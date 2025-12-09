@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -63,7 +63,7 @@ export function BoardView() {
     updateFeature,
     removeFeature,
     moveFeature,
-    currentAutoTask,
+    runningAutoTasks,
   } = useAppStore();
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null);
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
@@ -105,6 +105,12 @@ export function BoardView() {
       },
     })
   );
+
+  // Get unique categories from existing features for autocomplete suggestions
+  const categorySuggestions = useMemo(() => {
+    const categories = features.map((f) => f.category).filter(Boolean);
+    return [...new Set(categories)].sort();
+  }, [features]);
 
   // Custom collision detection that prioritizes columns over cards
   const collisionDetectionStrategy = useCallback((args: any) => {
@@ -285,7 +291,9 @@ export function BoardView() {
   };
 
   const handleDeleteFeature = (featureId: string) => {
-    removeFeature(featureId);
+    if (window.confirm("Are you sure you want to delete this feature?")) {
+      removeFeature(featureId);
+    }
   };
 
   const handleRunFeature = async (feature: Feature) => {
@@ -496,7 +504,7 @@ export function BoardView() {
                         onDelete={() => handleDeleteFeature(feature.id)}
                         onViewOutput={() => handleViewOutput(feature)}
                         onVerify={() => handleVerifyFeature(feature)}
-                        isCurrentAutoTask={currentAutoTask === feature.id}
+                        isCurrentAutoTask={runningAutoTasks.includes(feature.id)}
                       />
                     ))}
                   </SortableContext>
@@ -542,13 +550,13 @@ export function BoardView() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                placeholder="e.g., Core, UI, API"
+              <CategoryAutocomplete
                 value={newFeature.category}
-                onChange={(e) =>
-                  setNewFeature({ ...newFeature, category: e.target.value })
+                onChange={(value) =>
+                  setNewFeature({ ...newFeature, category: value })
                 }
+                suggestions={categorySuggestions}
+                placeholder="e.g., Core, UI, API"
                 data-testid="feature-category-input"
               />
             </div>
@@ -624,15 +632,16 @@ export function BoardView() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-category">Category</Label>
-                <Input
-                  id="edit-category"
+                <CategoryAutocomplete
                   value={editingFeature.category}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setEditingFeature({
                       ...editingFeature,
-                      category: e.target.value,
+                      category: value,
                     })
                   }
+                  suggestions={categorySuggestions}
+                  placeholder="e.g., Core, UI, API"
                   data-testid="edit-feature-category"
                 />
               </div>

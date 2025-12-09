@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = process.env.TEST_PORT || 3007;
+const reuseServer = process.env.TEST_REUSE_SERVER === "true";
 
 export default defineConfig({
   testDir: "./tests",
@@ -21,10 +22,14 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: `npx next dev -p ${port}`,
-    url: `http://localhost:${port}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  ...(reuseServer
+    ? {}
+    : {
+        webServer: {
+          command: `npx next dev -p ${port}`,
+          url: `http://localhost:${port}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120000,
+        },
+      }),
 });
