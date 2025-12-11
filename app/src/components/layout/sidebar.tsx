@@ -1272,7 +1272,7 @@ export function Sidebar() {
                   Generate feature list
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  Automatically populate feature_list.json with all features
+                  Automatically create features in the features folder
                   from the implementation roadmap after the spec is generated.
                 </p>
               </div>

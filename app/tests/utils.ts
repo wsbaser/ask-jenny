@@ -183,7 +183,9 @@ export async function dragKanbanCard(
 ): Promise<void> {
   const card = page.locator(`[data-testid="kanban-card-${featureId}"]`);
   const dragHandle = page.locator(`[data-testid="drag-handle-${featureId}"]`);
-  const targetColumn = page.locator(`[data-testid="kanban-column-${targetColumnId}"]`);
+  const targetColumn = page.locator(
+    `[data-testid="kanban-column-${targetColumnId}"]`
+  );
 
   // Perform drag and drop
   await dragHandle.dragTo(targetColumn);
@@ -433,7 +435,13 @@ export async function setupMockProjectAtConcurrencyLimit(
   runningTasks: string[] = ["running-task-1"]
 ): Promise<void> {
   await page.addInitScript(
-    ({ maxConcurrency, runningTasks }: { maxConcurrency: number; runningTasks: string[] }) => {
+    ({
+      maxConcurrency,
+      runningTasks,
+    }: {
+      maxConcurrency: number;
+      runningTasks: string[];
+    }) => {
       const mockProject = {
         id: "test-project-1",
         name: "Test Project",
@@ -570,43 +578,40 @@ export async function setupMockProjectWithFeatures(
     }>;
   }
 ): Promise<void> {
-  await page.addInitScript(
-    (opts: typeof options) => {
-      const mockProject = {
-        id: "test-project-1",
-        name: "Test Project",
-        path: "/mock/test-project",
-        lastOpened: new Date().toISOString(),
-      };
+  await page.addInitScript((opts: typeof options) => {
+    const mockProject = {
+      id: "test-project-1",
+      name: "Test Project",
+      path: "/mock/test-project",
+      lastOpened: new Date().toISOString(),
+    };
 
-      const mockFeatures = opts?.features || [];
+    const mockFeatures = opts?.features || [];
 
-      const mockState = {
-        state: {
-          projects: [mockProject],
-          currentProject: mockProject,
-          theme: "dark",
-          sidebarOpen: true,
-          apiKeys: { anthropic: "", google: "" },
-          chatSessions: [],
-          chatHistoryOpen: false,
-          maxConcurrency: opts?.maxConcurrency ?? 3,
-          isAutoModeRunning: false,
-          runningAutoTasks: opts?.runningTasks ?? [],
-          autoModeActivityLog: [],
-          features: mockFeatures,
-        },
-        version: 0,
-      };
+    const mockState = {
+      state: {
+        projects: [mockProject],
+        currentProject: mockProject,
+        theme: "dark",
+        sidebarOpen: true,
+        apiKeys: { anthropic: "", google: "" },
+        chatSessions: [],
+        chatHistoryOpen: false,
+        maxConcurrency: opts?.maxConcurrency ?? 3,
+        isAutoModeRunning: false,
+        runningAutoTasks: opts?.runningTasks ?? [],
+        autoModeActivityLog: [],
+        features: mockFeatures,
+      },
+      version: 0,
+    };
 
-      localStorage.setItem("automaker-storage", JSON.stringify(mockState));
+    localStorage.setItem("automaker-storage", JSON.stringify(mockState));
 
-      // Also store features in a global variable that the mock electron API can use
-      // This is needed because the board-view loads features from the file system
-      (window as any).__mockFeatures = mockFeatures;
-    },
-    options
-  );
+    // Also store features in a global variable that the mock electron API can use
+    // This is needed because the board-view loads features from the file system
+    (window as any).__mockFeatures = mockFeatures;
+  }, options);
 }
 
 /**
@@ -619,7 +624,13 @@ export async function setupMockProjectWithContextFile(
   contextContent: string = "# Agent Context\n\nPrevious implementation work..."
 ): Promise<void> {
   await page.addInitScript(
-    ({ featureId, contextContent }: { featureId: string; contextContent: string }) => {
+    ({
+      featureId,
+      contextContent,
+    }: {
+      featureId: string;
+      contextContent: string;
+    }) => {
       const mockProject = {
         id: "test-project-1",
         name: "Test Project",
@@ -645,9 +656,10 @@ export async function setupMockProjectWithContextFile(
 
       // Set up mock file system with a context file for the feature
       // This will be used by the mock electron API
+      // Now uses features/{id}/agent-output.md path
       (window as any).__mockContextFile = {
         featureId,
-        path: `/mock/test-project/.automaker/agents-context/${featureId}.md`,
+        path: `/mock/test-project/.automaker/features/${featureId}/agent-output.md`,
         content: contextContent,
       };
     },
@@ -668,14 +680,18 @@ export async function getCategoryAutocompleteInput(
 /**
  * Get the category autocomplete dropdown list
  */
-export async function getCategoryAutocompleteList(page: Page): Promise<Locator> {
+export async function getCategoryAutocompleteList(
+  page: Page
+): Promise<Locator> {
   return page.locator('[data-testid="category-autocomplete-list"]');
 }
 
 /**
  * Check if the category autocomplete dropdown is visible
  */
-export async function isCategoryAutocompleteListVisible(page: Page): Promise<boolean> {
+export async function isCategoryAutocompleteListVisible(
+  page: Page
+): Promise<boolean> {
   const list = page.locator('[data-testid="category-autocomplete-list"]');
   return await list.isVisible();
 }
@@ -707,7 +723,9 @@ export async function clickCategoryOption(
   page: Page,
   categoryName: string
 ): Promise<void> {
-  const optionTestId = `category-option-${categoryName.toLowerCase().replace(/\s+/g, "-")}`;
+  const optionTestId = `category-option-${categoryName
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
   const option = page.locator(`[data-testid="${optionTestId}"]`);
   await option.click();
 }
@@ -719,7 +737,9 @@ export async function getCategoryOption(
   page: Page,
   categoryName: string
 ): Promise<Locator> {
-  const optionTestId = `category-option-${categoryName.toLowerCase().replace(/\s+/g, "-")}`;
+  const optionTestId = `category-option-${categoryName
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
   return page.locator(`[data-testid="${optionTestId}"]`);
 }
 
@@ -788,7 +808,9 @@ export async function clickArchiveSession(
 /**
  * Check if the no session placeholder is visible
  */
-export async function isNoSessionPlaceholderVisible(page: Page): Promise<boolean> {
+export async function isNoSessionPlaceholderVisible(
+  page: Page
+): Promise<boolean> {
   const placeholder = page.locator('[data-testid="no-session-placeholder"]');
   return await placeholder.isVisible();
 }
@@ -864,43 +886,40 @@ export async function setupMockProjectWithInProgressFeatures(
     }>;
   }
 ): Promise<void> {
-  await page.addInitScript(
-    (opts: typeof options) => {
-      const mockProject = {
-        id: "test-project-1",
-        name: "Test Project",
-        path: "/mock/test-project",
-        lastOpened: new Date().toISOString(),
-      };
+  await page.addInitScript((opts: typeof options) => {
+    const mockProject = {
+      id: "test-project-1",
+      name: "Test Project",
+      path: "/mock/test-project",
+      lastOpened: new Date().toISOString(),
+    };
 
-      const mockFeatures = opts?.features || [];
+    const mockFeatures = opts?.features || [];
 
-      const mockState = {
-        state: {
-          projects: [mockProject],
-          currentProject: mockProject,
-          theme: "dark",
-          sidebarOpen: true,
-          apiKeys: { anthropic: "", google: "" },
-          chatSessions: [],
-          chatHistoryOpen: false,
-          maxConcurrency: opts?.maxConcurrency ?? 3,
-          isAutoModeRunning: false,
-          runningAutoTasks: opts?.runningTasks ?? [],
-          autoModeActivityLog: [],
-          features: mockFeatures,
-        },
-        version: 0,
-      };
+    const mockState = {
+      state: {
+        projects: [mockProject],
+        currentProject: mockProject,
+        theme: "dark",
+        sidebarOpen: true,
+        apiKeys: { anthropic: "", google: "" },
+        chatSessions: [],
+        chatHistoryOpen: false,
+        maxConcurrency: opts?.maxConcurrency ?? 3,
+        isAutoModeRunning: false,
+        runningAutoTasks: opts?.runningTasks ?? [],
+        autoModeActivityLog: [],
+        features: mockFeatures,
+      },
+      version: 0,
+    };
 
-      localStorage.setItem("automaker-storage", JSON.stringify(mockState));
+    localStorage.setItem("automaker-storage", JSON.stringify(mockState));
 
-      // Also store features in a global variable that the mock electron API can use
-      // This is needed because the board-view loads features from the file system
-      (window as any).__mockFeatures = mockFeatures;
-    },
-    options
-  );
+    // Also store features in a global variable that the mock electron API can use
+    // This is needed because the board-view loads features from the file system
+    (window as any).__mockFeatures = mockFeatures;
+  }, options);
 }
 
 /**
@@ -1052,7 +1071,8 @@ export async function navigateToView(
   page: Page,
   viewId: string
 ): Promise<void> {
-  const navSelector = viewId === "settings" ? "settings-button" : `nav-${viewId}`;
+  const navSelector =
+    viewId === "settings" ? "settings-button" : `nav-${viewId}`;
   await clickElement(page, navSelector);
   await page.waitForTimeout(100);
 }
@@ -1126,7 +1146,9 @@ export async function setupEmptyLocalStorage(page: Page): Promise<void> {
 /**
  * Set up mock projects in localStorage but with no current project (for recent projects list)
  */
-export async function setupMockProjectsWithoutCurrent(page: Page): Promise<void> {
+export async function setupMockProjectsWithoutCurrent(
+  page: Page
+): Promise<void> {
   await page.addInitScript(() => {
     const mockProjects = [
       {
@@ -1191,7 +1213,9 @@ export async function closeProjectInitDialog(page: Page): Promise<void> {
 /**
  * Check if the project opening overlay is visible
  */
-export async function isProjectOpeningOverlayVisible(page: Page): Promise<boolean> {
+export async function isProjectOpeningOverlayVisible(
+  page: Page
+): Promise<boolean> {
   const overlay = page.locator('[data-testid="project-opening-overlay"]');
   return await overlay.isVisible();
 }
@@ -1263,7 +1287,9 @@ export async function pressShortcut(page: Page, key: string): Promise<void> {
  * Count the number of session items in the session list
  */
 export async function countSessionItems(page: Page): Promise<number> {
-  const sessionList = page.locator('[data-testid="session-list"] [data-testid^="session-item-"]');
+  const sessionList = page.locator(
+    '[data-testid="session-list"] [data-testid^="session-item-"]'
+  );
   return await sessionList.count();
 }
 
@@ -1369,25 +1395,31 @@ export async function waitForProjectAnalysisComplete(
 ): Promise<void> {
   // Wait for the analyzing text to disappear
   const analyzingText = page.locator('p:has-text("AI agent is analyzing")');
-  await analyzingText.waitFor({
-    timeout: options?.timeout ?? 10000,
-    state: "hidden",
-  }).catch(() => {
-    // It may never have been visible, that's ok
-  });
+  await analyzingText
+    .waitFor({
+      timeout: options?.timeout ?? 10000,
+      state: "hidden",
+    })
+    .catch(() => {
+      // It may never have been visible, that's ok
+    });
 }
 
 /**
  * Get the delete confirmation dialog
  */
-export async function getDeleteConfirmationDialog(page: Page): Promise<Locator> {
+export async function getDeleteConfirmationDialog(
+  page: Page
+): Promise<Locator> {
   return page.locator('[data-testid="delete-confirmation-dialog"]');
 }
 
 /**
  * Check if the delete confirmation dialog is visible
  */
-export async function isDeleteConfirmationDialogVisible(page: Page): Promise<boolean> {
+export async function isDeleteConfirmationDialogVisible(
+  page: Page
+): Promise<boolean> {
   const dialog = page.locator('[data-testid="delete-confirmation-dialog"]');
   return await dialog.isVisible().catch(() => false);
 }
@@ -1469,14 +1501,18 @@ export async function waitForEditFeatureDialog(
 /**
  * Get the edit feature description input/textarea element
  */
-export async function getEditFeatureDescriptionInput(page: Page): Promise<Locator> {
+export async function getEditFeatureDescriptionInput(
+  page: Page
+): Promise<Locator> {
   return page.locator('[data-testid="edit-feature-description"]');
 }
 
 /**
  * Check if the edit feature description field is a textarea
  */
-export async function isEditFeatureDescriptionTextarea(page: Page): Promise<boolean> {
+export async function isEditFeatureDescriptionTextarea(
+  page: Page
+): Promise<boolean> {
   const element = page.locator('[data-testid="edit-feature-description"]');
   const tagName = await element.evaluate((el) => el.tagName.toLowerCase());
   return tagName === "textarea";
@@ -1643,39 +1679,36 @@ export async function setupMockProjectWithSkipTestsFeatures(
     }>;
   }
 ): Promise<void> {
-  await page.addInitScript(
-    (opts: typeof options) => {
-      const mockProject = {
-        id: "test-project-1",
-        name: "Test Project",
-        path: "/mock/test-project",
-        lastOpened: new Date().toISOString(),
-      };
+  await page.addInitScript((opts: typeof options) => {
+    const mockProject = {
+      id: "test-project-1",
+      name: "Test Project",
+      path: "/mock/test-project",
+      lastOpened: new Date().toISOString(),
+    };
 
-      const mockFeatures = opts?.features || [];
+    const mockFeatures = opts?.features || [];
 
-      const mockState = {
-        state: {
-          projects: [mockProject],
-          currentProject: mockProject,
-          theme: "dark",
-          sidebarOpen: true,
-          apiKeys: { anthropic: "", google: "" },
-          chatSessions: [],
-          chatHistoryOpen: false,
-          maxConcurrency: opts?.maxConcurrency ?? 3,
-          isAutoModeRunning: false,
-          runningAutoTasks: opts?.runningTasks ?? [],
-          autoModeActivityLog: [],
-          features: mockFeatures,
-        },
-        version: 0,
-      };
+    const mockState = {
+      state: {
+        projects: [mockProject],
+        currentProject: mockProject,
+        theme: "dark",
+        sidebarOpen: true,
+        apiKeys: { anthropic: "", google: "" },
+        chatSessions: [],
+        chatHistoryOpen: false,
+        maxConcurrency: opts?.maxConcurrency ?? 3,
+        isAutoModeRunning: false,
+        runningAutoTasks: opts?.runningTasks ?? [],
+        autoModeActivityLog: [],
+        features: mockFeatures,
+      },
+      version: 0,
+    };
 
-      localStorage.setItem("automaker-storage", JSON.stringify(mockState));
-    },
-    options
-  );
+    localStorage.setItem("automaker-storage", JSON.stringify(mockState));
+  }, options);
 }
 
 /**
@@ -1688,24 +1721,34 @@ export async function pressNumberKey(page: Page, num: number): Promise<void> {
 /**
  * Get the modal title/description text to verify which feature's output is being shown
  */
-export async function getAgentOutputModalDescription(page: Page): Promise<string | null> {
+export async function getAgentOutputModalDescription(
+  page: Page
+): Promise<string | null> {
   const modal = page.locator('[data-testid="agent-output-modal"]');
-  const description = modal.locator('[id="radix-\\:r.+\\:-description"]').first();
+  const description = modal
+    .locator('[id="radix-\\:r.+\\:-description"]')
+    .first();
   return await description.textContent().catch(() => null);
 }
 
 /**
  * Check the dialog description content in the agent output modal
  */
-export async function getOutputModalDescription(page: Page): Promise<string | null> {
-  const modalDescription = page.locator('[data-testid="agent-output-modal"] [data-slot="dialog-description"]');
+export async function getOutputModalDescription(
+  page: Page
+): Promise<string | null> {
+  const modalDescription = page.locator(
+    '[data-testid="agent-output-modal"] [data-slot="dialog-description"]'
+  );
   return await modalDescription.textContent().catch(() => null);
 }
 
 /**
  * Check if the project picker dropdown is open
  */
-export async function isProjectPickerDropdownOpen(page: Page): Promise<boolean> {
+export async function isProjectPickerDropdownOpen(
+  page: Page
+): Promise<boolean> {
   const dropdown = page.locator('[data-testid="project-picker-dropdown"]');
   return await dropdown.isVisible().catch(() => false);
 }
@@ -1733,14 +1776,20 @@ export async function waitForProjectPickerDropdownHidden(
 /**
  * Get a project hotkey indicator element by number (1-5)
  */
-export async function getProjectHotkey(page: Page, num: number): Promise<Locator> {
+export async function getProjectHotkey(
+  page: Page,
+  num: number
+): Promise<Locator> {
   return page.locator(`[data-testid="project-hotkey-${num}"]`);
 }
 
 /**
  * Check if a project hotkey indicator is visible
  */
-export async function isProjectHotkeyVisible(page: Page, num: number): Promise<boolean> {
+export async function isProjectHotkeyVisible(
+  page: Page,
+  num: number
+): Promise<boolean> {
   const hotkey = page.locator(`[data-testid="project-hotkey-${num}"]`);
   return await hotkey.isVisible().catch(() => false);
 }
@@ -1792,7 +1841,9 @@ export async function setupMockMultipleProjects(
 /**
  * Get the description image dropzone element
  */
-export async function getDescriptionImageDropzone(page: Page): Promise<Locator> {
+export async function getDescriptionImageDropzone(
+  page: Page
+): Promise<Locator> {
   return page.locator('[data-testid="feature-description-input"]');
 }
 
@@ -1806,7 +1857,9 @@ export async function getDescriptionImageInput(page: Page): Promise<Locator> {
 /**
  * Check if the description image previews section is visible
  */
-export async function isDescriptionImagePreviewsVisible(page: Page): Promise<boolean> {
+export async function isDescriptionImagePreviewsVisible(
+  page: Page
+): Promise<boolean> {
   const previews = page.locator('[data-testid="description-image-previews"]');
   return await previews.isVisible().catch(() => false);
 }
@@ -1814,7 +1867,9 @@ export async function isDescriptionImagePreviewsVisible(page: Page): Promise<boo
 /**
  * Get the number of description image previews
  */
-export async function getDescriptionImagePreviewCount(page: Page): Promise<number> {
+export async function getDescriptionImagePreviewCount(
+  page: Page
+): Promise<number> {
   const previews = page.locator('[data-testid^="description-image-preview-"]');
   return await previews.count();
 }
@@ -1845,7 +1900,9 @@ export async function waitForDescriptionImagePreview(
   page: Page,
   options?: { timeout?: number }
 ): Promise<Locator> {
-  const preview = page.locator('[data-testid^="description-image-preview-"]').first();
+  const preview = page
+    .locator('[data-testid^="description-image-preview-"]')
+    .first();
   await preview.waitFor({
     timeout: options?.timeout ?? 5000,
     state: "visible",
@@ -1913,7 +1970,9 @@ export async function scrollToBottom(locator: Locator): Promise<void> {
 /**
  * Get the scroll position of an element
  */
-export async function getScrollPosition(locator: Locator): Promise<{ scrollTop: number; scrollHeight: number; clientHeight: number }> {
+export async function getScrollPosition(
+  locator: Locator
+): Promise<{ scrollTop: number; scrollHeight: number; clientHeight: number }> {
   return await locator.evaluate((el) => ({
     scrollTop: el.scrollTop,
     scrollHeight: el.scrollHeight,
@@ -2088,7 +2147,13 @@ export async function setupMockProjectWithAgentOutput(
   outputContent: string
 ): Promise<void> {
   await page.addInitScript(
-    ({ featureId, outputContent }: { featureId: string; outputContent: string }) => {
+    ({
+      featureId,
+      outputContent,
+    }: {
+      featureId: string;
+      outputContent: string;
+    }) => {
       const mockProject = {
         id: "test-project-1",
         name: "Test Project",
@@ -2113,9 +2178,10 @@ export async function setupMockProjectWithAgentOutput(
       localStorage.setItem("automaker-storage", JSON.stringify(mockState));
 
       // Set up mock file system with output content for the feature
+      // Now uses features/{id}/agent-output.md path
       (window as any).__mockContextFile = {
         featureId,
-        path: `/mock/test-project/.automaker/agents-context/${featureId}.md`,
+        path: `/mock/test-project/.automaker/features/${featureId}/agent-output.md`,
         content: outputContent,
       };
     },
@@ -2234,7 +2300,9 @@ export async function getWaitingApprovalColumn(page: Page): Promise<Locator> {
 /**
  * Check if the waiting_approval column is visible
  */
-export async function isWaitingApprovalColumnVisible(page: Page): Promise<boolean> {
+export async function isWaitingApprovalColumnVisible(
+  page: Page
+): Promise<boolean> {
   const column = page.locator('[data-testid="kanban-column-waiting_approval"]');
   return await column.isVisible().catch(() => false);
 }
@@ -2242,14 +2310,18 @@ export async function isWaitingApprovalColumnVisible(page: Page): Promise<boolea
 /**
  * Get the agent output modal description element
  */
-export async function getAgentOutputModalDescriptionElement(page: Page): Promise<Locator> {
+export async function getAgentOutputModalDescriptionElement(
+  page: Page
+): Promise<Locator> {
   return page.locator('[data-testid="agent-output-description"]');
 }
 
 /**
  * Check if the agent output modal description is scrollable
  */
-export async function isAgentOutputDescriptionScrollable(page: Page): Promise<boolean> {
+export async function isAgentOutputDescriptionScrollable(
+  page: Page
+): Promise<boolean> {
   const description = page.locator('[data-testid="agent-output-description"]');
   const scrollInfo = await description.evaluate((el) => {
     return {
@@ -2264,7 +2336,9 @@ export async function isAgentOutputDescriptionScrollable(page: Page): Promise<bo
 /**
  * Get scroll dimensions of the agent output modal description
  */
-export async function getAgentOutputDescriptionScrollDimensions(page: Page): Promise<{
+export async function getAgentOutputDescriptionScrollDimensions(
+  page: Page
+): Promise<{
   scrollHeight: number;
   clientHeight: number;
   maxHeight: string;
@@ -2301,42 +2375,39 @@ export async function setupMockProjectWithWaitingApprovalFeatures(
     }>;
   }
 ): Promise<void> {
-  await page.addInitScript(
-    (opts: typeof options) => {
-      const mockProject = {
-        id: "test-project-1",
-        name: "Test Project",
-        path: "/mock/test-project",
-        lastOpened: new Date().toISOString(),
-      };
+  await page.addInitScript((opts: typeof options) => {
+    const mockProject = {
+      id: "test-project-1",
+      name: "Test Project",
+      path: "/mock/test-project",
+      lastOpened: new Date().toISOString(),
+    };
 
-      const mockFeatures = opts?.features || [];
+    const mockFeatures = opts?.features || [];
 
-      const mockState = {
-        state: {
-          projects: [mockProject],
-          currentProject: mockProject,
-          theme: "dark",
-          sidebarOpen: true,
-          apiKeys: { anthropic: "", google: "" },
-          chatSessions: [],
-          chatHistoryOpen: false,
-          maxConcurrency: opts?.maxConcurrency ?? 3,
-          isAutoModeRunning: false,
-          runningAutoTasks: opts?.runningTasks ?? [],
-          autoModeActivityLog: [],
-          features: mockFeatures,
-        },
-        version: 0,
-      };
+    const mockState = {
+      state: {
+        projects: [mockProject],
+        currentProject: mockProject,
+        theme: "dark",
+        sidebarOpen: true,
+        apiKeys: { anthropic: "", google: "" },
+        chatSessions: [],
+        chatHistoryOpen: false,
+        maxConcurrency: opts?.maxConcurrency ?? 3,
+        isAutoModeRunning: false,
+        runningAutoTasks: opts?.runningTasks ?? [],
+        autoModeActivityLog: [],
+        features: mockFeatures,
+      },
+      version: 0,
+    };
 
-      localStorage.setItem("automaker-storage", JSON.stringify(mockState));
+    localStorage.setItem("automaker-storage", JSON.stringify(mockState));
 
-      // Also store features in a global variable that the mock electron API can use
-      (window as any).__mockFeatures = mockFeatures;
-    },
-    options
-  );
+    // Also store features in a global variable that the mock electron API can use
+    (window as any).__mockFeatures = mockFeatures;
+  }, options);
 }
 
 // ============================================================================
@@ -2478,7 +2549,10 @@ export async function clickSetupFinish(page: Page): Promise<void> {
 /**
  * Enter Anthropic API key in setup
  */
-export async function enterAnthropicApiKey(page: Page, apiKey: string): Promise<void> {
+export async function enterAnthropicApiKey(
+  page: Page,
+  apiKey: string
+): Promise<void> {
   // Click "Use Anthropic API Key Instead" button
   const useApiKeyButton = await getByTestId(page, "use-api-key-button");
   await useApiKeyButton.click();
@@ -2495,7 +2569,10 @@ export async function enterAnthropicApiKey(page: Page, apiKey: string): Promise<
 /**
  * Enter OpenAI API key in setup
  */
-export async function enterOpenAIApiKey(page: Page, apiKey: string): Promise<void> {
+export async function enterOpenAIApiKey(
+  page: Page,
+  apiKey: string
+): Promise<void> {
   // Click "Enter OpenAI API Key" button
   const useApiKeyButton = await getByTestId(page, "use-openai-key-button");
   await useApiKeyButton.click();

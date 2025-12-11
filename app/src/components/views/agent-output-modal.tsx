@@ -20,6 +20,8 @@ interface AgentOutputModalProps {
   onClose: () => void;
   featureDescription: string;
   featureId: string;
+  /** The status of the feature - used to determine if spinner should be shown */
+  featureStatus?: string;
   /** Called when a number key (0-9) is pressed while the modal is open */
   onNumberKeyPress?: (key: string) => void;
 }
@@ -31,6 +33,7 @@ export function AgentOutputModal({
   onClose,
   featureDescription,
   featureId,
+  featureStatus,
   onNumberKeyPress,
 }: AgentOutputModalProps) {
   const [output, setOutput] = useState<string>("");
@@ -70,16 +73,18 @@ export function AgentOutputModal({
         projectPathRef.current = currentProject.path;
         setProjectPath(currentProject.path);
 
-        // Ensure context directory exists
-        const contextDir = `${currentProject.path}/.automaker/agents-context`;
-        await api.mkdir(contextDir);
+        // Use features API to get agent output
+        if (api.features) {
+          const result = await api.features.getAgentOutput(
+            currentProject.path,
+            featureId
+          );
 
-        // Try to read existing output file
-        const outputPath = `${contextDir}/${featureId}.md`;
-        const result = await api.readFile(outputPath);
-
-        if (result.success && result.content) {
-          setOutput(result.content);
+          if (result.success) {
+            setOutput(result.content || "");
+          } else {
+            setOutput("");
+          }
         } else {
           setOutput("");
         }
@@ -102,9 +107,10 @@ export function AgentOutputModal({
     if (!api) return;
 
     try {
-      const contextDir = `${projectPathRef.current}/.automaker/agents-context`;
-      const outputPath = `${contextDir}/${featureId}.md`;
-
+      // Use features API - agent output is stored in features/{id}/agent-output.md
+      // We need to write it directly since there's no updateAgentOutput method
+      // The context-manager handles this on the backend, but for frontend edits we write directly
+      const outputPath = `${projectPathRef.current}/.automaker/features/${featureId}/agent-output.md`;
       await api.writeFile(outputPath, newContent);
     } catch (error) {
       console.error("Failed to save output:", error);
@@ -250,7 +256,10 @@ export function AgentOutputModal({
         <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              {featureStatus !== "verified" &&
+                featureStatus !== "waiting_approval" && (
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                )}
               Agent Output
             </DialogTitle>
             <div className="flex items-center gap-1 bg-muted rounded-lg p-1">

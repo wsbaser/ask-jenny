@@ -90,7 +90,7 @@ class AutoModeService {
       content: `Working in isolated branch: ${result.branchName}\n`,
     });
 
-    // Update feature with worktree info in feature_list.json
+    // Update feature with worktree info
     await featureLoader.updateFeatureWorktree(
       feature.id,
       projectPath,

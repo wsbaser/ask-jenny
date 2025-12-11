@@ -155,7 +155,7 @@ export function AgentToolsView() {
       // In mock mode, simulate terminal output
       // In real Electron mode, this would use child_process
       const mockOutputs: Record<string, string> = {
-        ls: "app_spec.txt\nfeature_list.json\nnode_modules\npackage.json\nsrc\ntests\ntsconfig.json",
+        ls: "app_spec.txt\nfeatures\nnode_modules\npackage.json\nsrc\ntests\ntsconfig.json",
         pwd: currentProject?.path || "/Users/demo/project",
         "echo hello": "hello",
         whoami: "automaker-agent",

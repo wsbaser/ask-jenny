@@ -409,7 +409,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
     }
   }, [currentProject, projectAnalysis]);
 
-  // Generate .automaker/feature_list.json from analysis
+  // Generate features from analysis and save to .automaker/features folder
   const generateFeatureList = useCallback(async () => {
     if (!currentProject || !projectAnalysis) return;
 
@@ -755,23 +755,12 @@ ${Object.entries(projectAnalysis.filesByExtension)
         });
       }
 
-      // Generate the feature list content
-      const featureListContent = JSON.stringify(detectedFeatures, null, 2);
-
-      // Write the feature list file
-      const featureListPath = `${currentProject.path}/feature_list.json`;
-      const writeResult = await api.writeFile(
-        featureListPath,
-        featureListContent
-      );
-
-      if (writeResult.success) {
-        setFeatureListGenerated(true);
-      } else {
-        setFeatureListError(
-          writeResult.error || "Failed to write feature list file"
-        );
+      // Create each feature using the features API
+      for (const feature of detectedFeatures) {
+        await api.features.create(currentProject.path, feature);
       }
+
+      setFeatureListGenerated(true);
     } catch (error) {
       console.error("Failed to generate feature list:", error);
       setFeatureListError(
@@ -1041,7 +1030,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
                     Generate Feature List
                   </CardTitle>
                   <CardDescription>
-                    Create .automaker/feature_list.json from analysis
+                    Create features from analysis
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -1074,7 +1063,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
                       data-testid="feature-list-generated-success"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      <span>feature_list.json created successfully!</span>
+                      <span>Features created successfully!</span>
                     </div>
                   )}
                   {featureListError && (

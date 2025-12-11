@@ -16,11 +16,6 @@ export interface ProjectInitResult {
 }
 
 /**
- * Default feature_list.json template for new projects
- */
-const DEFAULT_FEATURE_LIST = JSON.stringify([], null, 2);
-
-/**
  * Required files and directories in the .automaker directory
  * Note: app_spec.txt is NOT created automatically - user must set it up via the spec editor
  */
@@ -28,12 +23,10 @@ const REQUIRED_STRUCTURE = {
   directories: [
     ".automaker",
     ".automaker/context",
-    ".automaker/agents-context",
+    ".automaker/features",
     ".automaker/images",
   ],
-  files: {
-    ".automaker/feature_list.json": DEFAULT_FEATURE_LIST,
-  },
+  files: {},
 };
 
 /**
@@ -71,9 +64,9 @@ export async function initializeProject(
       }
     }
 
-    // Determine if this is a new project (all files were created)
+    // Determine if this is a new project (no files needed to be created since features/ is empty by default)
     const isNewProject =
-      createdFiles.length === Object.keys(REQUIRED_STRUCTURE.files).length;
+      createdFiles.length === 0 && existingFiles.length === 0;
 
     return {
       success: true,
@@ -103,9 +96,9 @@ export async function isProjectInitialized(
   const api = getElectronAPI();
 
   try {
-    // Check all required files exist
-    for (const relativePath of Object.keys(REQUIRED_STRUCTURE.files)) {
-      const fullPath = `${projectPath}/${relativePath}`;
+    // Check all required directories exist (no files required - features/ folder is source of truth)
+    for (const dir of REQUIRED_STRUCTURE.directories) {
+      const fullPath = `${projectPath}/${dir}`;
       const exists = await api.exists(fullPath);
       if (!exists) {
         return false;
@@ -138,13 +131,14 @@ export async function getProjectInitStatus(projectPath: string): Promise<{
   const existingFiles: string[] = [];
 
   try {
-    for (const relativePath of Object.keys(REQUIRED_STRUCTURE.files)) {
-      const fullPath = `${projectPath}/${relativePath}`;
+    // Check directories (no files required - features/ folder is source of truth)
+    for (const dir of REQUIRED_STRUCTURE.directories) {
+      const fullPath = `${projectPath}/${dir}`;
       const exists = await api.exists(fullPath);
       if (exists) {
-        existingFiles.push(relativePath);
+        existingFiles.push(dir);
       } else {
-        missingFiles.push(relativePath);
+        missingFiles.push(dir);
       }
     }
 
@@ -157,7 +151,7 @@ export async function getProjectInitStatus(projectPath: string): Promise<{
     console.error("[project-init] Error getting project status:", error);
     return {
       initialized: false,
-      missingFiles: Object.keys(REQUIRED_STRUCTURE.files),
+      missingFiles: REQUIRED_STRUCTURE.directories,
       existingFiles: [],
     };
   }

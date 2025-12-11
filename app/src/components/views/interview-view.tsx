@@ -312,26 +312,20 @@ export function InterviewView() {
         generatedSpec
       );
 
-      // Create initial .automaker/feature_list.json
-      await api.writeFile(
-        `${fullProjectPath}/.automaker/feature_list.json`,
-        JSON.stringify(
-          [
-            {
-              category: "Core",
-              description: "Initial project setup",
-              steps: [
-                "Step 1: Review app_spec.txt",
-                "Step 2: Set up development environment",
-                "Step 3: Start implementing features",
-              ],
-              passes: false,
-            },
-          ],
-          null,
-          2
-        )
-      );
+      // Create initial feature in the features folder
+      const initialFeature = {
+        id: `feature-${Date.now()}-0`,
+        category: "Core",
+        description: "Initial project setup",
+        status: "backlog",
+        steps: [
+          "Step 1: Review app_spec.txt",
+          "Step 2: Set up development environment",
+          "Step 3: Start implementing features",
+        ],
+        skipTests: true,
+      };
+      await api.features.create(fullProjectPath, initialFeature);
 
       const project = {
         id: `project-${Date.now()}`,
@@ -444,11 +438,11 @@ export function InterviewView() {
               className={cn(
                 "max-w-[80%]",
                 message.role === "user"
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-transparent border border-primary text-foreground"
                   : "border-l-4 border-primary bg-card"
               )}
             >
-              <CardContent className="p-3">
+              <CardContent className="px-3 py-2">
                 {message.role === "assistant" ? (
                   <Markdown className="text-sm text-primary prose-headings:text-primary prose-strong:text-primary prose-code:text-primary">
                     {message.content}
@@ -460,9 +454,9 @@ export function InterviewView() {
                 )}
                 <p
                   className={cn(
-                    "text-xs mt-2",
+                    "text-xs mt-1",
                     message.role === "user"
-                      ? "text-primary-foreground/70"
+                      ? "text-muted-foreground"
                       : "text-primary/70"
                   )}
                 >

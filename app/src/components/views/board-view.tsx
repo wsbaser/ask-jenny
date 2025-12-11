@@ -85,6 +85,7 @@ import {
   Minimize2,
   Square,
   Maximize2,
+  Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
@@ -242,6 +243,8 @@ export function BoardView() {
   const [followUpPreviewMap, setFollowUpPreviewMap] = useState<ImagePreviewMap>(
     () => new Map()
   );
+  const [editFeaturePreviewMap, setEditFeaturePreviewMap] =
+    useState<ImagePreviewMap>(() => new Map());
   // Local state to temporarily show advanced options when profiles-only mode is enabled
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [showEditAdvancedOptions, setShowEditAdvancedOptions] = useState(false);
@@ -390,7 +393,7 @@ export function BoardView() {
     return rectIntersection(args);
   }, []);
 
-  // Load features from file
+  // Load features using features API
   const loadFeatures = useCallback(async () => {
     if (!currentProject) return;
 
@@ -419,21 +422,25 @@ export function BoardView() {
 
     try {
       const api = getElectronAPI();
-      const result = await api.readFile(
-        `${currentProject.path}/.automaker/feature_list.json`
-      );
+      if (!api.features) {
+        console.error("[BoardView] Features API not available");
+        return;
+      }
 
-      if (result.success && result.content) {
-        const parsed = JSON.parse(result.content);
-        const featuresWithIds = parsed.map((f: any, index: number) => ({
-          ...f,
-          id: f.id || `feature-${index}-${Date.now()}`,
-          status: f.status || "backlog",
-          startedAt: f.startedAt, // Preserve startedAt timestamp
-          // Ensure model and thinkingLevel are set for backward compatibility
-          model: f.model || "opus",
-          thinkingLevel: f.thinkingLevel || "none",
-        }));
+      const result = await api.features.getAll(currentProject.path);
+
+      if (result.success && result.features) {
+        const featuresWithIds = result.features.map(
+          (f: any, index: number) => ({
+            ...f,
+            id: f.id || `feature-${index}-${Date.now()}`,
+            status: f.status || "backlog",
+            startedAt: f.startedAt, // Preserve startedAt timestamp
+            // Ensure model and thinkingLevel are set for backward compatibility
+            model: f.model || "opus",
+            thinkingLevel: f.thinkingLevel || "none",
+          })
+        );
         setFeatures(featuresWithIds);
       }
     } catch (error) {
@@ -529,6 +536,9 @@ export function BoardView() {
         // Reload features when a feature is completed
         console.log("[Board] Feature completed, reloading features...");
         loadFeatures();
+        // Play ding sound when feature is done
+        const audio = new Audio("/sounds/ding.mp3");
+        audio.play().catch((err) => console.warn("Could not play ding sound:", err));
       } else if (event.type === "auto_mode_error") {
         // Reload features when an error occurs (feature moved to waiting_approval)
         console.log(
@@ -627,41 +637,75 @@ export function BoardView() {
     }
   }, [features, isLoading]);
 
-  // Save features to file
-  const saveFeatures = useCallback(async () => {
-    if (!currentProject) return;
+  // Persist feature update to API (replaces saveFeatures)
+  const persistFeatureUpdate = useCallback(
+    async (featureId: string, updates: Partial<Feature>) => {
+      if (!currentProject) return;
 
-    try {
-      const api = getElectronAPI();
-      const toSave = features.map((f) => ({
-        id: f.id,
-        category: f.category,
-        description: f.description,
-        steps: f.steps,
-        status: f.status,
-        startedAt: f.startedAt,
-        imagePaths: f.imagePaths,
-        skipTests: f.skipTests,
-        summary: f.summary,
-        model: f.model,
-        thinkingLevel: f.thinkingLevel,
-        error: f.error,
-      }));
-      await api.writeFile(
-        `${currentProject.path}/.automaker/feature_list.json`,
-        JSON.stringify(toSave, null, 2)
-      );
-    } catch (error) {
-      console.error("Failed to save features:", error);
-    }
-  }, [currentProject, features]);
+      try {
+        const api = getElectronAPI();
+        if (!api.features) {
+          console.error("[BoardView] Features API not available");
+          return;
+        }
 
-  // Save when features change (after initial load is complete)
-  useEffect(() => {
-    if (!isLoading && !isSwitchingProjectRef.current) {
-      saveFeatures();
-    }
-  }, [features, saveFeatures, isLoading]);
+        const result = await api.features.update(
+          currentProject.path,
+          featureId,
+          updates
+        );
+        if (result.success && result.feature) {
+          updateFeature(result.feature.id, result.feature);
+        }
+      } catch (error) {
+        console.error("Failed to persist feature update:", error);
+      }
+    },
+    [currentProject, updateFeature]
+  );
+
+  // Persist feature creation to API
+  const persistFeatureCreate = useCallback(
+    async (feature: Feature) => {
+      if (!currentProject) return;
+
+      try {
+        const api = getElectronAPI();
+        if (!api.features) {
+          console.error("[BoardView] Features API not available");
+          return;
+        }
+
+        const result = await api.features.create(currentProject.path, feature);
+        if (result.success && result.feature) {
+          updateFeature(result.feature.id, result.feature);
+        }
+      } catch (error) {
+        console.error("Failed to persist feature creation:", error);
+      }
+    },
+    [currentProject, updateFeature]
+  );
+
+  // Persist feature deletion to API
+  const persistFeatureDelete = useCallback(
+    async (featureId: string) => {
+      if (!currentProject) return;
+
+      try {
+        const api = getElectronAPI();
+        if (!api.features) {
+          console.error("[BoardView] Features API not available");
+          return;
+        }
+
+        await api.features.delete(currentProject.path, featureId);
+      } catch (error) {
+        console.error("Failed to persist feature deletion:", error);
+      }
+    },
+    [currentProject]
+  );
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -690,13 +734,15 @@ export function BoardView() {
     // Determine if dragging is allowed based on status and skipTests
     // - Backlog items can always be dragged
     // - waiting_approval items can always be dragged (to allow manual verification via drag)
+    // - verified items can always be dragged (to allow moving back to waiting_approval)
     // - skipTests (non-TDD) items can be dragged between in_progress and verified
-    // - Non-skipTests (TDD) items that are in progress or verified cannot be dragged
+    // - Non-skipTests (TDD) items that are in progress cannot be dragged (they are running)
     if (
       draggedFeature.status !== "backlog" &&
-      draggedFeature.status !== "waiting_approval"
+      draggedFeature.status !== "waiting_approval" &&
+      draggedFeature.status !== "verified"
     ) {
-      // Only allow dragging in_progress/verified if it's a skipTests feature and not currently running
+      // Only allow dragging in_progress if it's a skipTests feature and not currently running
       if (!draggedFeature.skipTests || isRunningTask) {
         console.log(
           "[Board] Cannot drag feature - TDD feature or currently running"
@@ -744,14 +790,17 @@ export function BoardView() {
       // From backlog
       if (targetStatus === "in_progress") {
         // Update with startedAt timestamp
-        updateFeature(featureId, {
+        const updates = {
           status: targetStatus,
           startedAt: new Date().toISOString(),
-        });
+        };
+        updateFeature(featureId, updates);
+        persistFeatureUpdate(featureId, updates);
         console.log("[Board] Feature moved to in_progress, starting agent...");
         await handleRunFeature(draggedFeature);
       } else {
         moveFeature(featureId, targetStatus);
+        persistFeatureUpdate(featureId, { status: targetStatus });
       }
     } else if (draggedFeature.status === "waiting_approval") {
       // waiting_approval features can be dragged to verified for manual verification
@@ -759,6 +808,7 @@ export function BoardView() {
       // features often have skipTests=true, and we want status-based handling first
       if (targetStatus === "verified") {
         moveFeature(featureId, "verified");
+        persistFeatureUpdate(featureId, { status: "verified" });
         toast.success("Feature verified", {
           description: `Manually verified: ${draggedFeature.description.slice(
             0,
@@ -768,6 +818,7 @@ export function BoardView() {
       } else if (targetStatus === "backlog") {
         // Allow moving waiting_approval cards back to backlog
         moveFeature(featureId, "backlog");
+        persistFeatureUpdate(featureId, { status: "backlog" });
         toast.info("Feature moved to backlog", {
           description: `Moved to Backlog: ${draggedFeature.description.slice(
             0,
@@ -783,6 +834,7 @@ export function BoardView() {
       ) {
         // Manual verify via drag
         moveFeature(featureId, "verified");
+        persistFeatureUpdate(featureId, { status: "verified" });
         toast.success("Feature verified", {
           description: `Marked as verified: ${draggedFeature.description.slice(
             0,
@@ -790,16 +842,14 @@ export function BoardView() {
           )}${draggedFeature.description.length > 50 ? "..." : ""}`,
         });
       } else if (
-        targetStatus === "in_progress" &&
+        targetStatus === "waiting_approval" &&
         draggedFeature.status === "verified"
       ) {
-        // Move back to in_progress
-        updateFeature(featureId, {
-          status: "in_progress",
-          startedAt: new Date().toISOString(),
-        });
+        // Move verified feature back to waiting_approval
+        moveFeature(featureId, "waiting_approval");
+        persistFeatureUpdate(featureId, { status: "waiting_approval" });
         toast.info("Feature moved back", {
-          description: `Moved back to In Progress: ${draggedFeature.description.slice(
+          description: `Moved back to Waiting Approval: ${draggedFeature.description.slice(
             0,
             50
           )}${draggedFeature.description.length > 50 ? "..." : ""}`,
@@ -807,6 +857,30 @@ export function BoardView() {
       } else if (targetStatus === "backlog") {
         // Allow moving skipTests cards back to backlog
         moveFeature(featureId, "backlog");
+        persistFeatureUpdate(featureId, { status: "backlog" });
+        toast.info("Feature moved to backlog", {
+          description: `Moved to Backlog: ${draggedFeature.description.slice(
+            0,
+            50
+          )}${draggedFeature.description.length > 50 ? "..." : ""}`,
+        });
+      }
+    } else if (draggedFeature.status === "verified") {
+      // Handle verified TDD (non-skipTests) features being moved back
+      if (targetStatus === "waiting_approval") {
+        // Move verified feature back to waiting_approval
+        moveFeature(featureId, "waiting_approval");
+        persistFeatureUpdate(featureId, { status: "waiting_approval" });
+        toast.info("Feature moved back", {
+          description: `Moved back to Waiting Approval: ${draggedFeature.description.slice(
+            0,
+            50
+          )}${draggedFeature.description.length > 50 ? "..." : ""}`,
+        });
+      } else if (targetStatus === "backlog") {
+        // Allow moving verified cards back to backlog
+        moveFeature(featureId, "backlog");
+        persistFeatureUpdate(featureId, { status: "backlog" });
         toast.info("Feature moved to backlog", {
           description: `Moved to Backlog: ${draggedFeature.description.slice(
             0,
@@ -828,17 +902,19 @@ export function BoardView() {
     const normalizedThinking = modelSupportsThinking(selectedModel)
       ? newFeature.thinkingLevel
       : "none";
-    addFeature({
+    const newFeatureData = {
       category,
       description: newFeature.description,
       steps: newFeature.steps.filter((s) => s.trim()),
-      status: "backlog",
+      status: "backlog" as const,
       images: newFeature.images,
       imagePaths: newFeature.imagePaths,
       skipTests: newFeature.skipTests,
       model: selectedModel,
       thinkingLevel: normalizedThinking,
-    });
+    };
+    const createdFeature = addFeature(newFeatureData);
+    persistFeatureCreate(createdFeature);
     // Persist the category
     saveCategory(category);
     setNewFeature({
@@ -864,14 +940,19 @@ export function BoardView() {
       ? editingFeature.thinkingLevel
       : "none";
 
-    updateFeature(editingFeature.id, {
+    const updates = {
       category: editingFeature.category,
       description: editingFeature.description,
       steps: editingFeature.steps,
       skipTests: editingFeature.skipTests,
       model: selectedModel,
       thinkingLevel: normalizedThinking,
-    });
+      imagePaths: editingFeature.imagePaths,
+    };
+    updateFeature(editingFeature.id, updates);
+    persistFeatureUpdate(editingFeature.id, updates);
+    // Clear the preview map after saving
+    setEditFeaturePreviewMap(new Map());
     // Persist the category if it's new
     if (editingFeature.category) {
       saveCategory(editingFeature.category);
@@ -904,13 +985,14 @@ export function BoardView() {
       }
     }
 
-    // Delete agent context file if it exists
+    // Note: Agent context file will be deleted automatically when feature folder is deleted
+    // via persistFeatureDelete, so no manual deletion needed
     if (currentProject) {
       try {
-        const api = getElectronAPI();
-        const contextPath = `${currentProject.path}/.automaker/agents-context/${featureId}.md`;
-        await api.deleteFile(contextPath);
-        console.log(`[Board] Deleted agent context for feature ${featureId}`);
+        // Feature folder deletion handles agent-output.md automatically
+        console.log(
+          `[Board] Feature ${featureId} will be deleted (including agent context)`
+        );
       } catch (error) {
         // Context file might not exist, which is fine
         console.log(
@@ -944,6 +1026,7 @@ export function BoardView() {
 
     // Remove the feature immediately without confirmation
     removeFeature(featureId);
+    persistFeatureDelete(featureId);
   };
 
   const handleRunFeature = async (feature: Feature) => {
@@ -1056,6 +1139,7 @@ export function BoardView() {
       description: feature.description,
     });
     moveFeature(feature.id, "verified");
+    persistFeatureUpdate(feature.id, { status: "verified" });
     toast.success("Feature verified", {
       description: `Marked as verified: ${feature.description.slice(0, 50)}${
         feature.description.length > 50 ? "..." : ""
@@ -1069,10 +1153,12 @@ export function BoardView() {
       id: feature.id,
       description: feature.description,
     });
-    updateFeature(feature.id, {
-      status: "in_progress",
+    const updates = {
+      status: "in_progress" as const,
       startedAt: new Date().toISOString(),
-    });
+    };
+    updateFeature(feature.id, updates);
+    persistFeatureUpdate(feature.id, updates);
     toast.info("Feature moved back", {
       description: `Moved back to In Progress: ${feature.description.slice(
         0,
@@ -1119,10 +1205,12 @@ export function BoardView() {
     }
 
     // Move feature back to in_progress before sending follow-up
-    updateFeature(featureId, {
-      status: "in_progress",
+    const updates = {
+      status: "in_progress" as const,
       startedAt: new Date().toISOString(),
-    });
+    };
+    updateFeature(featureId, updates);
+    persistFeatureUpdate(featureId, updates);
 
     // Reset follow-up state immediately (close dialog, clear form)
     setShowFollowUpDialog(false);
@@ -1181,6 +1269,7 @@ export function BoardView() {
         console.log("[Board] Feature committed successfully");
         // Move to verified status
         moveFeature(feature.id, "verified");
+        persistFeatureUpdate(feature.id, { status: "verified" });
         toast.success("Feature committed", {
           description: `Committed and verified: ${feature.description.slice(
             0,
@@ -1210,7 +1299,9 @@ export function BoardView() {
       id: feature.id,
       description: feature.description,
     });
-    updateFeature(feature.id, { status: "waiting_approval" });
+    const updates = { status: "waiting_approval" as const };
+    updateFeature(feature.id, updates);
+    persistFeatureUpdate(feature.id, updates);
     toast.info("Feature ready for review", {
       description: `Ready for approval: ${feature.description.slice(0, 50)}${
         feature.description.length > 50 ? "..." : ""
@@ -1426,6 +1517,7 @@ export function BoardView() {
 
       if (targetStatus !== feature.status) {
         moveFeature(feature.id, targetStatus);
+        persistFeatureUpdate(feature.id, { status: targetStatus });
       }
 
       toast.success("Agent stopped", {
@@ -1473,10 +1565,12 @@ export function BoardView() {
 
     for (const feature of featuresToStart) {
       // Update the feature status with startedAt timestamp
-      updateFeature(feature.id, {
-        status: "in_progress",
+      const updates = {
+        status: "in_progress" as const,
         startedAt: new Date().toISOString(),
-      });
+      };
+      updateFeature(feature.id, updates);
+      persistFeatureUpdate(feature.id, updates);
       // Start the agent for this feature
       await handleRunFeature(feature);
     }
@@ -1885,7 +1979,24 @@ export function BoardView() {
           }
         }}
       >
-        <DialogContent compact={!isMaximized} data-testid="add-feature-dialog">
+        <DialogContent
+          compact={!isMaximized}
+          data-testid="add-feature-dialog"
+          onPointerDownOutside={(e) => {
+            // Prevent dialog from closing when clicking on category autocomplete dropdown
+            const target = e.target as HTMLElement;
+            if (target.closest('[data-testid="category-autocomplete-list"]')) {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            // Prevent dialog from closing when clicking on category autocomplete dropdown
+            const target = e.target as HTMLElement;
+            if (target.closest('[data-testid="category-autocomplete-list"]')) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Add New Feature</DialogTitle>
             <DialogDescription>
@@ -2276,10 +2387,28 @@ export function BoardView() {
           if (!open) {
             setEditingFeature(null);
             setShowEditAdvancedOptions(false);
+            setEditFeaturePreviewMap(new Map());
           }
         }}
       >
-        <DialogContent compact={!isMaximized} data-testid="edit-feature-dialog">
+        <DialogContent
+          compact={!isMaximized}
+          data-testid="edit-feature-dialog"
+          onPointerDownOutside={(e) => {
+            // Prevent dialog from closing when clicking on category autocomplete dropdown
+            const target = e.target as HTMLElement;
+            if (target.closest('[data-testid="category-autocomplete-list"]')) {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            // Prevent dialog from closing when clicking on category autocomplete dropdown
+            const target = e.target as HTMLElement;
+            if (target.closest('[data-testid="category-autocomplete-list"]')) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Edit Feature</DialogTitle>
             <DialogDescription>Modify the feature details.</DialogDescription>
@@ -2308,16 +2437,24 @@ export function BoardView() {
               <TabsContent value="prompt" className="space-y-4 overflow-y-auto">
                 <div className="space-y-2">
                   <Label htmlFor="edit-description">Description</Label>
-                  <Textarea
-                    id="edit-description"
-                    placeholder="Describe the feature..."
+                  <DescriptionImageDropZone
                     value={editingFeature.description}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setEditingFeature({
                         ...editingFeature,
-                        description: e.target.value,
+                        description: value,
                       })
                     }
+                    images={editingFeature.imagePaths ?? []}
+                    onImagesChange={(images) =>
+                      setEditingFeature({
+                        ...editingFeature,
+                        imagePaths: images,
+                      })
+                    }
+                    placeholder="Describe the feature..."
+                    previewMap={editFeaturePreviewMap}
+                    onPreviewMapChange={setEditFeaturePreviewMap}
                     data-testid="edit-feature-description"
                   />
                 </div>
@@ -2669,6 +2806,7 @@ export function BoardView() {
         onClose={() => setShowOutputModal(false)}
         featureDescription={outputFeature?.description || ""}
         featureId={outputFeature?.id || ""}
+        featureStatus={outputFeature?.status}
         onNumberKeyPress={handleOutputModalNumberKeyPress}
       />
 
@@ -2720,12 +2858,12 @@ export function BoardView() {
                     }
                   }
 
-                  // Delete agent context file if it exists
+                  // Note: Agent context file will be deleted automatically when feature folder is deleted
+                  // via persistFeatureDelete, so no manual deletion needed
                   try {
-                    const contextPath = `${currentProject.path}/.automaker/agents-context/${feature.id}.md`;
-                    await api.deleteFile(contextPath);
+                    // Feature folder deletion handles agent-output.md automatically
                     console.log(
-                      `[Board] Deleted agent context for feature ${feature.id}`
+                      `[Board] Feature ${feature.id} will be deleted (including agent context)`
                     );
                   } catch (error) {
                     // Context file might not exist, which is fine
@@ -2737,6 +2875,7 @@ export function BoardView() {
 
                   // Remove the feature
                   removeFeature(feature.id);
+                  persistFeatureDelete(feature.id);
                 }
 
                 setShowDeleteAllVerifiedDialog(false);

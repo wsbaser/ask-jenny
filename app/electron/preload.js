@@ -24,7 +24,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // App APIs
   getPath: (name) => ipcRenderer.invoke("app:getPath", name),
   saveImageToTemp: (data, filename, mimeType, projectPath) =>
-    ipcRenderer.invoke("app:saveImageToTemp", { data, filename, mimeType, projectPath }),
+    ipcRenderer.invoke("app:saveImageToTemp", {
+      data,
+      filename,
+      mimeType,
+      projectPath,
+    }),
 
   // Agent APIs
   agent: {
@@ -34,19 +39,22 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     // Send a message to the agent
     send: (sessionId, message, workingDirectory, imagePaths) =>
-      ipcRenderer.invoke("agent:send", { sessionId, message, workingDirectory, imagePaths }),
+      ipcRenderer.invoke("agent:send", {
+        sessionId,
+        message,
+        workingDirectory,
+        imagePaths,
+      }),
 
     // Get conversation history
     getHistory: (sessionId) =>
       ipcRenderer.invoke("agent:getHistory", { sessionId }),
 
     // Stop current execution
-    stop: (sessionId) =>
-      ipcRenderer.invoke("agent:stop", { sessionId }),
+    stop: (sessionId) => ipcRenderer.invoke("agent:stop", { sessionId }),
 
     // Clear conversation
-    clear: (sessionId) =>
-      ipcRenderer.invoke("agent:clear", { sessionId }),
+    clear: (sessionId) => ipcRenderer.invoke("agent:clear", { sessionId }),
 
     // Subscribe to streaming events
     onStream: (callback) => {
@@ -65,7 +73,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     // Create a new session
     create: (name, projectPath, workingDirectory) =>
-      ipcRenderer.invoke("sessions:create", { name, projectPath, workingDirectory }),
+      ipcRenderer.invoke("sessions:create", {
+        name,
+        projectPath,
+        workingDirectory,
+      }),
 
     // Update session metadata
     update: (sessionId, name, tags) =>
@@ -80,8 +92,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.invoke("sessions:unarchive", { sessionId }),
 
     // Delete a session permanently
-    delete: (sessionId) =>
-      ipcRenderer.invoke("sessions:delete", { sessionId }),
+    delete: (sessionId) => ipcRenderer.invoke("sessions:delete", { sessionId }),
   },
 
   // Auto Mode API
@@ -98,19 +109,32 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     // Run a specific feature
     runFeature: (projectPath, featureId, useWorktrees) =>
-      ipcRenderer.invoke("auto-mode:run-feature", { projectPath, featureId, useWorktrees }),
+      ipcRenderer.invoke("auto-mode:run-feature", {
+        projectPath,
+        featureId,
+        useWorktrees,
+      }),
 
     // Verify a specific feature by running its tests
     verifyFeature: (projectPath, featureId) =>
-      ipcRenderer.invoke("auto-mode:verify-feature", { projectPath, featureId }),
+      ipcRenderer.invoke("auto-mode:verify-feature", {
+        projectPath,
+        featureId,
+      }),
 
     // Resume a specific feature with previous context
     resumeFeature: (projectPath, featureId) =>
-      ipcRenderer.invoke("auto-mode:resume-feature", { projectPath, featureId }),
+      ipcRenderer.invoke("auto-mode:resume-feature", {
+        projectPath,
+        featureId,
+      }),
 
     // Check if context file exists for a feature
     contextExists: (projectPath, featureId) =>
-      ipcRenderer.invoke("auto-mode:context-exists", { projectPath, featureId }),
+      ipcRenderer.invoke("auto-mode:context-exists", {
+        projectPath,
+        featureId,
+      }),
 
     // Analyze a new project - kicks off an agent to analyze codebase
     analyzeProject: (projectPath) =>
@@ -122,11 +146,19 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     // Follow-up on a feature with additional prompt
     followUpFeature: (projectPath, featureId, prompt, imagePaths) =>
-      ipcRenderer.invoke("auto-mode:follow-up-feature", { projectPath, featureId, prompt, imagePaths }),
+      ipcRenderer.invoke("auto-mode:follow-up-feature", {
+        projectPath,
+        featureId,
+        prompt,
+        imagePaths,
+      }),
 
     // Commit changes for a feature
     commitFeature: (projectPath, featureId) =>
-      ipcRenderer.invoke("auto-mode:commit-feature", { projectPath, featureId }),
+      ipcRenderer.invoke("auto-mode:commit-feature", {
+        projectPath,
+        featureId,
+      }),
 
     // Listen for auto mode events
     onEvent: (callback) => {
@@ -167,7 +199,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     // Merge feature worktree changes back to main branch
     mergeFeature: (projectPath, featureId, options) =>
-      ipcRenderer.invoke("worktree:merge-feature", { projectPath, featureId, options }),
+      ipcRenderer.invoke("worktree:merge-feature", {
+        projectPath,
+        featureId,
+        options,
+      }),
 
     // Get worktree info for a feature
     getInfo: (projectPath, featureId) =>
@@ -178,8 +214,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.invoke("worktree:get-status", { projectPath, featureId }),
 
     // List all feature worktrees
-    list: (projectPath) =>
-      ipcRenderer.invoke("worktree:list", { projectPath }),
+    list: (projectPath) => ipcRenderer.invoke("worktree:list", { projectPath }),
 
     // Get file diffs for a feature worktree
     getDiffs: (projectPath, featureId) =>
@@ -187,7 +222,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     // Get diff for a specific file in a worktree
     getFileDiff: (projectPath, featureId, filePath) =>
-      ipcRenderer.invoke("worktree:get-file-diff", { projectPath, featureId, filePath }),
+      ipcRenderer.invoke("worktree:get-file-diff", {
+        projectPath,
+        featureId,
+        filePath,
+      }),
   },
 
   // Git Operations APIs (for non-worktree operations)
@@ -229,11 +268,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
   specRegeneration: {
     // Create initial app spec for a new project
     create: (projectPath, projectOverview, generateFeatures = true) =>
-      ipcRenderer.invoke("spec-regeneration:create", { projectPath, projectOverview, generateFeatures }),
+      ipcRenderer.invoke("spec-regeneration:create", {
+        projectPath,
+        projectOverview,
+        generateFeatures,
+      }),
 
     // Regenerate the app spec
     generate: (projectPath, projectDefinition) =>
-      ipcRenderer.invoke("spec-regeneration:generate", { projectPath, projectDefinition }),
+      ipcRenderer.invoke("spec-regeneration:generate", {
+        projectPath,
+        projectDefinition,
+      }),
 
     // Stop regenerating spec
     stop: () => ipcRenderer.invoke("spec-regeneration:stop"),
@@ -304,6 +350,37 @@ contextBridge.exposeInMainWorld("electronAPI", {
         ipcRenderer.removeListener("setup:auth-progress", subscription);
       };
     },
+  },
+
+  // Features API
+  features: {
+    // Get all features for a project
+    getAll: (projectPath) =>
+      ipcRenderer.invoke("features:getAll", { projectPath }),
+
+    // Get a single feature by ID
+    get: (projectPath, featureId) =>
+      ipcRenderer.invoke("features:get", { projectPath, featureId }),
+
+    // Create a new feature
+    create: (projectPath, feature) =>
+      ipcRenderer.invoke("features:create", { projectPath, feature }),
+
+    // Update a feature (partial updates supported)
+    update: (projectPath, featureId, updates) =>
+      ipcRenderer.invoke("features:update", {
+        projectPath,
+        featureId,
+        updates,
+      }),
+
+    // Delete a feature and its folder
+    delete: (projectPath, featureId) =>
+      ipcRenderer.invoke("features:delete", { projectPath, featureId }),
+
+    // Get agent output for a feature
+    getAgentOutput: (projectPath, featureId) =>
+      ipcRenderer.invoke("features:getAgentOutput", { projectPath, featureId }),
   },
 });
 

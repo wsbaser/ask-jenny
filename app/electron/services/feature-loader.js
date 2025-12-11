@@ -2,36 +2,343 @@ const path = require("path");
 const fs = require("fs/promises");
 
 /**
- * Feature Loader - Handles loading and selecting features from feature_list.json
+ * Feature Loader - Handles loading and managing features from individual feature folders
+ * Each feature is stored in .automaker/features/{featureId}/feature.json
  */
 class FeatureLoader {
   /**
-   * Load features from .automaker/feature_list.json
+   * Get the features directory path
    */
-  async loadFeatures(projectPath) {
-    const featuresPath = path.join(
-      projectPath,
-      ".automaker",
-      "feature_list.json"
+  getFeaturesDir(projectPath) {
+    return path.join(projectPath, ".automaker", "features");
+  }
+
+  /**
+   * Get the path to a specific feature folder
+   */
+  getFeatureDir(projectPath, featureId) {
+    return path.join(this.getFeaturesDir(projectPath), featureId);
+  }
+
+  /**
+   * Get the path to a feature's feature.json file
+   */
+  getFeatureJsonPath(projectPath, featureId) {
+    return path.join(
+      this.getFeatureDir(projectPath, featureId),
+      "feature.json"
     );
+  }
 
+  /**
+   * Get the path to a feature's agent-output.md file
+   */
+  getAgentOutputPath(projectPath, featureId) {
+    return path.join(
+      this.getFeatureDir(projectPath, featureId),
+      "agent-output.md"
+    );
+  }
+
+  /**
+   * Generate a new feature ID
+   */
+  generateFeatureId() {
+    return `feature-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 11)}`;
+  }
+
+  /**
+   * Ensure all image paths for a feature are stored within the feature directory
+   */
+  async ensureFeatureImages(projectPath, featureId, feature) {
+    if (
+      !feature ||
+      !Array.isArray(feature.imagePaths) ||
+      feature.imagePaths.length === 0
+    ) {
+      return;
+    }
+
+    const featureDir = this.getFeatureDir(projectPath, featureId);
+    const featureImagesDir = path.join(featureDir, "images");
+    await fs.mkdir(featureImagesDir, { recursive: true });
+
+    const updatedImagePaths = [];
+
+    for (const entry of feature.imagePaths) {
+      const isStringEntry = typeof entry === "string";
+      const currentPathValue = isStringEntry ? entry : entry.path;
+
+      if (!currentPathValue) {
+        updatedImagePaths.push(entry);
+        continue;
+      }
+
+      let resolvedCurrentPath = currentPathValue;
+      if (!path.isAbsolute(resolvedCurrentPath)) {
+        resolvedCurrentPath = path.join(projectPath, resolvedCurrentPath);
+      }
+      resolvedCurrentPath = path.normalize(resolvedCurrentPath);
+
+      // Skip if file doesn't exist
+      try {
+        await fs.access(resolvedCurrentPath);
+      } catch {
+        console.warn(
+          `[FeatureLoader] Image file missing for ${featureId}: ${resolvedCurrentPath}`
+        );
+        updatedImagePaths.push(entry);
+        continue;
+      }
+
+      const relativeToFeatureImages = path.relative(
+        featureImagesDir,
+        resolvedCurrentPath
+      );
+      const alreadyInFeatureDir =
+        relativeToFeatureImages === "" ||
+        (!relativeToFeatureImages.startsWith("..") &&
+          !path.isAbsolute(relativeToFeatureImages));
+
+      let finalPath = resolvedCurrentPath;
+
+      if (!alreadyInFeatureDir) {
+        const originalName = path.basename(resolvedCurrentPath);
+        let targetPath = path.join(featureImagesDir, originalName);
+
+        // Avoid overwriting files by appending a counter if needed
+        let counter = 1;
+        while (true) {
+          try {
+            await fs.access(targetPath);
+            const parsed = path.parse(originalName);
+            targetPath = path.join(
+              featureImagesDir,
+              `${parsed.name}-${counter}${parsed.ext}`
+            );
+            counter += 1;
+          } catch {
+            break;
+          }
+        }
+
+        try {
+          await fs.rename(resolvedCurrentPath, targetPath);
+          finalPath = targetPath;
+        } catch (error) {
+          console.warn(
+            `[FeatureLoader] Failed to move image ${resolvedCurrentPath}: ${error.message}`
+          );
+          updatedImagePaths.push(entry);
+          continue;
+        }
+      }
+
+      updatedImagePaths.push(
+        isStringEntry ? finalPath : { ...entry, path: finalPath }
+      );
+    }
+
+    feature.imagePaths = updatedImagePaths;
+  }
+
+  /**
+   * Get all features for a project
+   */
+  async getAll(projectPath) {
     try {
-      const content = await fs.readFile(featuresPath, "utf-8");
-      const features = JSON.parse(content);
+      const featuresDir = this.getFeaturesDir(projectPath);
 
-      // Ensure each feature has an ID
-      return features.map((f, index) => ({
-        ...f,
-        id: f.id || `feature-${index}-${Date.now()}`,
-      }));
+      // Check if features directory exists
+      try {
+        await fs.access(featuresDir);
+      } catch {
+        // Directory doesn't exist, return empty array
+        return [];
+      }
+
+      // Read all feature directories
+      const entries = await fs.readdir(featuresDir, { withFileTypes: true });
+      const featureDirs = entries.filter((entry) => entry.isDirectory());
+
+      // Load each feature
+      const features = [];
+      for (const dir of featureDirs) {
+        const featureId = dir.name;
+        const featureJsonPath = this.getFeatureJsonPath(projectPath, featureId);
+
+        try {
+          const content = await fs.readFile(featureJsonPath, "utf-8");
+          const feature = JSON.parse(content);
+          features.push(feature);
+        } catch (error) {
+          console.error(
+            `[FeatureLoader] Failed to load feature ${featureId}:`,
+            error
+          );
+          // Continue loading other features
+        }
+      }
+
+      // Sort by creation order (feature IDs contain timestamp)
+      features.sort((a, b) => {
+        const aTime = a.id ? parseInt(a.id.split("-")[1] || "0") : 0;
+        const bTime = b.id ? parseInt(b.id.split("-")[1] || "0") : 0;
+        return aTime - bTime;
+      });
+
+      return features;
     } catch (error) {
-      console.error("[FeatureLoader] Failed to load features:", error);
+      console.error("[FeatureLoader] Failed to get all features:", error);
       return [];
     }
   }
 
   /**
-   * Update feature status in .automaker/feature_list.json
+   * Get a single feature by ID
+   */
+  async get(projectPath, featureId) {
+    try {
+      const featureJsonPath = this.getFeatureJsonPath(projectPath, featureId);
+      const content = await fs.readFile(featureJsonPath, "utf-8");
+      return JSON.parse(content);
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        return null;
+      }
+      console.error(
+        `[FeatureLoader] Failed to get feature ${featureId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new feature
+   */
+  async create(projectPath, featureData) {
+    const featureId = featureData.id || this.generateFeatureId();
+    const featureDir = this.getFeatureDir(projectPath, featureId);
+    const featureJsonPath = this.getFeatureJsonPath(projectPath, featureId);
+
+    // Ensure features directory exists
+    const featuresDir = this.getFeaturesDir(projectPath);
+    await fs.mkdir(featuresDir, { recursive: true });
+
+    // Create feature directory
+    await fs.mkdir(featureDir, { recursive: true });
+
+    // Ensure feature has an ID
+    const feature = { ...featureData, id: featureId };
+
+    // Move any uploaded images into the feature directory
+    await this.ensureFeatureImages(projectPath, featureId, feature);
+
+    // Write feature.json
+    await fs.writeFile(
+      featureJsonPath,
+      JSON.stringify(feature, null, 2),
+      "utf-8"
+    );
+
+    console.log(`[FeatureLoader] Created feature ${featureId}`);
+    return feature;
+  }
+
+  /**
+   * Update a feature (partial updates supported)
+   */
+  async update(projectPath, featureId, updates) {
+    try {
+      const feature = await this.get(projectPath, featureId);
+      if (!feature) {
+        throw new Error(`Feature ${featureId} not found`);
+      }
+
+      // Merge updates
+      const updatedFeature = { ...feature, ...updates };
+
+      // Move any new images into the feature directory
+      await this.ensureFeatureImages(projectPath, featureId, updatedFeature);
+
+      // Write back to file
+      const featureJsonPath = this.getFeatureJsonPath(projectPath, featureId);
+      await fs.writeFile(
+        featureJsonPath,
+        JSON.stringify(updatedFeature, null, 2),
+        "utf-8"
+      );
+
+      console.log(`[FeatureLoader] Updated feature ${featureId}`);
+      return updatedFeature;
+    } catch (error) {
+      console.error(
+        `[FeatureLoader] Failed to update feature ${featureId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a feature and its entire folder
+   */
+  async delete(projectPath, featureId) {
+    try {
+      const featureDir = this.getFeatureDir(projectPath, featureId);
+      await fs.rm(featureDir, { recursive: true, force: true });
+      console.log(`[FeatureLoader] Deleted feature ${featureId}`);
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        // Feature doesn't exist, that's fine
+        return;
+      }
+      console.error(
+        `[FeatureLoader] Failed to delete feature ${featureId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get agent output for a feature
+   */
+  async getAgentOutput(projectPath, featureId) {
+    try {
+      const agentOutputPath = this.getAgentOutputPath(projectPath, featureId);
+      const content = await fs.readFile(agentOutputPath, "utf-8");
+      return content;
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        return null;
+      }
+      console.error(
+        `[FeatureLoader] Failed to get agent output for ${featureId}:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // Legacy methods for backward compatibility (used by backend services)
+  // ============================================================================
+
+  /**
+   * Load all features for a project (legacy API)
+   * Features are stored in .automaker/features/{id}/feature.json
+   */
+  async loadFeatures(projectPath) {
+    return await this.getAll(projectPath);
+  }
+
+  /**
+   * Update feature status (legacy API)
+   * Features are stored in .automaker/features/{id}/feature.json
    * @param {string} featureId - The ID of the feature to update
    * @param {string} status - The new status
    * @param {string} projectPath - Path to the project
@@ -39,126 +346,26 @@ class FeatureLoader {
    * @param {string} [error] - Optional error message if feature errored
    */
   async updateFeatureStatus(featureId, status, projectPath, summary, error) {
-    const featuresPath = path.join(
-      projectPath,
-      ".automaker",
-      "feature_list.json"
-    );
-
-    // 🛡️ SAFETY: Create backup before any modification
-    const backupPath = path.join(
-      projectPath,
-      ".automaker",
-      "feature_list.backup.json"
-    );
-
-    try {
-      const originalContent = await fs.readFile(featuresPath, "utf-8");
-      await fs.writeFile(backupPath, originalContent, "utf-8");
-      console.log(`[FeatureLoader] Created backup at ${backupPath}`);
-    } catch (error) {
-      console.warn(`[FeatureLoader] Could not create backup: ${error.message}`);
+    const updates = { status };
+    if (summary !== undefined) {
+      updates.summary = summary;
     }
-
-    const features = await this.loadFeatures(projectPath);
-
-    // 🛡️ VALIDATION: Ensure we loaded features successfully
-    if (!Array.isArray(features)) {
-      throw new Error("CRITICAL: features is not an array - aborting to prevent data loss");
-    }
-
-    if (features.length === 0) {
-      console.warn(`[FeatureLoader] WARNING: Feature list is empty. This may indicate corruption.`);
-      // Try to restore from backup
-      try {
-        const backupContent = await fs.readFile(backupPath, "utf-8");
-        const backupFeatures = JSON.parse(backupContent);
-        if (Array.isArray(backupFeatures) && backupFeatures.length > 0) {
-          console.log(`[FeatureLoader] Restored ${backupFeatures.length} features from backup`);
-          // Use backup features instead
-          features.length = 0;
-          features.push(...backupFeatures);
-        }
-      } catch (backupError) {
-        console.error(`[FeatureLoader] Could not restore from backup: ${backupError.message}`);
-      }
-    }
-
-    const feature = features.find((f) => f.id === featureId);
-
-    if (!feature) {
-      console.error(`[FeatureLoader] Feature ${featureId} not found`);
-      return;
-    }
-
-    // Update the status field
-    feature.status = status;
-
-    // Update the summary field if provided
-    if (summary) {
-      feature.summary = summary;
-    }
-
-    // Update the error field (set or clear)
-    if (error) {
-      feature.error = error;
+    if (error !== undefined) {
+      updates.error = error;
     } else {
-      // Clear any previous error when status changes without error
-      delete feature.error;
+      // Clear error if not provided
+      const feature = await this.get(projectPath, featureId);
+      if (feature && feature.error) {
+        updates.error = undefined;
+      }
     }
 
-    // Save back to file
-    const toSave = features.map((f) => {
-      const featureData = {
-        id: f.id,
-        category: f.category,
-        description: f.description,
-        steps: f.steps,
-        status: f.status,
-      };
-      // Preserve optional fields if they exist
-      if (f.skipTests !== undefined) {
-        featureData.skipTests = f.skipTests;
-      }
-      if (f.images !== undefined) {
-        featureData.images = f.images;
-      }
-      if (f.imagePaths !== undefined) {
-        featureData.imagePaths = f.imagePaths;
-      }
-      if (f.startedAt !== undefined) {
-        featureData.startedAt = f.startedAt;
-      }
-      if (f.summary !== undefined) {
-        featureData.summary = f.summary;
-      }
-      if (f.model !== undefined) {
-        featureData.model = f.model;
-      }
-      if (f.thinkingLevel !== undefined) {
-        featureData.thinkingLevel = f.thinkingLevel;
-      }
-      if (f.error !== undefined) {
-        featureData.error = f.error;
-      }
-      // Preserve worktree info
-      if (f.worktreePath !== undefined) {
-        featureData.worktreePath = f.worktreePath;
-      }
-      if (f.branchName !== undefined) {
-        featureData.branchName = f.branchName;
-      }
-      return featureData;
-    });
-
-    // 🛡️ FINAL VALIDATION: Ensure we're not writing an empty array
-    if (!Array.isArray(toSave) || toSave.length === 0) {
-      throw new Error("CRITICAL: Attempted to save empty feature list - aborting to prevent data loss");
-    }
-
-    await fs.writeFile(featuresPath, JSON.stringify(toSave, null, 2), "utf-8");
-    console.log(`[FeatureLoader] Updated feature ${featureId}: status=${status}${summary ? `, summary="${summary}"` : ""}`);
-    console.log(`[FeatureLoader] Successfully saved ${toSave.length} features to feature_list.json`);
+    await this.update(projectPath, featureId, updates);
+    console.log(
+      `[FeatureLoader] Updated feature ${featureId}: status=${status}${
+        summary ? `, summary="${summary}"` : ""
+      }`
+    );
   }
 
   /**
@@ -168,70 +375,38 @@ class FeatureLoader {
   selectNextFeature(features) {
     // Find first feature that is in backlog or in_progress status
     // Skip verified and waiting_approval (which needs user input)
-    return features.find((f) => f.status !== "verified" && f.status !== "waiting_approval");
+    return features.find(
+      (f) => f.status !== "verified" && f.status !== "waiting_approval"
+    );
   }
 
   /**
-   * Update worktree info for a feature
+   * Update worktree info for a feature (legacy API)
+   * Features are stored in .automaker/features/{id}/feature.json
    * @param {string} featureId - The ID of the feature to update
    * @param {string} projectPath - Path to the project
    * @param {string|null} worktreePath - Path to the worktree (null to clear)
    * @param {string|null} branchName - Name of the feature branch (null to clear)
    */
-  async updateFeatureWorktree(featureId, projectPath, worktreePath, branchName) {
-    const featuresPath = path.join(
-      projectPath,
-      ".automaker",
-      "feature_list.json"
-    );
-
-    const features = await this.loadFeatures(projectPath);
-
-    if (!Array.isArray(features) || features.length === 0) {
-      console.error("[FeatureLoader] Cannot update worktree: feature list is empty");
-      return;
-    }
-
-    const feature = features.find((f) => f.id === featureId);
-
-    if (!feature) {
-      console.error(`[FeatureLoader] Feature ${featureId} not found`);
-      return;
-    }
-
-    // Update or clear worktree info
+  async updateFeatureWorktree(
+    featureId,
+    projectPath,
+    worktreePath,
+    branchName
+  ) {
+    const updates = {};
     if (worktreePath) {
-      feature.worktreePath = worktreePath;
-      feature.branchName = branchName;
+      updates.worktreePath = worktreePath;
+      updates.branchName = branchName;
     } else {
-      delete feature.worktreePath;
-      delete feature.branchName;
+      updates.worktreePath = null;
+      updates.branchName = null;
     }
 
-    // Save back to file (reuse the same mapping logic)
-    const toSave = features.map((f) => {
-      const featureData = {
-        id: f.id,
-        category: f.category,
-        description: f.description,
-        steps: f.steps,
-        status: f.status,
-      };
-      if (f.skipTests !== undefined) featureData.skipTests = f.skipTests;
-      if (f.images !== undefined) featureData.images = f.images;
-      if (f.imagePaths !== undefined) featureData.imagePaths = f.imagePaths;
-      if (f.startedAt !== undefined) featureData.startedAt = f.startedAt;
-      if (f.summary !== undefined) featureData.summary = f.summary;
-      if (f.model !== undefined) featureData.model = f.model;
-      if (f.thinkingLevel !== undefined) featureData.thinkingLevel = f.thinkingLevel;
-      if (f.error !== undefined) featureData.error = f.error;
-      if (f.worktreePath !== undefined) featureData.worktreePath = f.worktreePath;
-      if (f.branchName !== undefined) featureData.branchName = f.branchName;
-      return featureData;
-    });
-
-    await fs.writeFile(featuresPath, JSON.stringify(toSave, null, 2), "utf-8");
-    console.log(`[FeatureLoader] Updated feature ${featureId}: worktreePath=${worktreePath}, branchName=${branchName}`);
+    await this.update(projectPath, featureId, updates);
+    console.log(
+      `[FeatureLoader] Updated feature ${featureId}: worktreePath=${worktreePath}, branchName=${branchName}`
+    );
   }
 }
 

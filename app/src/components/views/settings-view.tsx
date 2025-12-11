@@ -167,9 +167,14 @@ export function SettingsView() {
   const [shortcutValue, setShortcutValue] = useState("");
   const [shortcutError, setShortcutError] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Get authentication status from setup store
-  const { claudeAuthStatus, codexAuthStatus, setClaudeAuthStatus, setCodexAuthStatus } = useSetupStore();
+  const {
+    claudeAuthStatus,
+    codexAuthStatus,
+    setClaudeAuthStatus,
+    setCodexAuthStatus,
+  } = useSetupStore();
 
   useEffect(() => {
     setAnthropicKey(apiKeys.anthropic);
@@ -221,11 +226,12 @@ export function SettingsView() {
             const auth = result.auth as any;
             const authStatus = {
               authenticated: auth.authenticated,
-              method: auth.method === "oauth_token"
-                ? "oauth"
-                : auth.method?.includes("api_key")
-                ? "api_key"
-                : "none",
+              method:
+                auth.method === "oauth_token"
+                  ? "oauth"
+                  : auth.method?.includes("api_key")
+                  ? "api_key"
+                  : "none",
               hasCredentialsFile: false,
               oauthTokenValid: auth.hasStoredOAuthToken,
               apiKeyValid: auth.hasStoredApiKey || auth.hasEnvApiKey,
@@ -246,7 +252,11 @@ export function SettingsView() {
             const auth = result.auth as any;
             setCodexAuthStatus({
               authenticated: auth.authenticated,
-              method: auth.hasEnvApiKey ? "env" : auth.hasStoredApiKey ? "api_key" : "none",
+              method: auth.hasEnvApiKey
+                ? "env"
+                : auth.hasStoredApiKey
+                ? "api_key"
+                : "none",
               apiKeyValid: auth.hasStoredApiKey || auth.hasEnvApiKey,
             });
           }
@@ -851,7 +861,7 @@ export function SettingsView() {
                       Current Authentication Configuration
                     </Label>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Claude Authentication Status */}
                     <div className="p-3 rounded-lg bg-card border border-border">
@@ -905,7 +915,9 @@ export function SettingsView() {
                         ) : apiKeyStatus?.hasAnthropicKey ? (
                           <div className="flex items-center gap-2 text-blue-400">
                             <Info className="w-3 h-3 shrink-0" />
-                            <span>Using environment variable (ANTHROPIC_API_KEY)</span>
+                            <span>
+                              Using environment variable (ANTHROPIC_API_KEY)
+                            </span>
                           </div>
                         ) : apiKeys.anthropic ? (
                           <div className="flex items-center gap-2 text-blue-400">
@@ -967,7 +979,9 @@ export function SettingsView() {
                         ) : apiKeyStatus?.hasOpenAIKey ? (
                           <div className="flex items-center gap-2 text-blue-400">
                             <Info className="w-3 h-3 shrink-0" />
-                            <span>Using environment variable (OPENAI_API_KEY)</span>
+                            <span>
+                              Using environment variable (OPENAI_API_KEY)
+                            </span>
                           </div>
                         ) : apiKeys.openai ? (
                           <div className="flex items-center gap-2 text-blue-400">
@@ -995,7 +1009,9 @@ export function SettingsView() {
                         {apiKeyStatus?.hasGoogleKey ? (
                           <div className="flex items-center gap-2 text-blue-400">
                             <Info className="w-3 h-3 shrink-0" />
-                            <span>Using environment variable (GOOGLE_API_KEY)</span>
+                            <span>
+                              Using environment variable (GOOGLE_API_KEY)
+                            </span>
                           </div>
                         ) : apiKeys.google ? (
                           <div className="flex items-center gap-2 text-blue-400">
@@ -1679,13 +1695,34 @@ export function SettingsView() {
                   </div>
                   <div className="space-y-2">
                     {[
-                      { key: "board" as keyof KeyboardShortcuts, label: "Kanban Board" },
-                      { key: "agent" as keyof KeyboardShortcuts, label: "Agent Runner" },
-                      { key: "spec" as keyof KeyboardShortcuts, label: "Spec Editor" },
-                      { key: "context" as keyof KeyboardShortcuts, label: "Context" },
-                      { key: "tools" as keyof KeyboardShortcuts, label: "Agent Tools" },
-                      { key: "profiles" as keyof KeyboardShortcuts, label: "AI Profiles" },
-                      { key: "settings" as keyof KeyboardShortcuts, label: "Settings" },
+                      {
+                        key: "board" as keyof KeyboardShortcuts,
+                        label: "Kanban Board",
+                      },
+                      {
+                        key: "agent" as keyof KeyboardShortcuts,
+                        label: "Agent Runner",
+                      },
+                      {
+                        key: "spec" as keyof KeyboardShortcuts,
+                        label: "Spec Editor",
+                      },
+                      {
+                        key: "context" as keyof KeyboardShortcuts,
+                        label: "Context",
+                      },
+                      {
+                        key: "tools" as keyof KeyboardShortcuts,
+                        label: "Agent Tools",
+                      },
+                      {
+                        key: "profiles" as keyof KeyboardShortcuts,
+                        label: "AI Profiles",
+                      },
+                      {
+                        key: "settings" as keyof KeyboardShortcuts,
+                        label: "Settings",
+                      },
                     ].map(({ key, label }) => (
                       <div
                         key={key}
@@ -1701,17 +1738,26 @@ export function SettingsView() {
                                   const value = e.target.value.toUpperCase();
                                   setShortcutValue(value);
                                   // Check for conflicts
-                                  const conflict = Object.entries(keyboardShortcuts).find(
-                                    ([k, v]) => k !== key && v.toUpperCase() === value
+                                  const conflict = Object.entries(
+                                    keyboardShortcuts
+                                  ).find(
+                                    ([k, v]) =>
+                                      k !== key && v.toUpperCase() === value
                                   );
                                   if (conflict) {
-                                    setShortcutError(`Already used by ${conflict[0]}`);
+                                    setShortcutError(
+                                      `Already used by ${conflict[0]}`
+                                    );
                                   } else {
                                     setShortcutError(null);
                                   }
                                 }}
                                 onKeyDown={(e) => {
-                                  if (e.key === "Enter" && !shortcutError && shortcutValue) {
+                                  if (
+                                    e.key === "Enter" &&
+                                    !shortcutError &&
+                                    shortcutValue
+                                  ) {
                                     setKeyboardShortcut(key, shortcutValue);
                                     setEditingShortcut(null);
                                     setShortcutValue("");
@@ -1769,15 +1815,19 @@ export function SettingsView() {
                                 }}
                                 className={cn(
                                   "px-3 py-1.5 text-sm font-mono rounded bg-sidebar-accent/20 border border-sidebar-border hover:bg-sidebar-accent/30 transition-colors",
-                                  keyboardShortcuts[key] !== DEFAULT_KEYBOARD_SHORTCUTS[key] &&
+                                  keyboardShortcuts[key] !==
+                                    DEFAULT_KEYBOARD_SHORTCUTS[key] &&
                                     "border-brand-500/50 bg-brand-500/10 text-brand-400"
                                 )}
                                 data-testid={`shortcut-${key}`}
                               >
                                 {keyboardShortcuts[key]}
                               </button>
-                              {keyboardShortcuts[key] !== DEFAULT_KEYBOARD_SHORTCUTS[key] && (
-                                <span className="text-xs text-brand-400">(modified)</span>
+                              {keyboardShortcuts[key] !==
+                                DEFAULT_KEYBOARD_SHORTCUTS[key] && (
+                                <span className="text-xs text-brand-400">
+                                  (modified)
+                                </span>
                               )}
                             </>
                           )}
@@ -1797,7 +1847,10 @@ export function SettingsView() {
                   </h3>
                   <div className="space-y-2">
                     {[
-                      { key: "toggleSidebar" as keyof KeyboardShortcuts, label: "Toggle Sidebar" },
+                      {
+                        key: "toggleSidebar" as keyof KeyboardShortcuts,
+                        label: "Toggle Sidebar",
+                      },
                     ].map(({ key, label }) => (
                       <div
                         key={key}
@@ -1813,17 +1866,23 @@ export function SettingsView() {
                                   const value = e.target.value;
                                   setShortcutValue(value);
                                   // Check for conflicts
-                                  const conflict = Object.entries(keyboardShortcuts).find(
-                                    ([k, v]) => k !== key && v === value
-                                  );
+                                  const conflict = Object.entries(
+                                    keyboardShortcuts
+                                  ).find(([k, v]) => k !== key && v === value);
                                   if (conflict) {
-                                    setShortcutError(`Already used by ${conflict[0]}`);
+                                    setShortcutError(
+                                      `Already used by ${conflict[0]}`
+                                    );
                                   } else {
                                     setShortcutError(null);
                                   }
                                 }}
                                 onKeyDown={(e) => {
-                                  if (e.key === "Enter" && !shortcutError && shortcutValue) {
+                                  if (
+                                    e.key === "Enter" &&
+                                    !shortcutError &&
+                                    shortcutValue
+                                  ) {
                                     setKeyboardShortcut(key, shortcutValue);
                                     setEditingShortcut(null);
                                     setShortcutValue("");
@@ -1879,15 +1938,19 @@ export function SettingsView() {
                                 }}
                                 className={cn(
                                   "px-3 py-1.5 text-sm font-mono rounded bg-sidebar-accent/20 border border-sidebar-border hover:bg-sidebar-accent/30 transition-colors",
-                                  keyboardShortcuts[key] !== DEFAULT_KEYBOARD_SHORTCUTS[key] &&
+                                  keyboardShortcuts[key] !==
+                                    DEFAULT_KEYBOARD_SHORTCUTS[key] &&
                                     "border-brand-500/50 bg-brand-500/10 text-brand-400"
                                 )}
                                 data-testid={`shortcut-${key}`}
                               >
                                 {keyboardShortcuts[key]}
                               </button>
-                              {keyboardShortcuts[key] !== DEFAULT_KEYBOARD_SHORTCUTS[key] && (
-                                <span className="text-xs text-brand-400">(modified)</span>
+                              {keyboardShortcuts[key] !==
+                                DEFAULT_KEYBOARD_SHORTCUTS[key] && (
+                                <span className="text-xs text-brand-400">
+                                  (modified)
+                                </span>
                               )}
                             </>
                           )}
@@ -1904,15 +1967,42 @@ export function SettingsView() {
                   </h3>
                   <div className="space-y-2">
                     {[
-                      { key: "addFeature" as keyof KeyboardShortcuts, label: "Add Feature" },
-                      { key: "addContextFile" as keyof KeyboardShortcuts, label: "Add Context File" },
-                      { key: "startNext" as keyof KeyboardShortcuts, label: "Start Next Features" },
-                      { key: "newSession" as keyof KeyboardShortcuts, label: "New Session" },
-                      { key: "openProject" as keyof KeyboardShortcuts, label: "Open Project" },
-                      { key: "projectPicker" as keyof KeyboardShortcuts, label: "Project Picker" },
-                      { key: "cyclePrevProject" as keyof KeyboardShortcuts, label: "Previous Project" },
-                      { key: "cycleNextProject" as keyof KeyboardShortcuts, label: "Next Project" },
-                      { key: "addProfile" as keyof KeyboardShortcuts, label: "Add Profile" },
+                      {
+                        key: "addFeature" as keyof KeyboardShortcuts,
+                        label: "Add Feature",
+                      },
+                      {
+                        key: "addContextFile" as keyof KeyboardShortcuts,
+                        label: "Add Context File",
+                      },
+                      {
+                        key: "startNext" as keyof KeyboardShortcuts,
+                        label: "Start Next Features",
+                      },
+                      {
+                        key: "newSession" as keyof KeyboardShortcuts,
+                        label: "New Session",
+                      },
+                      {
+                        key: "openProject" as keyof KeyboardShortcuts,
+                        label: "Open Project",
+                      },
+                      {
+                        key: "projectPicker" as keyof KeyboardShortcuts,
+                        label: "Project Picker",
+                      },
+                      {
+                        key: "cyclePrevProject" as keyof KeyboardShortcuts,
+                        label: "Previous Project",
+                      },
+                      {
+                        key: "cycleNextProject" as keyof KeyboardShortcuts,
+                        label: "Next Project",
+                      },
+                      {
+                        key: "addProfile" as keyof KeyboardShortcuts,
+                        label: "Add Profile",
+                      },
                     ].map(({ key, label }) => (
                       <div
                         key={key}
@@ -1928,17 +2018,26 @@ export function SettingsView() {
                                   const value = e.target.value.toUpperCase();
                                   setShortcutValue(value);
                                   // Check for conflicts
-                                  const conflict = Object.entries(keyboardShortcuts).find(
-                                    ([k, v]) => k !== key && v.toUpperCase() === value
+                                  const conflict = Object.entries(
+                                    keyboardShortcuts
+                                  ).find(
+                                    ([k, v]) =>
+                                      k !== key && v.toUpperCase() === value
                                   );
                                   if (conflict) {
-                                    setShortcutError(`Already used by ${conflict[0]}`);
+                                    setShortcutError(
+                                      `Already used by ${conflict[0]}`
+                                    );
                                   } else {
                                     setShortcutError(null);
                                   }
                                 }}
                                 onKeyDown={(e) => {
-                                  if (e.key === "Enter" && !shortcutError && shortcutValue) {
+                                  if (
+                                    e.key === "Enter" &&
+                                    !shortcutError &&
+                                    shortcutValue
+                                  ) {
                                     setKeyboardShortcut(key, shortcutValue);
                                     setEditingShortcut(null);
                                     setShortcutValue("");
@@ -1994,15 +2093,19 @@ export function SettingsView() {
                                 }}
                                 className={cn(
                                   "px-3 py-1.5 text-sm font-mono rounded bg-sidebar-accent/20 border border-sidebar-border hover:bg-sidebar-accent/30 transition-colors",
-                                  keyboardShortcuts[key] !== DEFAULT_KEYBOARD_SHORTCUTS[key] &&
+                                  keyboardShortcuts[key] !==
+                                    DEFAULT_KEYBOARD_SHORTCUTS[key] &&
                                     "border-brand-500/50 bg-brand-500/10 text-brand-400"
                                 )}
                                 data-testid={`shortcut-${key}`}
                               >
                                 {keyboardShortcuts[key]}
                               </button>
-                              {keyboardShortcuts[key] !== DEFAULT_KEYBOARD_SHORTCUTS[key] && (
-                                <span className="text-xs text-brand-400">(modified)</span>
+                              {keyboardShortcuts[key] !==
+                                DEFAULT_KEYBOARD_SHORTCUTS[key] && (
+                                <span className="text-xs text-brand-400">
+                                  (modified)
+                                </span>
                               )}
                             </>
                           )}
@@ -2020,9 +2123,9 @@ export function SettingsView() {
                       About Keyboard Shortcuts
                     </p>
                     <p className="text-blue-400/80 text-xs mt-1">
-                      Shortcuts won&apos;t trigger when typing in input fields. Use
-                      single keys (A-Z, 0-9) or special keys like ` (backtick).
-                      Changes take effect immediately.
+                      Shortcuts won&apos;t trigger when typing in input fields.
+                      Use single keys (A-Z, 0-9) or special keys like `
+                      (backtick). Changes take effect immediately.
                     </p>
                   </div>
                 </div>

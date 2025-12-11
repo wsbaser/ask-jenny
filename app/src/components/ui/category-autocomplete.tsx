@@ -1,11 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
+import { Check, ChevronsUpDown } from "lucide-react";
+
 import { cn } from "@/lib/utils";
-import { Input } from "./input";
-import { Check, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface CategoryAutocompleteProps {
   value: string;
@@ -26,225 +38,54 @@ export function CategoryAutocomplete({
   disabled = false,
   "data-testid": testId,
 }: CategoryAutocompleteProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(value);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
-
-  // Update internal state when value prop changes
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  // Filter suggestions based on input
-  useEffect(() => {
-    const searchTerm = inputValue.toLowerCase().trim();
-    if (searchTerm === "") {
-      setFilteredSuggestions(suggestions);
-    } else {
-      const filtered = suggestions.filter((s) =>
-        s.toLowerCase().includes(searchTerm)
-      );
-      setFilteredSuggestions(filtered);
-    }
-    setHighlightedIndex(-1);
-  }, [inputValue, suggestions]);
-
-  // Update dropdown position when open and handle scroll/resize
-  useEffect(() => {
-    const updatePosition = () => {
-      if (isOpen && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.bottom + window.scrollY,
-          left: rect.left + window.scrollX,
-          width: rect.width,
-        });
-      }
-    };
-
-    updatePosition();
-
-    if (isOpen) {
-      window.addEventListener("scroll", updatePosition, true);
-      window.addEventListener("resize", updatePosition);
-      return () => {
-        window.removeEventListener("scroll", updatePosition, true);
-        window.removeEventListener("resize", updatePosition);
-      };
-    }
-  }, [isOpen]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node) &&
-        listRef.current &&
-        !listRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Scroll highlighted item into view
-  useEffect(() => {
-    if (highlightedIndex >= 0 && listRef.current) {
-      const items = listRef.current.querySelectorAll("li");
-      const highlightedItem = items[highlightedIndex];
-      if (highlightedItem) {
-        highlightedItem.scrollIntoView({ block: "nearest" });
-      }
-    }
-  }, [highlightedIndex]);
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
-      setInputValue(newValue);
-      onChange(newValue);
-      setIsOpen(true);
-    },
-    [onChange]
-  );
-
-  const handleSelect = useCallback(
-    (suggestion: string) => {
-      setInputValue(suggestion);
-      onChange(suggestion);
-      setIsOpen(false);
-      inputRef.current?.focus();
-    },
-    [onChange]
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (!isOpen) {
-        if (e.key === "ArrowDown" || e.key === "Enter") {
-          e.preventDefault();
-          setIsOpen(true);
-        }
-        return;
-      }
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          setHighlightedIndex((prev) =>
-            prev < filteredSuggestions.length - 1 ? prev + 1 : prev
-          );
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (highlightedIndex >= 0 && filteredSuggestions[highlightedIndex]) {
-            handleSelect(filteredSuggestions[highlightedIndex]);
-          } else {
-            setIsOpen(false);
-          }
-          break;
-        case "Escape":
-          e.preventDefault();
-          setIsOpen(false);
-          break;
-        case "Tab":
-          setIsOpen(false);
-          break;
-      }
-    },
-    [isOpen, highlightedIndex, filteredSuggestions, handleSelect]
-  );
-
-  const handleFocus = useCallback(() => {
-    setIsOpen(true);
-  }, []);
+  const [open, setOpen] = React.useState(false);
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
-      <div className="relative">
-        <Input
-          ref={inputRef}
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          placeholder={placeholder}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
           disabled={disabled}
+          className={cn("w-full justify-between", className)}
           data-testid={testId}
-          className="pr-8"
-        />
-        <button
-          type="button"
-          className={cn(
-            "absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors",
-            disabled && "pointer-events-none opacity-50"
-          )}
-          onClick={() => setIsOpen(!isOpen)}
-          tabIndex={-1}
         >
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isOpen && "rotate-180"
-            )}
-          />
-        </button>
-      </div>
-
-      {isOpen && filteredSuggestions.length > 0 && typeof document !== "undefined" &&
-        createPortal(
-          <ul
-            ref={listRef}
-            className="fixed z-[9999] max-h-60 overflow-auto rounded-md border bg-background p-1 shadow-md animate-in fade-in-0 zoom-in-95"
-            role="listbox"
-            data-testid="category-autocomplete-list"
-            style={{
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              width: dropdownPosition.width,
-            }}
-          >
-            {filteredSuggestions.map((suggestion, index) => (
-              <li
-                key={suggestion}
-                role="option"
-                aria-selected={highlightedIndex === index}
-                className={cn(
-                  "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
-                  highlightedIndex === index && "bg-accent text-accent-foreground",
-                  inputValue === suggestion && "font-medium"
-                )}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelect(suggestion);
-                }}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                data-testid={`category-option-${suggestion.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                {inputValue === suggestion && (
-                  <Check className="mr-2 h-4 w-4 text-primary" />
-                )}
-                <span className={cn(inputValue !== suggestion && "ml-6")}>
+          {value
+            ? suggestions.find((s) => s === value) ?? value
+            : placeholder}
+          <ChevronsUpDown className="opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <Command>
+          <CommandInput placeholder="Search category..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No category found.</CommandEmpty>
+            <CommandGroup>
+              {suggestions.map((suggestion) => (
+                <CommandItem
+                  key={suggestion}
+                  value={suggestion}
+                  onSelect={(currentValue) => {
+                    onChange(currentValue === value ? "" : currentValue);
+                    setOpen(false);
+                  }}
+                  data-testid={`category-option-${suggestion.toLowerCase().replace(/\s+/g, "-")}`}
+                >
                   {suggestion}
-                </span>
-              </li>
-            ))}
-          </ul>,
-          document.body
-        )}
-    </div>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      value === suggestion ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

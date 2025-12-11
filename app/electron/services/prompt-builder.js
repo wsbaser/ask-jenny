@@ -69,7 +69,7 @@ ${
 }
 ${
   feature.skipTests ? "4" : "6"
-}. **CRITICAL: Use the UpdateFeatureStatus tool to mark this feature as verified** - DO NOT manually edit .automaker/feature_list.json
+}. **CRITICAL: Use the UpdateFeatureStatus tool to mark this feature as verified**
 ${
   feature.skipTests
     ? "5. **DO NOT commit changes** - the user will review and commit manually"
@@ -83,7 +83,7 @@ When you have completed the feature${
     }, you MUST use the \`mcp__automaker-tools__UpdateFeatureStatus\` tool to update the feature status:
 - Call the tool with: featureId="${feature.id}" and status="verified"
 - **You can also include a summary parameter** to describe what was done: summary="Brief summary of changes"
-- **DO NOT manually edit the .automaker/feature_list.json file** - this can cause race conditions
+- **DO NOT manually edit feature files** - this can cause race conditions
 - The UpdateFeatureStatus tool safely updates the feature status without risk of corrupting other data
 - **If skipTests=true, the tool will automatically convert "verified" to "waiting_approval"** - this is correct behavior
 
@@ -113,7 +113,7 @@ ${
     ? "- Skip automated testing (skipTests=true) - user will manually verify"
     : "- Write comprehensive Playwright tests\n- Ensure all existing tests still pass\n- Mark the feature as passing only when all tests are green\n- **CRITICAL: Delete test files after verification** - tests accumulate and become brittle"
 }
-- **CRITICAL: Use UpdateFeatureStatus tool instead of editing feature_list.json directly**
+- **CRITICAL: Use UpdateFeatureStatus tool instead of editing feature files directly**
 - **CRITICAL: Always include a summary when marking feature as verified**
 ${
   feature.skipTests
@@ -223,7 +223,7 @@ ${
 }
 ${
   feature.skipTests ? "4" : "8"
-}. **CRITICAL: Use the UpdateFeatureStatus tool to mark this feature as verified** - DO NOT manually edit .automaker/feature_list.json
+}. **CRITICAL: Use the UpdateFeatureStatus tool to mark this feature as verified**
 ${
   feature.skipTests
     ? "5. **DO NOT commit changes** - the user will review and commit manually"
@@ -237,7 +237,7 @@ When you have completed the feature${
     }, you MUST use the \`mcp__automaker-tools__UpdateFeatureStatus\` tool to update the feature status:
 - Call the tool with: featureId="${feature.id}" and status="verified"
 - **You can also include a summary parameter** to describe what was done: summary="Brief summary of changes"
-- **DO NOT manually edit the .automaker/feature_list.json file** - this can cause race conditions
+- **DO NOT manually edit feature files** - this can cause race conditions
 - The UpdateFeatureStatus tool safely updates the feature status without risk of corrupting other data
 - **If skipTests=true, the tool will automatically convert "verified" to "waiting_approval"** - this is correct behavior
 
@@ -275,7 +275,7 @@ ${
     ? "- Skip automated testing (skipTests=true) - user will manually verify\n- **DO NOT commit changes** - user will review and commit manually"
     : "- **CONTINUE IMPLEMENTING until all tests pass** - don't stop at the first failure\n- Only mark as verified if Playwright tests pass\n- **CRITICAL: Delete test files after they pass** - tests should not accumulate\n- Update test utilities if functionality changed\n- Make a git commit when the feature is complete\n- Be thorough and persistent in fixing issues"
 }
-- **CRITICAL: Use UpdateFeatureStatus tool instead of editing feature_list.json directly**
+- **CRITICAL: Use UpdateFeatureStatus tool instead of editing feature files directly**
 - **CRITICAL: Always include a summary when marking feature as verified**
 
 Begin by reading the project structure and understanding what needs to be implemented or fixed.`;
@@ -358,7 +358,7 @@ ${
 }
 ${
   feature.skipTests ? "4" : "6"
-}. **CRITICAL: Use the UpdateFeatureStatus tool to mark this feature as verified** - DO NOT manually edit .automaker/feature_list.json
+}. **CRITICAL: Use the UpdateFeatureStatus tool to mark this feature as verified**
 ${
   feature.skipTests
     ? "5. **DO NOT commit changes** - the user will review and commit manually"
@@ -372,7 +372,7 @@ When you have completed the feature${
     }, you MUST use the \`mcp__automaker-tools__UpdateFeatureStatus\` tool to update the feature status:
 - Call the tool with: featureId="${feature.id}" and status="verified"
 - **You can also include a summary parameter** to describe what was done: summary="Brief summary of changes"
-- **DO NOT manually edit the .automaker/feature_list.json file** - this can cause race conditions
+- **DO NOT manually edit feature files** - this can cause race conditions
 - The UpdateFeatureStatus tool safely updates the feature status without risk of corrupting other data
 - **If skipTests=true, the tool will automatically convert "verified" to "waiting_approval"** - this is correct behavior
 
@@ -402,7 +402,7 @@ ${
     ? "- Skip automated testing (skipTests=true) - user will manually verify"
     : "- Write comprehensive Playwright tests if not already done\n- Ensure all tests pass before marking as verified\n- **CRITICAL: Delete test files after verification**"
 }
-- **CRITICAL: Use UpdateFeatureStatus tool instead of editing feature_list.json directly**
+- **CRITICAL: Use UpdateFeatureStatus tool instead of editing feature files directly**
 - **CRITICAL: Always include a summary when marking feature as verified**
 ${
   feature.skipTests
@@ -491,38 +491,16 @@ Analyze this project's codebase and update the .automaker/app_spec.txt file with
    </project_specification>
    \`\`\`
 
-4. **IMPORTANT - Generate Feature List:**
-   After writing the app_spec.txt, you MUST update .automaker/feature_list.json with features from the implementation_roadmap section:
-   - Read the app_spec.txt you just created
-   - For EVERY feature in each phase of the implementation_roadmap, create an entry
-   - Write ALL features to .automaker/feature_list.json
+4. Ensure .automaker/context/ directory exists
 
-   The feature_list.json format should be:
-   \`\`\`json
-   [
-     {
-       "id": "feature-<timestamp>-<index>",
-       "category": "<phase name, e.g., 'Phase 1: Foundation'>",
-       "description": "<feature description>",
-       "status": "backlog",
-       "steps": ["Step 1", "Step 2", "..."],
-       "skipTests": true
-     }
-   ]
-   \`\`\`
-
-   Generate unique IDs using the current timestamp and index (e.g., "feature-1234567890-0", "feature-1234567890-1", etc.)
-
-5. Ensure .automaker/context/ directory exists
-
-6. Ensure .automaker/agents-context/ directory exists
+5. Ensure .automaker/features/ directory exists
 
 **Important:**
 - Be concise but accurate
 - Only include information you can verify from the codebase
 - If unsure about something, note it as "to be determined"
 - Don't make up features that don't exist
-- Include EVERY feature from the roadmap in feature_list.json - do not skip any
+- Features are stored in .automaker/features/{id}/feature.json - each feature gets its own folder
 
 Begin by exploring the project structure.`;
   }
@@ -563,27 +541,12 @@ You are implementing features for manual user review. This means:
 ${modeHeader}
 ${memoryContent}
 
-**🚨 CRITICAL FILE PROTECTION - READ THIS FIRST 🚨**
-
-THE FOLLOWING FILE IS ABSOLUTELY FORBIDDEN FROM DIRECT MODIFICATION:
-- .automaker/feature_list.json
-
-**YOU MUST NEVER:**
-- Use the Write tool on feature_list.json
-- Use the Edit tool on feature_list.json
-- Use any Bash command that writes to feature_list.json (echo, sed, awk, etc.)
-- Attempt to read and rewrite feature_list.json
-- UNDER ANY CIRCUMSTANCES touch this file directly
-
-**CATASTROPHIC CONSEQUENCES:**
-Directly modifying feature_list.json can:
-- Erase all project features permanently
-- Corrupt the project state beyond recovery
-- Destroy hours/days of planning work
-- This is a FIREABLE OFFENSE - you will be terminated if you do this
+**Feature Storage:**
+Features are stored in .automaker/features/{id}/feature.json - each feature has its own folder.
 
 **THE ONLY WAY to update features:**
 Use the mcp__automaker-tools__UpdateFeatureStatus tool with featureId, status, and summary parameters.
+Do NOT manually edit feature.json files directly.
 
 ${contextFilesPreview}
 
@@ -594,7 +557,7 @@ Your role is to:
 - Create comprehensive Playwright tests using testing utilities (only if skipTests is false)
 - Ensure all tests pass before marking features complete (only if skipTests is false)
 - **DELETE test files after successful verification** - tests are only for immediate feature verification (only if skipTests is false)
-- **Use the UpdateFeatureStatus tool to mark features as verified** - NEVER manually edit feature_list.json
+- **Use the UpdateFeatureStatus tool to mark features as verified** - NEVER manually edit feature files
 - **Always include a summary parameter when calling UpdateFeatureStatus** - describe what was done
 - Commit working code to git (only if skipTests is false - skipTests features require manual review)
 - Be thorough and detail-oriented
@@ -609,7 +572,7 @@ If a feature has skipTests=true:
 **IMPORTANT - UpdateFeatureStatus Tool:**
 You have access to the \`mcp__automaker-tools__UpdateFeatureStatus\` tool. When the feature is complete (and all tests pass if skipTests is false), use this tool to update the feature status:
 - Call with featureId, status="verified", and summary="Description of what was done"
-- **DO NOT manually edit .automaker/feature_list.json** - this can cause race conditions and restore old state
+- **DO NOT manually edit feature files** - this can cause race conditions and restore old state
 - The tool safely updates the status without corrupting other feature data
 - **If skipTests=true, the tool will automatically convert "verified" to "waiting_approval"** - this is correct
 
@@ -704,27 +667,12 @@ You are completing features for manual user review. This means:
 
 ${modeHeader}
 ${memoryContent}
-**🚨 CRITICAL FILE PROTECTION - READ THIS FIRST 🚨**
-
-THE FOLLOWING FILE IS ABSOLUTELY FORBIDDEN FROM DIRECT MODIFICATION:
-- .automaker/feature_list.json
-
-**YOU MUST NEVER:**
-- Use the Write tool on feature_list.json
-- Use the Edit tool on feature_list.json
-- Use any Bash command that writes to feature_list.json (echo, sed, awk, etc.)
-- Attempt to read and rewrite feature_list.json
-- UNDER ANY CIRCUMSTANCES touch this file directly
-
-**CATASTROPHIC CONSEQUENCES:**
-Directly modifying feature_list.json can:
-- Erase all project features permanently
-- Corrupt the project state beyond recovery
-- Destroy hours/days of planning work
-- This is a FIREABLE OFFENSE - you will be terminated if you do this
+**Feature Storage:**
+Features are stored in .automaker/features/{id}/feature.json - each feature has its own folder.
 
 **THE ONLY WAY to update features:**
 Use the mcp__automaker-tools__UpdateFeatureStatus tool with featureId, status, and summary parameters.
+Do NOT manually edit feature.json files directly.
 
 ${contextFilesPreview}
 
@@ -737,7 +685,7 @@ Your role is to:
 - If other tests fail, verify if those tests are still accurate or should be updated or deleted (only if skipTests is false)
 - Continue rerunning tests and fixing issues until ALL tests pass (only if skipTests is false)
 - **DELETE test files after successful verification** - tests are only for immediate feature verification (only if skipTests is false)
-- **Use the UpdateFeatureStatus tool to mark features as verified** - NEVER manually edit feature_list.json
+- **Use the UpdateFeatureStatus tool to mark features as verified** - NEVER manually edit feature files
 - **Always include a summary parameter when calling UpdateFeatureStatus** - describe what was done
 - **Update test utilities (tests/utils.ts) if functionality changed** - keep helpers in sync with code (only if skipTests is false)
 - Commit working code to git (only if skipTests is false - skipTests features require manual review)
@@ -752,7 +700,7 @@ If a feature has skipTests=true:
 **IMPORTANT - UpdateFeatureStatus Tool:**
 You have access to the \`mcp__automaker-tools__UpdateFeatureStatus\` tool. When the feature is complete (and all tests pass if skipTests is false), use this tool to update the feature status:
 - Call with featureId, status="verified", and summary="Description of what was done"
-- **DO NOT manually edit .automaker/feature_list.json** - this can cause race conditions and restore old state
+- **DO NOT manually edit feature files** - this can cause race conditions and restore old state
 - The tool safely updates the status without corrupting other feature data
 - **If skipTests=true, the tool will automatically convert "verified" to "waiting_approval"** - this is correct
 
@@ -820,7 +768,6 @@ Your goal is to:
 - Identify programming languages, frameworks, and libraries
 - Detect existing features and capabilities
 - Update the .automaker/app_spec.txt with accurate information
-- Generate a feature list in .automaker/feature_list.json based on the implementation roadmap
 - Ensure all required .automaker files and directories exist
 
 Be efficient - don't read every file, focus on:
@@ -829,11 +776,9 @@ Be efficient - don't read every file, focus on:
 - Directory structure
 - README and documentation
 
-**CRITICAL - Feature List Generation:**
-After creating/updating the app_spec.txt, you MUST also update .automaker/feature_list.json:
-1. Read the app_spec.txt you just wrote
-2. Extract all features from the implementation_roadmap section
-3. Write them to .automaker/feature_list.json in the correct format
+**Feature Storage:**
+Features are stored in .automaker/features/{id}/feature.json - each feature has its own folder.
+Use the UpdateFeatureStatus tool to manage features, not direct file edits.
 
 You have access to Read, Write, Edit, Glob, Grep, and Bash tools. Use them to explore the structure and write the necessary files.`;
   }

@@ -202,12 +202,13 @@ export function FeatureSuggestionsDialog({
         skipTests: true, // As specified, testing mode true
       }));
 
-      // Merge with existing features
-      const updatedFeatures = [...features, ...newFeatures];
+      // Create each new feature using the features API
+      for (const feature of newFeatures) {
+        await api.features.create(projectPath, feature);
+      }
 
-      // Save to file
-      const featureListPath = `${projectPath}/.automaker/feature_list.json`;
-      await api.writeFile(featureListPath, JSON.stringify(updatedFeatures, null, 2));
+      // Merge with existing features for store update
+      const updatedFeatures = [...features, ...newFeatures];
 
       // Update store
       setFeatures(updatedFeatures);

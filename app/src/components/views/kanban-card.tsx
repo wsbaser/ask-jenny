@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { HotkeyButton } from "@/components/ui/hotkey-button";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,8 @@ import {
   GitBranch,
   Undo2,
   GitMerge,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { CountUpTimer } from "@/components/ui/count-up-timer";
 import { getElectronAPI } from "@/lib/electron";
@@ -116,6 +119,7 @@ export const KanbanCard = memo(function KanbanCard({
   const [isSummaryDialogOpen, setIsSummaryDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
   const [agentInfo, setAgentInfo] = useState<AgentTaskInfo | null>(null);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const { kanbanCardDetailLevel } = useAppStore();
 
   // Check if feature has worktree
@@ -149,12 +153,26 @@ export const KanbanCard = memo(function KanbanCard({
         const currentProject = (window as any).__currentProject;
         if (!currentProject?.path) return;
 
-        const contextPath = `${currentProject.path}/.automaker/agents-context/${feature.id}.md`;
+        // Use features API to get agent output
+        if (api.features) {
+          const result = await api.features.getAgentOutput(
+            currentProject.path,
+            feature.id
+          );
+
+          if (result.success && result.content) {
+            const info = parseAgentContext(result.content);
+            setAgentInfo(info);
+          }
+        } else {
+          // Fallback to direct file read for backward compatibility
+          const contextPath = `${currentProject.path}/.automaker/features/${feature.id}/agent-output.md`;
         const result = await api.readFile(contextPath);
 
         if (result.success && result.content) {
           const info = parseAgentContext(result.content);
           setAgentInfo(info);
+          }
         }
       } catch {
         // Context file might not exist
@@ -216,16 +234,19 @@ export const KanbanCard = memo(function KanbanCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "cursor-grab active:cursor-grabbing transition-all backdrop-blur-sm border-border relative kanban-card-content",
+        "cursor-grab active:cursor-grabbing transition-all backdrop-blur-sm border-border relative kanban-card-content select-none",
         isDragging && "opacity-50 scale-105 shadow-lg",
         isCurrentAutoTask &&
           "border-running-indicator border-2 shadow-running-indicator/50 shadow-lg animate-pulse",
         feature.error &&
           !isCurrentAutoTask &&
-          "border-red-500 border-2 shadow-red-500/30 shadow-lg"
+          "border-red-500 border-2 shadow-red-500/30 shadow-lg",
+        !isDraggable && "cursor-default"
       )}
       data-testid={`kanban-card-${feature.id}`}
+      onDoubleClick={onEdit}
       {...attributes}
+      {...(isDraggable ? listeners : {})}
     >
       {/* Shortcut key badge for in-progress cards */}
       {shortcutKey && (
@@ -323,6 +344,7 @@ export const KanbanCard = memo(function KanbanCard({
                   size="sm"
                   className="h-6 w-6 p-0 hover:bg-white/10"
                   onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`menu-${feature.id}`}
                 >
                   <MoreVertical className="w-4 h-4" />
@@ -369,17 +391,45 @@ export const KanbanCard = memo(function KanbanCard({
         <div className="flex items-start gap-2">
           {isDraggable && (
             <div
-              {...listeners}
-              className="mt-0.5 touch-none cursor-grab"
+              className="-ml-2 -mt-1 p-2 touch-none"
               data-testid={`drag-handle-${feature.id}`}
             >
               <GripVertical className="w-4 h-4 text-muted-foreground" />
             </div>
           )}
           <div className="flex-1 min-w-0 overflow-hidden">
-            <CardTitle className="text-sm leading-tight break-words hyphens-auto line-clamp-3 overflow-hidden">
+            <CardTitle
+              className={cn(
+                "text-sm leading-tight break-words hyphens-auto overflow-hidden",
+                !isDescriptionExpanded && "line-clamp-3"
+              )}
+            >
               {feature.description}
             </CardTitle>
+            {/* Show More/Less toggle - only show when description is likely truncated */}
+            {feature.description.length > 100 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDescriptionExpanded(!isDescriptionExpanded);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground mt-1 transition-colors"
+                data-testid={`toggle-description-${feature.id}`}
+              >
+                {isDescriptionExpanded ? (
+                  <>
+                    <ChevronUp className="w-3 h-3" />
+                    <span>Show Less</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3 h-3" />
+                    <span>Show More</span>
+                  </>
+                )}
+              </button>
+            )}
             <CardDescription className="text-xs mt-1 truncate">
               {feature.category}
             </CardDescription>
@@ -504,6 +554,7 @@ export const KanbanCard = memo(function KanbanCard({
                           e.stopPropagation();
                           setIsSummaryDialogOpen(true);
                         }}
+                        onPointerDown={(e) => e.stopPropagation()}
                         className="p-0.5 rounded hover:bg-accent transition-colors text-muted-foreground hover:text-foreground shrink-0"
                         title="View full summary"
                         data-testid={`expand-summary-${feature.id}`}
@@ -557,6 +608,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onViewOutput();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`view-output-${feature.id}`}
                 >
                   <FileText className="w-3 h-3 mr-1" />
@@ -572,6 +624,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onForceStop();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`force-stop-${feature.id}`}
                 >
                   <StopCircle className="w-3 h-3 mr-1" />
@@ -592,6 +645,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onManualVerify();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`manual-verify-${feature.id}`}
                 >
                   <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -606,6 +660,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onResume();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`resume-feature-${feature.id}`}
                 >
                   <RotateCcw className="w-3 h-3 mr-1" />
@@ -620,6 +675,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onVerify();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`verify-feature-${feature.id}`}
                 >
                   <PlayCircle className="w-3 h-3 mr-1" />
@@ -635,6 +691,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onViewOutput();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`view-output-inprogress-${feature.id}`}
                 >
                   <FileText className="w-3 h-3 mr-1" />
@@ -655,6 +712,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onViewOutput();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`view-output-verified-${feature.id}`}
                 >
                   <FileText className="w-3 h-3 mr-1" />
@@ -678,6 +736,7 @@ export const KanbanCard = memo(function KanbanCard({
                           e.stopPropagation();
                           setIsRevertDialogOpen(true);
                         }}
+                        onPointerDown={(e) => e.stopPropagation()}
                         data-testid={`revert-${feature.id}`}
                       >
                         <Undo2 className="w-3.5 h-3.5" />
@@ -699,6 +758,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onFollowUp();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`follow-up-${feature.id}`}
                 >
                   <MessageSquare className="w-3 h-3 mr-1 shrink-0" />
@@ -715,6 +775,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onMerge();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`merge-${feature.id}`}
                   title="Merge changes into main branch"
                 >
@@ -732,6 +793,7 @@ export const KanbanCard = memo(function KanbanCard({
                     e.stopPropagation();
                     onCommit();
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   data-testid={`commit-${feature.id}`}
                 >
                   <GitCommit className="w-3 h-3 mr-1" />
@@ -753,7 +815,7 @@ export const KanbanCard = memo(function KanbanCard({
               be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button
               variant="ghost"
               onClick={handleCancelDelete}
@@ -761,13 +823,15 @@ export const KanbanCard = memo(function KanbanCard({
             >
               Cancel
             </Button>
-            <Button
+            <HotkeyButton
               variant="destructive"
               onClick={handleConfirmDelete}
               data-testid="confirm-delete-button"
+              hotkey={{ key: "Enter", cmdCtrl: true }}
+              hotkeyActive={isDeleteDialogOpen}
             >
               Delete
-            </Button>
+            </HotkeyButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

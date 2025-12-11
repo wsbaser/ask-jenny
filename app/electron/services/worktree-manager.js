@@ -176,15 +176,8 @@ class WorktreeManager {
       try {
         await fs.mkdir(automakerDst, { recursive: true });
 
-        // Copy feature_list.json
-        const featureListSrc = path.join(automakerSrc, "feature_list.json");
-        const featureListDst = path.join(automakerDst, "feature_list.json");
-        try {
-          const content = await fs.readFile(featureListSrc, "utf-8");
-          await fs.writeFile(featureListDst, content, "utf-8");
-        } catch {
-          // Feature list might not exist yet
-        }
+        // Note: Features are stored in .automaker/features/{id}/feature.json
+        // These are managed by the main project, not copied to worktrees
 
         // Copy app_spec.txt if it exists
         const appSpecSrc = path.join(automakerSrc, "app_spec.txt");

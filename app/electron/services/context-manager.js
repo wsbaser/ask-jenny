@@ -12,16 +12,21 @@ class ContextManager {
     if (!projectPath) return;
 
     try {
-      const contextDir = path.join(projectPath, ".automaker", "agents-context");
+      const featureDir = path.join(
+        projectPath,
+        ".automaker",
+        "features",
+        featureId
+      );
 
-      // Ensure directory exists
+      // Ensure feature directory exists
       try {
-        await fs.access(contextDir);
+        await fs.access(featureDir);
       } catch {
-        await fs.mkdir(contextDir, { recursive: true });
+        await fs.mkdir(featureDir, { recursive: true });
       }
 
-      const filePath = path.join(contextDir, `${featureId}.md`);
+      const filePath = path.join(featureDir, "agent-output.md");
 
       // Append to existing file or create new one
       try {
@@ -43,8 +48,9 @@ class ContextManager {
       const contextPath = path.join(
         projectPath,
         ".automaker",
-        "agents-context",
-        `${featureId}.md`
+        "features",
+        featureId,
+        "agent-output.md"
       );
       const content = await fs.readFile(contextPath, "utf-8");
       return content;
@@ -64,8 +70,9 @@ class ContextManager {
       const contextPath = path.join(
         projectPath,
         ".automaker",
-        "agents-context",
-        `${featureId}.md`
+        "features",
+        featureId,
+        "agent-output.md"
       );
       await fs.unlink(contextPath);
       console.log(
@@ -213,13 +220,18 @@ This helps future agent runs avoid the same pitfalls.
 
     try {
       const { execSync } = require("child_process");
-      const contextDir = path.join(projectPath, ".automaker", "agents-context");
+      const featureDir = path.join(
+        projectPath,
+        ".automaker",
+        "features",
+        featureId
+      );
 
-      // Ensure directory exists
+      // Ensure feature directory exists
       try {
-        await fs.access(contextDir);
+        await fs.access(featureDir);
       } catch {
-        await fs.mkdir(contextDir, { recursive: true });
+        await fs.mkdir(featureDir, { recursive: true });
       }
 
       // Get list of modified files (both staged and unstaged)
@@ -233,25 +245,34 @@ This helps future agent runs avoid the same pitfalls.
           modifiedFiles = modifiedOutput.split("\n").filter(Boolean);
         }
       } catch (error) {
-        console.log("[ContextManager] No modified files or git error:", error.message);
+        console.log(
+          "[ContextManager] No modified files or git error:",
+          error.message
+        );
       }
 
       // Get list of untracked files
       let untrackedFiles = [];
       try {
-        const untrackedOutput = execSync("git ls-files --others --exclude-standard", {
-          cwd: projectPath,
-          encoding: "utf-8",
-        }).trim();
+        const untrackedOutput = execSync(
+          "git ls-files --others --exclude-standard",
+          {
+            cwd: projectPath,
+            encoding: "utf-8",
+          }
+        ).trim();
         if (untrackedOutput) {
           untrackedFiles = untrackedOutput.split("\n").filter(Boolean);
         }
       } catch (error) {
-        console.log("[ContextManager] Error getting untracked files:", error.message);
+        console.log(
+          "[ContextManager] Error getting untracked files:",
+          error.message
+        );
       }
 
       // Save the initial state to a JSON file
-      const stateFile = path.join(contextDir, `${featureId}-git-state.json`);
+      const stateFile = path.join(featureDir, "git-state.json");
       const state = {
         timestamp: new Date().toISOString(),
         modifiedFiles,
@@ -259,14 +280,20 @@ This helps future agent runs avoid the same pitfalls.
       };
 
       await fs.writeFile(stateFile, JSON.stringify(state, null, 2), "utf-8");
-      console.log(`[ContextManager] Saved initial git state for ${featureId}:`, {
-        modifiedCount: modifiedFiles.length,
-        untrackedCount: untrackedFiles.length,
-      });
+      console.log(
+        `[ContextManager] Saved initial git state for ${featureId}:`,
+        {
+          modifiedCount: modifiedFiles.length,
+          untrackedCount: untrackedFiles.length,
+        }
+      );
 
       return state;
     } catch (error) {
-      console.error("[ContextManager] Failed to save initial git state:", error);
+      console.error(
+        "[ContextManager] Failed to save initial git state:",
+        error
+      );
       return { modifiedFiles: [], untrackedFiles: [] };
     }
   }
@@ -284,13 +311,16 @@ This helps future agent runs avoid the same pitfalls.
       const stateFile = path.join(
         projectPath,
         ".automaker",
-        "agents-context",
-        `${featureId}-git-state.json`
+        "features",
+        featureId,
+        "git-state.json"
       );
       const content = await fs.readFile(stateFile, "utf-8");
       return JSON.parse(content);
     } catch (error) {
-      console.log(`[ContextManager] No initial git state found for ${featureId}`);
+      console.log(
+        `[ContextManager] No initial git state found for ${featureId}`
+      );
       return null;
     }
   }
@@ -307,15 +337,19 @@ This helps future agent runs avoid the same pitfalls.
       const stateFile = path.join(
         projectPath,
         ".automaker",
-        "agents-context",
-        `${featureId}-git-state.json`
+        "features",
+        featureId,
+        "git-state.json"
       );
       await fs.unlink(stateFile);
       console.log(`[ContextManager] Deleted git state file for ${featureId}`);
     } catch (error) {
       // File might not exist, which is fine
       if (error.code !== "ENOENT") {
-        console.error("[ContextManager] Failed to delete git state file:", error);
+        console.error(
+          "[ContextManager] Failed to delete git state file:",
+          error
+        );
       }
     }
   }
@@ -334,7 +368,10 @@ This helps future agent runs avoid the same pitfalls.
       const { execSync } = require("child_process");
 
       // Get initial state
-      const initialState = await this.getInitialGitState(projectPath, featureId);
+      const initialState = await this.getInitialGitState(
+        projectPath,
+        featureId
+      );
 
       // Get current state
       let currentModified = [];
@@ -352,10 +389,13 @@ This helps future agent runs avoid the same pitfalls.
 
       let currentUntracked = [];
       try {
-        const untrackedOutput = execSync("git ls-files --others --exclude-standard", {
-          cwd: projectPath,
-          encoding: "utf-8",
-        }).trim();
+        const untrackedOutput = execSync(
+          "git ls-files --others --exclude-standard",
+          {
+            cwd: projectPath,
+            encoding: "utf-8",
+          }
+        ).trim();
         if (untrackedOutput) {
           currentUntracked = untrackedOutput.split("\n").filter(Boolean);
         }
@@ -365,7 +405,9 @@ This helps future agent runs avoid the same pitfalls.
 
       if (!initialState) {
         // No initial state - all current changes are considered from this session
-        console.log("[ContextManager] No initial state found, returning all current changes");
+        console.log(
+          "[ContextManager] No initial state found, returning all current changes"
+        );
         return {
           newFiles: currentUntracked,
           modifiedFiles: currentModified,
@@ -377,21 +419,31 @@ This helps future agent runs avoid the same pitfalls.
       const initialUntrackedSet = new Set(initialState.untrackedFiles || []);
 
       // New files = current untracked - initial untracked
-      const newFiles = currentUntracked.filter(f => !initialUntrackedSet.has(f));
+      const newFiles = currentUntracked.filter(
+        (f) => !initialUntrackedSet.has(f)
+      );
 
       // Modified files = current modified - initial modified
-      const modifiedFiles = currentModified.filter(f => !initialModifiedSet.has(f));
+      const modifiedFiles = currentModified.filter(
+        (f) => !initialModifiedSet.has(f)
+      );
 
-      console.log(`[ContextManager] Files changed during session for ${featureId}:`, {
-        newFilesCount: newFiles.length,
-        modifiedFilesCount: modifiedFiles.length,
-        newFiles,
-        modifiedFiles,
-      });
+      console.log(
+        `[ContextManager] Files changed during session for ${featureId}:`,
+        {
+          newFilesCount: newFiles.length,
+          modifiedFilesCount: modifiedFiles.length,
+          newFiles,
+          modifiedFiles,
+        }
+      );
 
       return { newFiles, modifiedFiles };
     } catch (error) {
-      console.error("[ContextManager] Failed to calculate changed files:", error);
+      console.error(
+        "[ContextManager] Failed to calculate changed files:",
+        error
+      );
       return { newFiles: [], modifiedFiles: [] };
     }
   }

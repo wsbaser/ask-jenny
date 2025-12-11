@@ -312,7 +312,9 @@ export interface AppActions {
   // Feature actions
   setFeatures: (features: Feature[]) => void;
   updateFeature: (id: string, updates: Partial<Feature>) => void;
-  addFeature: (feature: Omit<Feature, "id">) => void;
+  addFeature: (
+    feature: Omit<Feature, "id"> & Partial<Pick<Feature, "id">>
+  ) => Feature;
   removeFeature: (id: string) => void;
   moveFeature: (id: string, newStatus: Feature["status"]) => void;
 
@@ -744,10 +746,12 @@ export const useAppStore = create<AppState & AppActions>()(
       },
 
       addFeature: (feature) => {
-        const id = `feature-${Date.now()}-${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-        set({ features: [...get().features, { ...feature, id }] });
+        const id =
+          feature.id ||
+          `feature-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const featureWithId = { ...feature, id } as Feature;
+        set({ features: [...get().features, featureWithId] });
+        return featureWithId;
       },
 
       removeFeature: (id) => {

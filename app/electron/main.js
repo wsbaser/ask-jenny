@@ -819,7 +819,10 @@ ipcMain.handle("claude:check-cli", async () => {
   try {
     const claudeCliDetector = require("./services/claude-cli-detector");
     const path = require("path");
-    const credentialsPath = path.join(app.getPath("userData"), "credentials.json");
+    const credentialsPath = path.join(
+      app.getPath("userData"),
+      "credentials.json"
+    );
     const fullStatus = claudeCliDetector.getFullStatus(credentialsPath);
 
     // Return in format expected by settings view (status: "installed" | "not_installed")
@@ -833,7 +836,9 @@ ipcMain.handle("claude:check-cli", async () => {
       recommendation: fullStatus.installed
         ? null
         : "Install Claude Code CLI for optimal performance with ultrathink.",
-      installCommands: fullStatus.installed ? null : claudeCliDetector.getInstallCommands(),
+      installCommands: fullStatus.installed
+        ? null
+        : claudeCliDetector.getInstallCommands(),
     };
   } catch (error) {
     console.error("[IPC] claude:check-cli error:", error);
@@ -1389,7 +1394,10 @@ ipcMain.handle("git:get-file-diff", async (_, { projectPath, filePath }) => {
 ipcMain.handle("setup:claude-status", async () => {
   try {
     const claudeCliDetector = require("./services/claude-cli-detector");
-    const credentialsPath = path.join(app.getPath("userData"), "credentials.json");
+    const credentialsPath = path.join(
+      app.getPath("userData"),
+      "credentials.json"
+    );
     const result = claudeCliDetector.getFullStatus(credentialsPath);
     console.log("[IPC] setup:claude-status result:", result);
     return result;
@@ -1424,7 +1432,7 @@ ipcMain.handle("setup:install-claude", async (event) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("setup:install-progress", {
           cli: "claude",
-          ...progress
+          ...progress,
         });
       }
     };
@@ -1448,7 +1456,7 @@ ipcMain.handle("setup:install-codex", async (event) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("setup:install-progress", {
           cli: "codex",
-          ...progress
+          ...progress,
         });
       }
     };
@@ -1472,7 +1480,7 @@ ipcMain.handle("setup:auth-claude", async (event) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("setup:auth-progress", {
           cli: "claude",
-          ...progress
+          ...progress,
         });
       }
     };
@@ -1496,7 +1504,7 @@ ipcMain.handle("setup:auth-codex", async (event, { apiKey }) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("setup:auth-progress", {
           cli: "codex",
-          ...progress
+          ...progress,
         });
       }
     };
@@ -1532,7 +1540,11 @@ ipcMain.handle("setup:store-api-key", async (_, { provider, apiKey }) => {
     credentials[provider] = apiKey;
 
     // Write back
-    await fs.writeFile(configPath, JSON.stringify(credentials, null, 2), "utf-8");
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(credentials, null, 2),
+      "utf-8"
+    );
 
     console.log("[IPC] setup:store-api-key stored successfully for:", provider);
     return { success: true };
@@ -1559,7 +1571,7 @@ ipcMain.handle("setup:get-api-keys", async () => {
         hasAnthropicKey: !!credentials.anthropic,
         hasAnthropicOAuthToken: !!credentials.anthropic_oauth_token,
         hasOpenAIKey: !!credentials.openai,
-        hasGoogleKey: !!credentials.google
+        hasGoogleKey: !!credentials.google,
       };
     } catch (e) {
       return {
@@ -1567,7 +1579,7 @@ ipcMain.handle("setup:get-api-keys", async () => {
         hasAnthropicKey: false,
         hasAnthropicOAuthToken: false,
         hasOpenAIKey: false,
-        hasGoogleKey: false
+        hasGoogleKey: false,
       };
     }
   } catch (error) {
@@ -1582,9 +1594,16 @@ ipcMain.handle("setup:get-api-keys", async () => {
 ipcMain.handle("setup:configure-codex-mcp", async (_, { projectPath }) => {
   try {
     const codexConfigManager = require("./services/codex-config-manager");
-    const mcpServerPath = path.join(__dirname, "services", "mcp-server-factory.js");
+    const mcpServerPath = path.join(
+      __dirname,
+      "services",
+      "mcp-server-factory.js"
+    );
 
-    const configPath = await codexConfigManager.configureMcpServer(projectPath, mcpServerPath);
+    const configPath = await codexConfigManager.configureMcpServer(
+      projectPath,
+      mcpServerPath
+    );
 
     return { success: true, configPath };
   } catch (error) {
@@ -1605,6 +1624,155 @@ ipcMain.handle("setup:get-platform", async () => {
     homeDir: os.homedir(),
     isWindows: process.platform === "win32",
     isMac: process.platform === "darwin",
-    isLinux: process.platform === "linux"
+    isLinux: process.platform === "linux",
   };
 });
+
+// ============================================================================
+// Features IPC Handlers
+// ============================================================================
+
+/**
+ * Get all features for a project
+ */
+ipcMain.handle("features:getAll", async (_, { projectPath }) => {
+  try {
+    // Security check
+    if (!isPathAllowed(projectPath)) {
+      return {
+        success: false,
+        error: "Access denied: Path is outside allowed project directories",
+      };
+    }
+
+    const featureLoader = require("./services/feature-loader");
+    const features = await featureLoader.getAll(projectPath);
+    return { success: true, features };
+  } catch (error) {
+    console.error("[IPC] features:getAll error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+/**
+ * Get a single feature by ID
+ */
+ipcMain.handle("features:get", async (_, { projectPath, featureId }) => {
+  try {
+    // Security check
+    if (!isPathAllowed(projectPath)) {
+      return {
+        success: false,
+        error: "Access denied: Path is outside allowed project directories",
+      };
+    }
+
+    const featureLoader = require("./services/feature-loader");
+    const feature = await featureLoader.get(projectPath, featureId);
+    if (!feature) {
+      return { success: false, error: "Feature not found" };
+    }
+    return { success: true, feature };
+  } catch (error) {
+    console.error("[IPC] features:get error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+/**
+ * Create a new feature
+ */
+ipcMain.handle("features:create", async (_, { projectPath, feature }) => {
+  try {
+    // Security check
+    if (!isPathAllowed(projectPath)) {
+      return {
+        success: false,
+        error: "Access denied: Path is outside allowed project directories",
+      };
+    }
+
+    const featureLoader = require("./services/feature-loader");
+    const createdFeature = await featureLoader.create(projectPath, feature);
+    return { success: true, feature: createdFeature };
+  } catch (error) {
+    console.error("[IPC] features:create error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+/**
+ * Update a feature (partial updates supported)
+ */
+ipcMain.handle(
+  "features:update",
+  async (_, { projectPath, featureId, updates }) => {
+    try {
+      // Security check
+      if (!isPathAllowed(projectPath)) {
+        return {
+          success: false,
+          error: "Access denied: Path is outside allowed project directories",
+        };
+      }
+
+      const featureLoader = require("./services/feature-loader");
+      const updatedFeature = await featureLoader.update(
+        projectPath,
+        featureId,
+        updates
+      );
+      return { success: true, feature: updatedFeature };
+    } catch (error) {
+      console.error("[IPC] features:update error:", error);
+      return { success: false, error: error.message };
+    }
+  }
+);
+
+/**
+ * Delete a feature and its folder
+ */
+ipcMain.handle("features:delete", async (_, { projectPath, featureId }) => {
+  try {
+    // Security check
+    if (!isPathAllowed(projectPath)) {
+      return {
+        success: false,
+        error: "Access denied: Path is outside allowed project directories",
+      };
+    }
+
+    const featureLoader = require("./services/feature-loader");
+    await featureLoader.delete(projectPath, featureId);
+    return { success: true };
+  } catch (error) {
+    console.error("[IPC] features:delete error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+/**
+ * Get agent output for a feature
+ */
+ipcMain.handle(
+  "features:getAgentOutput",
+  async (_, { projectPath, featureId }) => {
+    try {
+      // Security check
+      if (!isPathAllowed(projectPath)) {
+        return {
+          success: false,
+          error: "Access denied: Path is outside allowed project directories",
+        };
+      }
+
+      const featureLoader = require("./services/feature-loader");
+      const content = await featureLoader.getAgentOutput(projectPath, featureId);
+      return { success: true, content };
+    } catch (error) {
+      console.error("[IPC] features:getAgentOutput error:", error);
+      return { success: false, error: error.message };
+    }
+  }
+);

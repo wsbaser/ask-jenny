@@ -144,7 +144,7 @@ async function handleToolsList(params, id) {
     tools: [
       {
         name: 'UpdateFeatureStatus',
-        description: 'Update the status of a feature in the feature list. Use this tool instead of directly modifying feature_list.json to safely update feature status. IMPORTANT: If the feature has skipTests=true, you should NOT mark it as verified - instead it will automatically go to waiting_approval status for manual review. Always include a summary of what was done.',
+        description: 'Update the status of a feature. Use this tool instead of directly modifying feature files to safely update feature status. IMPORTANT: If the feature has skipTests=true, you should NOT mark it as verified - instead it will automatically go to waiting_approval status for manual review. Always include a summary of what was done.',
         inputSchema: {
           type: 'object',
           properties: {

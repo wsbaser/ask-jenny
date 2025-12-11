@@ -9,8 +9,8 @@ class McpServerFactory {
   /**
    * Create a custom MCP server with the UpdateFeatureStatus tool
    * This tool allows Claude Code to safely update feature status without
-   * directly modifying the feature_list.json file, preventing race conditions
-   * and accidental state restoration.
+   * directly modifying feature files, preventing race conditions
+   * and accidental state corruption.
    */
   createFeatureToolsServer(updateFeatureStatusCallback, projectPath) {
     return createSdkMcpServer({
@@ -19,7 +19,7 @@ class McpServerFactory {
       tools: [
         tool(
           "UpdateFeatureStatus",
-          "Update the status of a feature in the feature list. Use this tool instead of directly modifying feature_list.json to safely update feature status. IMPORTANT: If the feature has skipTests=true, you should NOT mark it as verified - instead it will automatically go to waiting_approval status for manual review. Always include a summary of what was done.",
+          "Update the status of a feature. Use this tool instead of directly modifying feature files to safely update feature status. IMPORTANT: If the feature has skipTests=true, you should NOT mark it as verified - instead it will automatically go to waiting_approval status for manual review. Always include a summary of what was done.",
           {
             featureId: z.string().describe("The ID of the feature to update"),
             status: z.enum(["backlog", "in_progress", "verified"]).describe("The new status for the feature. Note: If skipTests=true, verified will be converted to waiting_approval automatically."),

@@ -50,14 +50,21 @@
     </project_management>
 
     <intelligent_analysis>
-      - Automatic codebase analysis and understanding
       - Auto-generation and updating of app_spec.txt
       - Feature extraction from existing codebases
       - Technology stack detection and documentation
-      - Project structure analysis with file tree visualization
+      - Project structure analysis with file tree visualization - "Project Ingestion": Analyzes existing codebases to understand structure
+      - Auto-generation of `.automaker/app_spec.txt` based on codebase analysis
+      - Auto-generation of features in `.automaker/features/{id}/feature.json`:
+        - Scans code for implemented features
+        - Creates test cases for existing features
+        - Marks existing features as "passes": true automatically
     </intelligent_analysis>
 
     <kanban_workflow>
+      - Visual representation of features from `.automaker/features/` folder
+      - Drag-and-drop interface to reprioritize tasks
+      - direct editing of feature details (steps, description) from the card
       - Visual Kanban board with drag-and-drop functionality
       - Multiple status columns: Backlog, In Progress, Waiting Approval, Verified
       - Feature cards with detailed information display (3 detail levels)
@@ -107,6 +114,30 @@
     </extensibility>
   </core_capabilities>
 
+  <ui_layout>
+    <window_structure>
+      - Sidebar: Project List, Settings, Logs, Plugins
+      - Main Content:
+        - **Spec View**: Split editor for `.automaker/app_spec.txt`
+        - **Board View**: Kanban board for `.automaker/features/` folder
+        - **Code View**: Read-only Monaco editor to see what the agent is writing
+        - **Agent View**: Chat-like interface showing agent thought process and tool usage. Also used for the "New Project Interview".
+    </window_structure>
+    <theme>
+      - Dark/Light mode support (system sync)
+      - "Hacker" aesthetic option (terminal-like)
+      - Professional/Clean default
+    </theme>
+  </ui_layout>
+
+  <development_workflow>
+    <local_testing>
+      - "Browser Mode": Run the Next.js frontend in a standard browser with mocked Electron IPC for rapid UI iteration.
+      - "Electron Mode": Full desktop app testing.
+      - Hot Reloading for both Main and Renderer processes.
+    </local_testing>
+  </development_workflow>
+
   <implemented_features>
     - Complete Kanban board with drag-and-drop functionality
     - Multi-model AI agent execution (Claude + GPT/Codex)
@@ -137,6 +168,7 @@
       - Improved memory management for long-running sessions
       - Advanced logging and debugging capabilities
     </phase_1_foundation>
+    
     <phase_2_core_logic>
       - Plugin system for custom model providers
       - Advanced workflow customization engine
@@ -144,6 +176,14 @@
       - Cloud synchronization capabilities
       - Advanced project templates and scaffolding
     </phase_2_core_logic>
+
+    <phase_3_kanban_and_interaction>
+      - Build Kanban board with drag-and-drop
+      - Connect Kanban state to `.automaker/features/` filesystem
+      - Implement "Run Feature" capability
+      - Integrate standard prompts library
+    </phase_3_kanban_and_interaction>
+
     <phase_3_polish>
       - Enhanced accessibility features
       - Advanced theme customization
@@ -152,5 +192,11 @@
       - Integration with external development tools
       - Advanced security auditing and sandboxing
     </phase_3_polish>
+
+    <phase_4_polish>
+      - Advanced terminal integration
+      - Settings & Extensibility
+      - UI refinement
+    </phase_4_polish>
   </implementation_roadmap>
 </project_specification>

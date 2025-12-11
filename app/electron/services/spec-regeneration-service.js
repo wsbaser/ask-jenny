@@ -92,7 +92,7 @@ class SpecRegenerationService {
    * @param {string} projectOverview - User's project description
    * @param {Function} sendToRenderer - Function to send events to renderer
    * @param {Object} execution - Execution context with abort controller
-   * @param {boolean} generateFeatures - Whether to generate feature_list.json entries
+   * @param {boolean} generateFeatures - Whether to generate feature entries in features folder
    */
   async createInitialSpec(projectPath, projectOverview, sendToRenderer, execution, generateFeatures = true) {
     console.log(`[SpecRegeneration] Creating initial spec for: ${projectPath}, generateFeatures: ${generateFeatures}`);
@@ -187,43 +187,6 @@ class SpecRegenerationService {
    * @param {boolean} generateFeatures - Whether features should be generated
    */
   getInitialCreationSystemPrompt(generateFeatures = true) {
-    const featureListInstructions = generateFeatures
-      ? `
-**FEATURE LIST GENERATION**
-
-After creating the app_spec.txt, you MUST also update the .automaker/feature_list.json file with all features from the implementation_roadmap section.
-
-For EACH feature in each phase of the implementation_roadmap:
-1. Read the app_spec.txt you just created
-2. Extract every single feature from each phase (phase_1, phase_2, phase_3, phase_4, etc.)
-3. Write ALL features to .automaker/feature_list.json in order
-
-The feature_list.json format should be:
-\`\`\`json
-[
-  {
-    "id": "feature-<timestamp>-<index>",
-    "category": "<phase name, e.g., 'Phase 1: Foundation'>",
-    "description": "<feature description>",
-    "status": "backlog",
-    "steps": ["Step 1", "Step 2", "..."],
-    "skipTests": true
-  }
-]
-\`\`\`
-
-IMPORTANT: Include EVERY feature from the implementation_roadmap. Do not skip any.`
-      : `
-**CRITICAL FILE PROTECTION**
-
-THE FOLLOWING FILE IS ABSOLUTELY FORBIDDEN FROM DIRECT MODIFICATION:
-- .automaker/feature_list.json
-
-**YOU MUST NEVER:**
-- Use the Write tool on .automaker/feature_list.json
-- Use the Edit tool on .automaker/feature_list.json
-- Use any Bash command that writes to .automaker/feature_list.json`;
-
     return `You are an expert software architect and product manager. Your job is to analyze an existing codebase and generate a comprehensive application specification based on a user's project overview.
 
 You should:
@@ -241,10 +204,13 @@ When analyzing, look at:
 - Framework-specific patterns (Next.js, React, Django, etc.)
 - Database configurations and schemas
 - API structures and patterns
-${featureListInstructions}
+
+**Feature Storage:**
+Features are stored in .automaker/features/{id}/feature.json - each feature has its own folder.
+Do NOT manually create feature files. Use the UpdateFeatureStatus tool to manage features.
 
 You CAN and SHOULD modify:
-- .automaker/app_spec.txt (this is your primary target)${generateFeatures ? '\n- .automaker/feature_list.json (to populate features from implementation_roadmap)' : ''}
+- .automaker/app_spec.txt (this is your primary target)
 
 You have access to file reading, writing, and search tools. Use them to understand the codebase and write the new spec.`;
   }
@@ -252,20 +218,9 @@ You have access to file reading, writing, and search tools. Use them to understa
   /**
    * Build the prompt for initial spec creation
    * @param {string} projectOverview - User's project description
-   * @param {boolean} generateFeatures - Whether to generate feature_list.json entries
+   * @param {boolean} generateFeatures - Whether to generate feature entries in features folder
    */
   buildInitialCreationPrompt(projectOverview, generateFeatures = true) {
-    const featureGenerationStep = generateFeatures
-      ? `
-5. **IMPORTANT - GENERATE FEATURE LIST**: After writing the app_spec.txt:
-   - Read back the app_spec.txt file you just created
-   - Look at the implementation_roadmap section
-   - For EVERY feature listed in each phase (phase_1, phase_2, phase_3, phase_4, etc.), create an entry
-   - Write ALL these features to \`.automaker/feature_list.json\` in the order they appear
-   - Each feature should have: id (feature-timestamp-index), category (phase name), description, status: "backlog", steps array, and skipTests: true
-   - Do NOT skip any features - include every single one from the roadmap`
-      : '';
-
     return `I need you to create an initial application specification for my project. I haven't set up an app_spec.txt yet, so this will be the first one.
 
 **My Project Overview:**
@@ -295,7 +250,6 @@ ${APP_SPEC_XML_TEMPLATE}
    - **implementation_roadmap**: Break down the features into phases - be VERY detailed here, listing every feature that needs to be built
 
 4. **IMPORTANT**: Write the complete specification to the file \`.automaker/app_spec.txt\`
-${featureGenerationStep}
 
 **Guidelines:**
 - Be comprehensive! Include ALL features needed for a complete application
@@ -420,15 +374,9 @@ When analyzing, look at:
 - Database configurations and schemas
 - API structures and patterns
 
-**CRITICAL FILE PROTECTION**
-
-THE FOLLOWING FILE IS ABSOLUTELY FORBIDDEN FROM DIRECT MODIFICATION:
-- .automaker/feature_list.json
-
-**YOU MUST NEVER:**
-- Use the Write tool on .automaker/feature_list.json
-- Use the Edit tool on .automaker/feature_list.json
-- Use any Bash command that writes to .automaker/feature_list.json
+**Feature Storage:**
+Features are stored in .automaker/features/{id}/feature.json - each feature has its own folder.
+Do NOT manually create feature files. Use the UpdateFeatureStatus tool to manage features.
 
 You CAN and SHOULD modify:
 - .automaker/app_spec.txt (this is your primary target)
