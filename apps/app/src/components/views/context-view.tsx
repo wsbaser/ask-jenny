@@ -17,6 +17,8 @@ import {
   File,
   X,
   BookOpen,
+  EditIcon,
+  Eye,
 } from "lucide-react";
 import {
   useKeyboardShortcuts,
@@ -34,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Markdown } from "../ui/markdown";
 
 interface ContextFile {
   name: string;
@@ -60,6 +63,7 @@ export function ContextView() {
   );
   const [newFileContent, setNewFileContent] = useState("");
   const [isDropHovering, setIsDropHovering] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   // Keyboard shortcuts for this view
   const contextShortcuts: KeyboardShortcut[] = useMemo(
@@ -79,6 +83,11 @@ export function ContextView() {
     if (!currentProject) return null;
     return `${currentProject.path}/.automaker/context`;
   }, [currentProject]);
+
+  const isMarkdownFile = (filename: string): boolean => {
+    const ext = filename.toLowerCase().substring(filename.lastIndexOf("."));
+    return ext === ".md" || ext === ".markdown";
+  };
 
   // Determine if a file is an image based on extension
   const isImageFile = (filename: string): boolean => {
@@ -151,6 +160,7 @@ export function ContextView() {
       // Could add a confirmation dialog here
     }
     loadFileContent(file);
+    setIsPreviewMode(isMarkdownFile(file.name));
   };
 
   // Save current file
@@ -448,6 +458,27 @@ export function ContextView() {
                   </span>
                 </div>
                 <div className="flex gap-2">
+                  {selectedFile.type === "text" &&
+                    isMarkdownFile(selectedFile.name) && (
+                      <Button
+                        variant={"outline"}
+                        size="sm"
+                        onClick={() => setIsPreviewMode(!isPreviewMode)}
+                        data-testid="toggle-preview-mode"
+                      >
+                        {isPreviewMode ? (
+                          <>
+                            <EditIcon className="w-4 h-4 mr-2" />
+                            Edit
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Preview
+                          </>
+                        )}
+                      </Button>
+                    )}
                   {selectedFile.type === "text" && (
                     <Button
                       size="sm"
@@ -484,6 +515,10 @@ export function ContextView() {
                       className="max-w-full max-h-full object-contain"
                     />
                   </div>
+                ) : isPreviewMode ? (
+                  <Card className="h-full overflow-auto p-4" data-testid="markdown-preview">
+                    <Markdown>{editedContent}</Markdown>
+                  </Card>
                 ) : (
                   <Card className="h-full overflow-hidden">
                     <textarea
