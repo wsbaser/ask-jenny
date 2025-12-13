@@ -1247,6 +1247,46 @@ export function Sidebar() {
       <div className="border-t border-sidebar-border bg-sidebar-accent/10 shrink-0">
         {/* Course Promo Badge */}
         <CoursePromoBadge sidebarOpen={sidebarOpen} />
+        {/* Wiki Link */}
+        <div className="p-2 pb-0">
+          <button
+            onClick={() => setCurrentView("wiki")}
+            className={cn(
+              "group flex items-center w-full px-2 lg:px-3 py-2.5 rounded-lg relative overflow-hidden transition-all titlebar-no-drag",
+              isActiveRoute("wiki")
+                ? "bg-sidebar-accent/50 text-foreground border border-sidebar-border"
+                : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50",
+              sidebarOpen ? "justify-start" : "justify-center"
+            )}
+            title={!sidebarOpen ? "Wiki" : undefined}
+            data-testid="wiki-link"
+          >
+            {isActiveRoute("wiki") && (
+              <div className="absolute inset-y-0 left-0 w-0.5 bg-brand-500 rounded-l-md"></div>
+            )}
+            <BookOpen
+              className={cn(
+                "w-4 h-4 shrink-0 transition-colors",
+                isActiveRoute("wiki")
+                  ? "text-brand-500"
+                  : "group-hover:text-brand-400"
+              )}
+            />
+            <span
+              className={cn(
+                "ml-2.5 font-medium text-sm flex-1 text-left",
+                sidebarOpen ? "hidden lg:block" : "hidden"
+              )}
+            >
+              Wiki
+            </span>
+            {!sidebarOpen && (
+              <span className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-border">
+                Wiki
+              </span>
+            )}
+          </button>
+        </div>
         {/* Running Agents Link */}
         <div className="p-2 pb-0">
           <button

@@ -13,7 +13,8 @@ export type ViewMode =
   | "context"
   | "profiles"
   | "running-agents"
-  | "terminal";
+  | "terminal"
+  | "wiki";
 
 export type ThemeMode =
   | "light"
