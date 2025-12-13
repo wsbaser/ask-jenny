@@ -100,7 +100,7 @@
     },
     "files": [
       "electron/**/*",
-      ".next/**/*",
+      "out/**/*",
       "public/**/*",
       "!node_modules/**/*"
     ],
