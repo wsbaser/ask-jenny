@@ -146,7 +146,10 @@ function HomeContent() {
       "catppuccin",
       "onedark",
       "synthwave",
-      "red"
+      "red",
+      "cream",
+      "sunset",
+      "gray"
     );
 
     if (effectiveTheme === "dark") {
@@ -173,6 +176,12 @@ function HomeContent() {
       root.classList.add("synthwave");
     } else if (effectiveTheme === "red") {
       root.classList.add("red");
+    } else if (effectiveTheme === "cream") {
+      root.classList.add("cream");
+    } else if (effectiveTheme === "sunset") {
+      root.classList.add("sunset");
+    } else if (effectiveTheme === "gray") {
+      root.classList.add("gray");
     } else if (effectiveTheme === "light") {
       root.classList.add("light");
     } else if (effectiveTheme === "system") {

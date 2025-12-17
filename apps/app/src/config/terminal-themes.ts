@@ -356,6 +356,81 @@ const redTheme: TerminalTheme = {
   brightWhite: "#d0c0c0",
 };
 
+// Cream theme - Warm, soft, easy on the eyes
+const creamTheme: TerminalTheme = {
+  background: "#f5f3ee",
+  foreground: "#5a4a3a",
+  cursor: "#9d6b53",
+  cursorAccent: "#f5f3ee",
+  selectionBackground: "#d4c4b0",
+  black: "#5a4a3a",
+  red: "#c85a4f",
+  green: "#7a9a6a",
+  yellow: "#c9a554",
+  blue: "#6b8aaa",
+  magenta: "#a66a8a",
+  cyan: "#5a9a8a",
+  white: "#b0a090",
+  brightBlack: "#8a7a6a",
+  brightRed: "#e07060",
+  brightGreen: "#90b080",
+  brightYellow: "#e0bb70",
+  brightBlue: "#80a0c0",
+  brightMagenta: "#c080a0",
+  brightCyan: "#70b0a0",
+  brightWhite: "#d0c0b0",
+};
+
+// Sunset theme - Mellow oranges and soft pastels
+const sunsetTheme: TerminalTheme = {
+  background: "#1e1a24",
+  foreground: "#f2e8dd",
+  cursor: "#dd8855",
+  cursorAccent: "#1e1a24",
+  selectionBackground: "#3a2a40",
+  black: "#1e1a24",
+  red: "#dd6655",
+  green: "#88bb77",
+  yellow: "#ddaa66",
+  blue: "#6699cc",
+  magenta: "#cc7799",
+  cyan: "#66ccaa",
+  white: "#e8d8c8",
+  brightBlack: "#4a3a50",
+  brightRed: "#ee8866",
+  brightGreen: "#99cc88",
+  brightYellow: "#eebb77",
+  brightBlue: "#88aadd",
+  brightMagenta: "#dd88aa",
+  brightCyan: "#88ddbb",
+  brightWhite: "#f5e8dd",
+};
+
+// Gray theme - Modern, minimal gray scheme inspired by Cursor
+const grayTheme: TerminalTheme = {
+  background: "#2a2d32",
+  foreground: "#d0d0d5",
+  cursor: "#8fa0c0",
+  cursorAccent: "#2a2d32",
+  selectionBackground: "#3a3f48",
+  black: "#2a2d32",
+  red: "#d87070",
+  green: "#78b088",
+  yellow: "#d0b060",
+  blue: "#7090c0",
+  magenta: "#a880b0",
+  cyan: "#60a0b0",
+  white: "#b0b0b8",
+  brightBlack: "#606068",
+  brightRed: "#e88888",
+  brightGreen: "#90c8a0",
+  brightYellow: "#e0c878",
+  brightBlue: "#90b0d8",
+  brightMagenta: "#c098c8",
+  brightCyan: "#80b8c8",
+  brightWhite: "#e0e0e8",
+};
+
 // Theme mapping
 const terminalThemes: Record<ThemeMode, TerminalTheme> = {
   light: lightTheme,
@@ -372,6 +447,9 @@ const terminalThemes: Record<ThemeMode, TerminalTheme> = {
   onedark: onedarkTheme,
   synthwave: synthwaveTheme,
   red: redTheme,
+  cream: creamTheme,
+  sunset: sunsetTheme,
+  gray: grayTheme,
 };
 
 /**

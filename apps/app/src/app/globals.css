@@ -13,6 +13,9 @@
 @custom-variant onedark (&:is(.onedark *));
 @custom-variant synthwave (&:is(.synthwave *));
 @custom-variant red (&:is(.red *));
+@custom-variant cream (&:is(.cream *));
+@custom-variant sunset (&:is(.sunset *));
+@custom-variant gray (&:is(.gray *));
 
 @theme inline {
   --color-background: var(--background);
@@ -1220,6 +1223,252 @@
   --running-indicator-text: oklch(0.6 0.23 25);
 }
 
+.cream {
+  /* Cream Theme - Warm, soft, easy on the eyes */
+  --background: oklch(0.95 0.01 70); /* Warm cream background */
+  --background-50: oklch(0.95 0.01 70 / 0.5);
+  --background-80: oklch(0.95 0.01 70 / 0.8);
+
+  --foreground: oklch(0.25 0.02 60); /* Dark warm brown */
+  --foreground-secondary: oklch(0.45 0.02 60); /* Medium brown */
+  --foreground-muted: oklch(0.55 0.02 60); /* Light brown */
+
+  --card: oklch(0.98 0.005 70); /* Slightly lighter cream */
+  --card-foreground: oklch(0.25 0.02 60);
+  --popover: oklch(0.97 0.008 70);
+  --popover-foreground: oklch(0.25 0.02 60);
+
+  --primary: oklch(0.5 0.12 45); /* Warm terracotta/rust */
+  --primary-foreground: oklch(0.98 0.005 70);
+
+  --brand-400: oklch(0.55 0.12 45);
+  --brand-500: oklch(0.5 0.12 45); /* Terracotta */
+  --brand-600: oklch(0.45 0.13 45);
+
+  --secondary: oklch(0.88 0.02 70);
+  --secondary-foreground: oklch(0.25 0.02 60);
+
+  --muted: oklch(0.9 0.015 70);
+  --muted-foreground: oklch(0.45 0.02 60);
+
+  --accent: oklch(0.85 0.025 70);
+  --accent-foreground: oklch(0.25 0.02 60);
+
+  --destructive: oklch(0.55 0.22 25); /* Warm red */
+
+  --border: oklch(0.85 0.015 70);
+  --border-glass: oklch(0.5 0.12 45 / 0.2);
+
+  --input: oklch(0.98 0.005 70);
+  --ring: oklch(0.5 0.12 45);
+
+  --chart-1: oklch(0.5 0.12 45); /* Terracotta */
+  --chart-2: oklch(0.55 0.15 35); /* Burnt orange */
+  --chart-3: oklch(0.6 0.12 100); /* Olive */
+  --chart-4: oklch(0.5 0.15 20); /* Deep rust */
+  --chart-5: oklch(0.65 0.1 80); /* Golden */
+
+  --sidebar: oklch(0.93 0.012 70);
+  --sidebar-foreground: oklch(0.25 0.02 60);
+  --sidebar-primary: oklch(0.5 0.12 45);
+  --sidebar-primary-foreground: oklch(0.98 0.005 70);
+  --sidebar-accent: oklch(0.88 0.02 70);
+  --sidebar-accent-foreground: oklch(0.25 0.02 60);
+  --sidebar-border: oklch(0.85 0.015 70);
+  --sidebar-ring: oklch(0.5 0.12 45);
+
+  /* Action button colors - Warm earth tones */
+  --action-view: oklch(0.5 0.12 45); /* Terracotta */
+  --action-view-hover: oklch(0.45 0.13 45);
+  --action-followup: oklch(0.55 0.15 35); /* Burnt orange */
+  --action-followup-hover: oklch(0.5 0.16 35);
+  --action-commit: oklch(0.55 0.12 130); /* Sage green */
+  --action-commit-hover: oklch(0.5 0.13 130);
+  --action-verify: oklch(0.55 0.12 130); /* Sage green */
+  --action-verify-hover: oklch(0.5 0.13 130);
+
+  /* Running indicator - Terracotta */
+  --running-indicator: oklch(0.5 0.12 45);
+  --running-indicator-text: oklch(0.55 0.12 45);
+
+  /* Status colors - Cream theme */
+  --status-success: oklch(0.55 0.15 130);
+  --status-success-bg: oklch(0.55 0.15 130 / 0.15);
+  --status-warning: oklch(0.6 0.15 70);
+  --status-warning-bg: oklch(0.6 0.15 70 / 0.15);
+  --status-error: oklch(0.55 0.22 25);
+  --status-error-bg: oklch(0.55 0.22 25 / 0.15);
+  --status-info: oklch(0.5 0.15 230);
+  --status-info-bg: oklch(0.5 0.15 230 / 0.15);
+  --status-backlog: oklch(0.6 0.02 60);
+  --status-in-progress: oklch(0.6 0.15 70);
+  --status-waiting: oklch(0.58 0.13 50);
+}
+
+.sunset {
+  /* Sunset Theme - Mellow oranges and soft purples */
+  --background: oklch(0.15 0.02 280); /* Deep twilight blue-purple */
+  --background-50: oklch(0.15 0.02 280 / 0.5);
+  --background-80: oklch(0.15 0.02 280 / 0.8);
+
+  --foreground: oklch(0.95 0.01 80); /* Warm white */
+  --foreground-secondary: oklch(0.75 0.02 60);
+  --foreground-muted: oklch(0.6 0.02 60);
+
+  --card: oklch(0.2 0.025 280);
+  --card-foreground: oklch(0.95 0.01 80);
+  --popover: oklch(0.18 0.02 280);
+  --popover-foreground: oklch(0.95 0.01 80);
+
+  --primary: oklch(0.68 0.18 45); /* Mellow sunset orange */
+  --primary-foreground: oklch(0.15 0.02 280);
+
+  --brand-400: oklch(0.72 0.17 45);
+  --brand-500: oklch(0.68 0.18 45); /* Soft sunset orange */
+  --brand-600: oklch(0.64 0.19 42);
+
+  --secondary: oklch(0.25 0.03 280);
+  --secondary-foreground: oklch(0.95 0.01 80);
+
+  --muted: oklch(0.27 0.03 280);
+  --muted-foreground: oklch(0.6 0.02 60);
+
+  --accent: oklch(0.35 0.04 310);
+  --accent-foreground: oklch(0.95 0.01 80);
+
+  --destructive: oklch(0.6 0.2 25); /* Muted red */
+
+  --border: oklch(0.32 0.04 280);
+  --border-glass: oklch(0.68 0.18 45 / 0.3);
+
+  --input: oklch(0.2 0.025 280);
+  --ring: oklch(0.68 0.18 45);
+
+  --chart-1: oklch(0.68 0.18 45); /* Mellow orange */
+  --chart-2: oklch(0.75 0.16 340); /* Soft pink sunset */
+  --chart-3: oklch(0.78 0.18 70); /* Soft golden */
+  --chart-4: oklch(0.66 0.19 42); /* Subtle coral */
+  --chart-5: oklch(0.72 0.14 310); /* Pastel purple */
+
+  --sidebar: oklch(0.13 0.015 280);
+  --sidebar-foreground: oklch(0.95 0.01 80);
+  --sidebar-primary: oklch(0.68 0.18 45);
+  --sidebar-primary-foreground: oklch(0.15 0.02 280);
+  --sidebar-accent: oklch(0.25 0.03 280);
+  --sidebar-accent-foreground: oklch(0.95 0.01 80);
+  --sidebar-border: oklch(0.32 0.04 280);
+  --sidebar-ring: oklch(0.68 0.18 45);
+
+  /* Action button colors - Mellow sunset palette */
+  --action-view: oklch(0.68 0.18 45); /* Mellow orange */
+  --action-view-hover: oklch(0.64 0.19 42);
+  --action-followup: oklch(0.75 0.16 340); /* Soft pink */
+  --action-followup-hover: oklch(0.7 0.17 340);
+  --action-commit: oklch(0.65 0.16 140); /* Soft green */
+  --action-commit-hover: oklch(0.6 0.17 140);
+  --action-verify: oklch(0.65 0.16 140); /* Soft green */
+  --action-verify-hover: oklch(0.6 0.17 140);
+
+  /* Running indicator - Mellow orange */
+  --running-indicator: oklch(0.68 0.18 45);
+  --running-indicator-text: oklch(0.72 0.17 45);
+
+  /* Status colors - Sunset theme */
+  --status-success: oklch(0.65 0.16 140);
+  --status-success-bg: oklch(0.65 0.16 140 / 0.2);
+  --status-warning: oklch(0.78 0.18 70);
+  --status-warning-bg: oklch(0.78 0.18 70 / 0.2);
+  --status-error: oklch(0.65 0.2 25);
+  --status-error-bg: oklch(0.65 0.2 25 / 0.2);
+  --status-info: oklch(0.75 0.16 340);
+  --status-info-bg: oklch(0.75 0.16 340 / 0.2);
+  --status-backlog: oklch(0.65 0.02 280);
+  --status-in-progress: oklch(0.78 0.18 70);
+  --status-waiting: oklch(0.72 0.17 60);
+}
+
+.gray {
+  /* Gray Theme - Modern, minimal gray scheme inspired by Cursor */
+  --background: oklch(0.2 0.005 250); /* Medium-dark neutral gray */
+  --background-50: oklch(0.2 0.005 250 / 0.5);
+  --background-80: oklch(0.2 0.005 250 / 0.8);
+
+  --foreground: oklch(0.9 0.005 250); /* Light gray */
+  --foreground-secondary: oklch(0.65 0.005 250);
+  --foreground-muted: oklch(0.5 0.005 250);
+
+  --card: oklch(0.24 0.005 250);
+  --card-foreground: oklch(0.9 0.005 250);
+  --popover: oklch(0.22 0.005 250);
+  --popover-foreground: oklch(0.9 0.005 250);
+
+  --primary: oklch(0.6 0.08 250); /* Subtle blue-gray */
+  --primary-foreground: oklch(0.95 0.005 250);
+
+  --brand-400: oklch(0.65 0.08 250);
+  --brand-500: oklch(0.6 0.08 250); /* Blue-gray */
+  --brand-600: oklch(0.55 0.09 250);
+
+  --secondary: oklch(0.28 0.005 250);
+  --secondary-foreground: oklch(0.9 0.005 250);
+
+  --muted: oklch(0.3 0.005 250);
+  --muted-foreground: oklch(0.6 0.005 250);
+
+  --accent: oklch(0.35 0.01 250);
+  --accent-foreground: oklch(0.9 0.005 250);
+
+  --destructive: oklch(0.6 0.2 25); /* Muted red */
+
+  --border: oklch(0.32 0.005 250);
+  --border-glass: oklch(0.6 0.08 250 / 0.2);
+
+  --input: oklch(0.24 0.005 250);
+  --ring: oklch(0.6 0.08 250);
+
+  --chart-1: oklch(0.6 0.08 250); /* Blue-gray */
+  --chart-2: oklch(0.65 0.1 210); /* Cyan */
+  --chart-3: oklch(0.7 0.12 160); /* Teal */
+  --chart-4: oklch(0.65 0.1 280); /* Purple */
+  --chart-5: oklch(0.7 0.08 300); /* Violet */
+
+  --sidebar: oklch(0.18 0.005 250);
+  --sidebar-foreground: oklch(0.9 0.005 250);
+  --sidebar-primary: oklch(0.6 0.08 250);
+  --sidebar-primary-foreground: oklch(0.95 0.005 250);
+  --sidebar-accent: oklch(0.28 0.005 250);
+  --sidebar-accent-foreground: oklch(0.9 0.005 250);
+  --sidebar-border: oklch(0.32 0.005 250);
+  --sidebar-ring: oklch(0.6 0.08 250);
+
+  /* Action button colors - Subtle modern colors */
+  --action-view: oklch(0.6 0.08 250); /* Blue-gray */
+  --action-view-hover: oklch(0.55 0.09 250);
+  --action-followup: oklch(0.65 0.1 210); /* Cyan */
+  --action-followup-hover: oklch(0.6 0.11 210);
+  --action-commit: oklch(0.65 0.12 150); /* Teal-green */
+  --action-commit-hover: oklch(0.6 0.13 150);
+  --action-verify: oklch(0.65 0.12 150); /* Teal-green */
+  --action-verify-hover: oklch(0.6 0.13 150);
+
+  /* Running indicator - Blue-gray */
+  --running-indicator: oklch(0.6 0.08 250);
+  --running-indicator-text: oklch(0.65 0.08 250);
+
+  /* Status colors - Gray theme */
+  --status-success: oklch(0.65 0.12 150);
+  --status-success-bg: oklch(0.65 0.12 150 / 0.2);
+  --status-warning: oklch(0.7 0.15 70);
+  --status-warning-bg: oklch(0.7 0.15 70 / 0.2);
+  --status-error: oklch(0.6 0.2 25);
+  --status-error-bg: oklch(0.6 0.2 25 / 0.2);
+  --status-info: oklch(0.65 0.1 210);
+  --status-info-bg: oklch(0.65 0.1 210 / 0.2);
+  --status-backlog: oklch(0.6 0.005 250);
+  --status-in-progress: oklch(0.7 0.15 70);
+  --status-waiting: oklch(0.68 0.1 220);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -1255,12 +1504,12 @@
 }
 
 /* Custom scrollbar for dark themes */
-:is(.dark, .retro, .dracula, .nord, .monokai, .tokyonight, .solarized, .gruvbox, .catppuccin, .onedark, .synthwave, .red) ::-webkit-scrollbar {
+:is(.dark, .retro, .dracula, .nord, .monokai, .tokyonight, .solarized, .gruvbox, .catppuccin, .onedark, .synthwave, .red, .sunset, .gray) ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-:is(.dark, .retro, .dracula, .nord, .monokai, .tokyonight, .solarized, .gruvbox, .catppuccin, .onedark, .synthwave, .red) ::-webkit-scrollbar-track {
+:is(.dark, .retro, .dracula, .nord, .monokai, .tokyonight, .solarized, .gruvbox, .catppuccin, .onedark, .synthwave, .red, .sunset, .gray) ::-webkit-scrollbar-track {
   background: var(--muted);
 }
 
@@ -1294,6 +1543,53 @@
 
 .red ::-webkit-scrollbar-track {
   background: oklch(0.15 0.05 25);
+}
+
+/* Cream theme scrollbar */
+.cream ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.cream ::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.03 60);
+  border-radius: 4px;
+}
+
+.cream ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0.04 60);
+}
+
+.cream ::-webkit-scrollbar-track {
+  background: oklch(0.9 0.015 70);
+}
+
+/* Sunset theme scrollbar */
+.sunset ::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0.14 45);
+  border-radius: 4px;
+}
+
+.sunset ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.58 0.16 45);
+}
+
+.sunset ::-webkit-scrollbar-track {
+  background: oklch(0.18 0.03 280);
+}
+
+/* Gray theme scrollbar */
+.gray ::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0.01 250);
+  border-radius: 4px;
+}
+
+.gray ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0.02 250);
+}
+
+.gray ::-webkit-scrollbar-track {
+  background: oklch(0.25 0.005 250);
 }
 
 /* Always visible scrollbar for file diffs and code blocks */
@@ -1350,6 +1646,45 @@
 .retro .scrollbar-visible::-webkit-scrollbar-track {
   background: var(--background);
   border-radius: 0;
+}
+
+/* Cream theme scrollbar-visible adjustments */
+.cream .scrollbar-visible::-webkit-scrollbar-track {
+  background: oklch(0.9 0.015 70);
+}
+
+.cream .scrollbar-visible::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.03 60);
+}
+
+.cream .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0.04 60);
+}
+
+/* Sunset theme scrollbar-visible adjustments */
+.sunset .scrollbar-visible::-webkit-scrollbar-track {
+  background: oklch(0.18 0.03 280);
+}
+
+.sunset .scrollbar-visible::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0.14 45);
+}
+
+.sunset .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.58 0.16 45);
+}
+
+/* Gray theme scrollbar-visible adjustments */
+.gray .scrollbar-visible::-webkit-scrollbar-track {
+  background: oklch(0.25 0.005 250);
+}
+
+.gray .scrollbar-visible::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0.01 250);
+}
+
+.gray .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0.02 250);
 }
 
 /* Glass morphism utilities */
