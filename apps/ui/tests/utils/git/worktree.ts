@@ -459,6 +459,7 @@ export async function setupProjectWithStaleWorktree(page: Page, projectPath: str
 /**
  * Wait for the board view to load
  * Navigates to /board first since the index route shows WelcomeView
+ * Handles zustand store hydration timing (may show "no-project" briefly)
  */
 export async function waitForBoardView(page: Page): Promise<void> {
   // Navigate directly to /board route (index route shows welcome view)
@@ -467,7 +468,19 @@ export async function waitForBoardView(page: Page): Promise<void> {
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
   }
-  await page.waitForSelector('[data-testid="board-view"]', { timeout: TIMEOUTS.long });
+
+  // Wait for either board-view (success) or board-view-no-project (store not hydrated yet)
+  // Then poll until board-view appears (zustand hydrates from localStorage)
+  await page.waitForFunction(
+    () => {
+      const boardView = document.querySelector('[data-testid="board-view"]');
+      const noProject = document.querySelector('[data-testid="board-view-no-project"]');
+      const loading = document.querySelector('[data-testid="board-view-loading"]');
+      // Return true only when board-view is visible (store hydrated with project)
+      return boardView !== null;
+    },
+    { timeout: TIMEOUTS.long }
+  );
 }
 
 /**
