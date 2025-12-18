@@ -114,6 +114,7 @@
     "appId": "com.automaker.app",
     "productName": "Automaker",
     "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "npmRebuild": false,
     "afterPack": "./scripts/rebuild-server-natives.cjs",
     "directories": {
       "output": "release"
