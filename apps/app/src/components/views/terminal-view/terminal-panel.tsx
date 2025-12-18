@@ -78,11 +78,15 @@ export function TerminalPanel({
 
   // Detect platform on mount
   useEffect(() => {
-    // Use modern userAgentData API with fallback to deprecated navigator.platform
-    const detected = (navigator as Navigator & { userAgentData?: { platform: string } })
-      .userAgentData?.platform?.toLowerCase().includes("mac")
-      ?? navigator.platform?.toLowerCase().includes("mac")
-      ?? false;
+    // Use modern userAgentData API with fallback to navigator.platform
+    const nav = navigator as Navigator & { userAgentData?: { platform: string } };
+    let detected = false;
+    if (nav.userAgentData?.platform) {
+      detected = nav.userAgentData.platform.toLowerCase().includes("mac");
+    } else if (typeof navigator !== "undefined") {
+      // Fallback for browsers without userAgentData (intentionally using deprecated API)
+      detected = /mac/i.test(navigator.platform);
+    }
     setIsMac(detected);
     isMacRef.current = detected;
   }, []);
@@ -736,11 +740,35 @@ export function TerminalPanel({
     buttons[focusedMenuIndex]?.focus();
   }, [focusedMenuIndex, contextMenu]);
 
-  // Handle right-click context menu
+  // Handle right-click context menu with boundary checking
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY });
+
+    // Menu dimensions (approximate)
+    const menuWidth = 160;
+    const menuHeight = 152; // 4 items + separator + padding
+    const padding = 8;
+
+    // Calculate position with boundary checks
+    let x = e.clientX;
+    let y = e.clientY;
+
+    // Check right edge
+    if (x + menuWidth + padding > window.innerWidth) {
+      x = window.innerWidth - menuWidth - padding;
+    }
+
+    // Check bottom edge
+    if (y + menuHeight + padding > window.innerHeight) {
+      y = window.innerHeight - menuHeight - padding;
+    }
+
+    // Ensure not negative
+    x = Math.max(padding, x);
+    y = Math.max(padding, y);
+
+    setContextMenu({ x, y });
   }, []);
 
   // Combine refs for the container
