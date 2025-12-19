@@ -3,8 +3,6 @@
  * Extracts useful information from agent context files for display in kanban cards
  */
 
-import { DEFAULT_MODELS } from "@automaker/types";
-
 export interface AgentTaskInfo {
   // Task list extracted from TodoWrite tool calls
   todos: {
@@ -29,7 +27,7 @@ export interface AgentTaskInfo {
 /**
  * Default model used by the feature executor
  */
-export const DEFAULT_MODEL = DEFAULT_MODELS.claude;
+export const DEFAULT_MODEL = "claude-opus-4-5-20251101";
 
 /**
  * Formats a model name for display

@@ -6,8 +6,8 @@ import type { Request, Response } from "express";
 import fs from "fs/promises";
 import path from "path";
 import { validatePath } from "@automaker/platform";
+import { mkdirSafe } from "@automaker/utils";
 import { getErrorMessage, logError } from "../common.js";
-import { mkdirSafe } from "../../../lib/fs-utils.js";
 
 export function createWriteHandler() {
   return async (req: Request, res: Response): Promise<void> => {
