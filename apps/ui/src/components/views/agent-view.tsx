@@ -755,8 +755,8 @@ export function AgentView() {
               />
             )}
 
-            {/* Selected Images Preview */}
-            {selectedImages.length > 0 && (
+            {/* Selected Images Preview - only show when ImageDropZone is hidden to avoid duplicate display */}
+            {selectedImages.length > 0 && !showImageDropZone && (
               <div className="mb-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium text-foreground">
