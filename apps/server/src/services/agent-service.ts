@@ -3,7 +3,6 @@
  * Manages conversation sessions and streams responses via WebSocket
  */
 
-import { AbortError } from "@anthropic-ai/claude-agent-sdk";
 import path from "path";
 import fs from "fs/promises";
 import type { EventEmitter } from "../lib/events.js";

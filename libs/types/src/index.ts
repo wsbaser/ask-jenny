@@ -18,6 +18,7 @@ export type {
 // Feature types
 export type {
   Feature,
+  FeatureImagePath,
   FeatureStatus,
   PlanningMode,
 } from './feature';

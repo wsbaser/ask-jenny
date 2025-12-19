@@ -2,6 +2,14 @@
  * Feature types for AutoMaker feature management
  */
 
+export interface FeatureImagePath {
+  id: string;
+  path: string;
+  filename: string;
+  mimeType: string;
+  [key: string]: unknown;
+}
+
 export interface Feature {
   id: string;
   category: string;
@@ -13,7 +21,7 @@ export interface Feature {
   dependencies?: string[];
   spec?: string;
   model?: string;
-  imagePaths?: Array<string | { path: string; [key: string]: unknown }>;
+  imagePaths?: Array<string | FeatureImagePath | { path: string; [key: string]: unknown }>;
   // Branch info - worktree path is derived at runtime from branchName
   branchName?: string; // Name of the feature branch (undefined = use current worktree)
   skipTests?: boolean;

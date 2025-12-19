@@ -3,7 +3,7 @@ import {
   spawnJSONLProcess,
   spawnProcess,
   type SubprocessOptions,
-} from "@/lib/subprocess-manager.js";
+} from "@automaker/platform";
 import * as cp from "child_process";
 import { EventEmitter } from "events";
 import { Readable } from "stream";

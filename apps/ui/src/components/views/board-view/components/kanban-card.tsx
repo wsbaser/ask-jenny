@@ -40,7 +40,6 @@ import {
   RotateCcw,
   StopCircle,
   Hand,
-  MessageSquare,
   GitCommit,
   Cpu,
   Wrench,

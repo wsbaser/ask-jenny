@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildPromptWithImages } from "@/lib/prompt-builder.js";
-import * as imageHandler from "@/lib/image-handler.js";
+import { buildPromptWithImages } from "@automaker/utils";
+import * as imageHandler from "@automaker/utils";
 
-vi.mock("@/lib/image-handler.js");
+vi.mock("@automaker/utils");
 
 describe("prompt-builder.ts", () => {
   beforeEach(() => {
