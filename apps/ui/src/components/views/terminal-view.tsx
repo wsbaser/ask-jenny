@@ -269,6 +269,49 @@ export function TerminalView() {
   const defaultRunScript = useAppStore((state) => state.terminalState.defaultRunScript);
 
   const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:3008";
+
+  // Helper to collect all session IDs from all tabs
+  const collectAllSessionIds = useCallback((): string[] => {
+    const sessionIds: string[] = [];
+    const collectFromLayout = (node: TerminalPanelContent | null): void => {
+      if (!node) return;
+      if (node.type === "terminal") {
+        sessionIds.push(node.sessionId);
+      } else {
+        node.panels.forEach(collectFromLayout);
+      }
+    };
+    terminalState.tabs.forEach(tab => collectFromLayout(tab.layout));
+    return sessionIds;
+  }, [terminalState.tabs]);
+
+  // Kill all terminal sessions on the server
+  // This should be called before clearTerminalState() to prevent orphaned server sessions
+  const killAllSessions = useCallback(async () => {
+    const sessionIds = collectAllSessionIds();
+    if (sessionIds.length === 0) return;
+
+    const headers: Record<string, string> = {};
+    if (terminalState.authToken) {
+      headers["X-Terminal-Token"] = terminalState.authToken;
+    }
+
+    console.log(`[Terminal] Killing ${sessionIds.length} sessions on server`);
+
+    // Kill all sessions in parallel
+    await Promise.allSettled(
+      sessionIds.map(async (sessionId) => {
+        try {
+          await fetch(`${serverUrl}/api/terminal/sessions/${sessionId}`, {
+            method: "DELETE",
+            headers,
+          });
+        } catch (err) {
+          console.error(`[Terminal] Failed to kill session ${sessionId}:`, err);
+        }
+      })
+    );
+  }, [collectAllSessionIds, terminalState.authToken, serverUrl]);
   const CREATE_COOLDOWN_MS = 500; // Prevent rapid terminal creation
 
   // Helper to check if terminal creation should be debounced
@@ -426,6 +469,47 @@ export function TerminalView() {
     fetchStatus();
   }, [fetchStatus]);
 
+  // Clean up all terminal sessions when the page/app is about to close
+  // This prevents orphaned PTY processes on the server
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Use sendBeacon for reliable delivery during page unload
+      // Fall back to sync fetch if sendBeacon is not available
+      const sessionIds = collectAllSessionIds();
+      if (sessionIds.length === 0) return;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (terminalState.authToken) {
+        headers["X-Terminal-Token"] = terminalState.authToken;
+      }
+
+      // Try to use the bulk delete endpoint if available, otherwise delete individually
+      // Using sendBeacon for reliability during page unload
+      sessionIds.forEach((sessionId) => {
+        const url = `${serverUrl}/api/terminal/sessions/${sessionId}`;
+        // sendBeacon doesn't support DELETE method, so we'll use a sync XMLHttpRequest
+        // which is more reliable during page unload than fetch
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open("DELETE", url, false); // synchronous
+          if (terminalState.authToken) {
+            xhr.setRequestHeader("X-Terminal-Token", terminalState.authToken);
+          }
+          xhr.send();
+        } catch {
+          // Ignore errors during unload - best effort cleanup
+        }
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [collectAllSessionIds, terminalState.authToken, serverUrl]);
+
   // Fetch server settings when terminal is unlocked
   useEffect(() => {
     if (terminalState.isUnlocked) {
@@ -455,15 +539,23 @@ export function TerminalView() {
     // Update the previous project ref
     prevProjectPathRef.current = currentPath;
 
+    // Helper to kill sessions and clear state
+    const killAndClear = async () => {
+      // Kill all server-side sessions first to prevent orphaned processes
+      await killAllSessions();
+      clearTerminalState();
+    };
+
     // If no current project, just clear terminals
     if (!currentPath) {
-      clearTerminalState();
+      killAndClear();
       return;
     }
 
     // ALWAYS clear existing terminals when switching projects
     // This is critical - prevents old project's terminals from "bleeding" into new project
-    clearTerminalState();
+    // We need to kill server sessions first to prevent orphans
+    killAndClear();
 
     // Check for saved layout for this project
     const savedLayout = getPersistedTerminalLayout(currentPath);
@@ -650,7 +742,7 @@ export function TerminalView() {
       };
 
       restoreLayout();
-  }, [currentProject?.path, saveTerminalLayout, getPersistedTerminalLayout, clearTerminalState, addTerminalTab, serverUrl]);
+  }, [currentProject?.path, saveTerminalLayout, getPersistedTerminalLayout, clearTerminalState, addTerminalTab, serverUrl, killAllSessions]);
 
   // Save terminal layout whenever it changes (debounced to prevent excessive writes)
   // Also save when tabs become empty so closed terminals stay closed on refresh

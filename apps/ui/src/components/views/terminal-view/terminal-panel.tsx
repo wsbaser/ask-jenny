@@ -896,12 +896,17 @@ export function TerminalPanel({
         resizeDebounceRef.current = null;
       }
 
+      // Clear search decorations before disposing to prevent visual artifacts
+      if (searchAddonRef.current) {
+        searchAddonRef.current.clearDecorations();
+        searchAddonRef.current = null;
+      }
+
       if (xtermRef.current) {
         xtermRef.current.dispose();
         xtermRef.current = null;
       }
       fitAddonRef.current = null;
-      searchAddonRef.current = null;
       setIsTerminalReady(false);
     };
   }, []); // No dependencies - only run once on mount
@@ -950,6 +955,8 @@ export function TerminalPanel({
               // Only process scrollback if there's actual data
               // Don't clear if empty - prevents blank terminal issue
               if (msg.data && msg.data.length > 0) {
+                // Clear any stale search decorations before restoring content
+                searchAddonRef.current?.clearDecorations();
                 // Use reset() which is more reliable than clear() or escape sequences
                 terminal.reset();
                 terminal.write(msg.data);
@@ -1257,6 +1264,8 @@ export function TerminalPanel({
   // Update terminal theme when app theme changes (including system preference)
   useEffect(() => {
     if (xtermRef.current && isTerminalReady) {
+      // Clear any search decorations first to prevent stale color artifacts
+      searchAddonRef.current?.clearDecorations();
       const terminalTheme = getTerminalTheme(resolvedTheme);
       xtermRef.current.options.theme = terminalTheme;
     }
