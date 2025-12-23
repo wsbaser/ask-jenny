@@ -46,7 +46,7 @@ export function GraphView({
       // Skip completed features (they're in archive)
       if (f.status === 'completed') return false;
 
-      const featureBranch = f.branchName;
+      const featureBranch = f.branchName as string | undefined;
 
       if (!featureBranch) {
         // No branch assigned - show only on primary worktree

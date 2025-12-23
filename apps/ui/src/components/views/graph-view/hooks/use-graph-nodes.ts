@@ -5,6 +5,12 @@ import { getBlockingDependencies } from '@automaker/dependency-resolver';
 import { GraphFilterResult } from './use-graph-filter';
 
 export interface TaskNodeData extends Feature {
+  // Re-declare properties from BaseFeature that have index signature issues
+  priority?: number;
+  error?: string;
+  branchName?: string;
+  dependencies?: string[];
+  // Task node specific properties
   isBlocked: boolean;
   isRunning: boolean;
   blockingDependencies: string[];
@@ -112,8 +118,9 @@ export function useGraphNodes({
       nodeList.push(node);
 
       // Create edges for dependencies
-      if (feature.dependencies && feature.dependencies.length > 0) {
-        feature.dependencies.forEach((depId: string) => {
+      const deps = feature.dependencies as string[] | undefined;
+      if (deps && deps.length > 0) {
+        deps.forEach((depId: string) => {
           // Only create edge if the dependency exists in current view
           if (featureMap.has(depId)) {
             const sourceFeature = featureMap.get(depId)!;
