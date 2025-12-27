@@ -1,47 +1,30 @@
-# Phase 2: Cursor Provider Implementation
+/**
+ * Cursor Provider - Executes queries using cursor-agent CLI
+ *
+ * Spawns the cursor-agent CLI with --output-format stream-json for streaming responses.
+ * Normalizes Cursor events to the AutoMaker ProviderMessage format.
+ */
 
-**Status:** `completed`
-**Dependencies:** Phase 1 (Types)
-**Estimated Effort:** Medium-Large (core implementation)
-
----
-
-## Objective
-
-Implement the main `CursorProvider` class that spawns the cursor-agent CLI and streams responses in the AutoMaker provider format.
-
----
-
-## Tasks
-
-### Task 2.1: Create Cursor Provider
-
-**Status:** `completed`
-
-**File:** `apps/server/src/providers/cursor-provider.ts`
-
-```typescript
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { BaseProvider } from './base-provider';
-import {
+import { BaseProvider } from './base-provider.js';
+import type {
   ProviderConfig,
   ExecuteOptions,
   ProviderMessage,
   InstallationStatus,
   ModelDefinition,
-} from './types';
+} from './types.js';
 import {
-  CursorModelId,
-  CursorStreamEvent,
-  CursorSystemEvent,
-  CursorAssistantEvent,
-  CursorToolCallEvent,
-  CursorResultEvent,
+  type CursorStreamEvent,
+  type CursorSystemEvent,
+  type CursorAssistantEvent,
+  type CursorToolCallEvent,
+  type CursorResultEvent,
+  type CursorAuthStatus,
   CURSOR_MODEL_MAP,
-  CursorAuthStatus,
 } from '@automaker/types';
 import { createLogger, isAbortError } from '@automaker/utils';
 import { spawnJSONLProcess, type SubprocessOptions } from '@automaker/platform';
@@ -76,8 +59,6 @@ export interface CursorError extends Error {
  * Normalizes Cursor events to the AutoMaker ProviderMessage format.
  */
 export class CursorProvider extends BaseProvider {
-  private static CLI_NAME = 'cursor-agent';
-
   /**
    * Installation paths based on official cursor-agent install script:
    *
@@ -109,7 +90,6 @@ export class CursorProvider extends BaseProvider {
   private static VERSIONS_DIR = path.join(os.homedir(), '.local/share/cursor-agent/versions');
 
   private cliPath: string | null = null;
-  private currentProcess: ChildProcess | null = null;
 
   constructor(config: ProviderConfig = {}) {
     super(config);
@@ -129,6 +109,7 @@ export class CursorProvider extends BaseProvider {
       const cmd = process.platform === 'win32' ? 'where cursor-agent' : 'which cursor-agent';
       const result = execSync(cmd, { encoding: 'utf8', timeout: 5000 }).trim().split('\n')[0];
       if (result && fs.existsSync(result)) {
+        logger.debug(`Found cursor-agent in PATH: ${result}`);
         return result;
       }
     } catch {
@@ -141,6 +122,7 @@ export class CursorProvider extends BaseProvider {
 
     for (const p of platformPaths) {
       if (fs.existsSync(p)) {
+        logger.debug(`Found cursor-agent at: ${p}`);
         return p;
       }
     }
@@ -158,6 +140,7 @@ export class CursorProvider extends BaseProvider {
           const binaryName = platform === 'win32' ? 'cursor-agent.exe' : 'cursor-agent';
           const versionPath = path.join(CursorProvider.VERSIONS_DIR, version, binaryName);
           if (fs.existsSync(versionPath)) {
+            logger.debug(`Found cursor-agent version ${version} at: ${versionPath}`);
             return versionPath;
           }
         }
@@ -166,6 +149,7 @@ export class CursorProvider extends BaseProvider {
       }
     }
 
+    logger.debug('cursor-agent CLI not found');
     return null;
   }
 
@@ -236,8 +220,9 @@ export class CursorProvider extends BaseProvider {
       // If we get here without error, assume authenticated
       // (actual auth check would need a real API call)
       return { authenticated: true, method: 'login' };
-    } catch (error: any) {
-      if (error.stderr?.includes('not authenticated') || error.stderr?.includes('log in')) {
+    } catch (error: unknown) {
+      const execError = error as { stderr?: string };
+      if (execError.stderr?.includes('not authenticated') || execError.stderr?.includes('log in')) {
         return { authenticated: false, method: 'none' };
       }
     }
@@ -273,7 +258,7 @@ export class CursorProvider extends BaseProvider {
       modelString: id,
       provider: 'cursor',
       description: config.description,
-      tier: config.tier === 'pro' ? 'premium' : 'basic',
+      tier: config.tier === 'pro' ? ('premium' as const) : ('basic' as const),
       supportsTools: true,
       supportsVision: false, // Cursor CLI may not support vision
     }));
@@ -369,20 +354,6 @@ export class CursorProvider extends BaseProvider {
       stderr || `Cursor agent exited with code ${exitCode}`,
       false
     );
-  }
-
-  /**
-   * Parse a line of stream-json output
-   */
-  private parseStreamLine(line: string): CursorStreamEvent | null {
-    if (!line.trim()) return null;
-
-    try {
-      return JSON.parse(line) as CursorStreamEvent;
-    } catch {
-      logger.debug('[CursorProvider] Failed to parse stream line:', line);
-      return null;
-    }
   }
 
   /**
@@ -564,15 +535,23 @@ export class CursorProvider extends BaseProvider {
     // Add the prompt
     args.push(promptText);
 
-    logger.debug(`[CursorProvider] Executing: ${this.cliPath} ${args.slice(0, 6).join(' ')}...`);
+    logger.debug(`Executing: ${this.cliPath} ${args.slice(0, 6).join(' ')}...`);
 
     // Use spawnJSONLProcess from @automaker/platform for JSONL streaming
     // This handles line buffering, timeouts, and abort signals automatically
+    // Filter out undefined values from process.env to satisfy TypeScript
+    const filteredEnv: Record<string, string> = {};
+    for (const [key, value] of Object.entries(process.env)) {
+      if (value !== undefined) {
+        filteredEnv[key] = value;
+      }
+    }
+
     const subprocessOptions: SubprocessOptions = {
       command: this.cliPath,
       args,
       cwd,
-      env: { ...process.env },
+      env: filteredEnv,
       abortController: options.abortController,
       timeout: 120000, // 2 min timeout for CLI operations (may take longer than default 30s)
     };
@@ -587,6 +566,7 @@ export class CursorProvider extends BaseProvider {
         // Capture session ID from system init
         if (event.type === 'system' && (event as CursorSystemEvent).subtype === 'init') {
           sessionId = event.session_id;
+          logger.debug(`Session started: ${sessionId}`);
         }
 
         // Normalize and yield the event
@@ -602,24 +582,18 @@ export class CursorProvider extends BaseProvider {
     } catch (error) {
       // Use isAbortError from @automaker/utils for abort detection
       if (isAbortError(error)) {
+        logger.debug('Query aborted');
         return; // Clean abort, don't throw
       }
 
       // Map CLI errors to CursorError
       if (error instanceof Error && 'stderr' in error) {
-        throw this.mapError((error as any).stderr || error.message, (error as any).exitCode);
+        throw this.mapError(
+          (error as { stderr?: string }).stderr || error.message,
+          (error as { exitCode?: number | null }).exitCode ?? null
+        );
       }
       throw error;
-    }
-  }
-
-  /**
-   * Abort the current execution
-   */
-  abort(): void {
-    if (this.currentProcess) {
-      this.currentProcess.kill('SIGTERM');
-      this.currentProcess = null;
     }
   }
 
@@ -631,220 +605,3 @@ export class CursorProvider extends BaseProvider {
     return supported.includes(feature);
   }
 }
-```
-
-### Task 2.2: Create Cursor Config Manager
-
-**Status:** `completed`
-
-**File:** `apps/server/src/providers/cursor-config-manager.ts`
-
-```typescript
-import * as path from 'path';
-import { CursorCliConfig, CursorModelId } from '@automaker/types';
-import { createLogger, mkdirSafe, existsSafe } from '@automaker/utils';
-import { getAutomakerDir } from '@automaker/platform';
-import { secureFs } from '@automaker/platform';
-
-// Create logger for this module
-const logger = createLogger('CursorConfigManager');
-
-/**
- * Manages Cursor CLI configuration
- * Config location: .automaker/cursor-config.json
- */
-export class CursorConfigManager {
-  private configPath: string;
-  private config: CursorCliConfig;
-
-  constructor(projectPath: string) {
-    // Use getAutomakerDir for consistent path resolution
-    this.configPath = path.join(getAutomakerDir(projectPath), 'cursor-config.json');
-    this.config = this.loadConfig();
-  }
-
-  private loadConfig(): CursorCliConfig {
-    try {
-      if (fs.existsSync(this.configPath)) {
-        const content = fs.readFileSync(this.configPath, 'utf8');
-        return JSON.parse(content);
-      }
-    } catch (error) {
-      logger.warn('[CursorConfigManager] Failed to load config:', error);
-    }
-
-    // Return default config
-    return {
-      defaultModel: 'auto',
-      models: ['auto', 'claude-sonnet-4', 'gpt-4o-mini'],
-    };
-  }
-
-  private saveConfig(): void {
-    try {
-      const dir = path.dirname(this.configPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
-      logger.debug('[CursorConfigManager] Config saved');
-    } catch (error) {
-      logger.error('[CursorConfigManager] Failed to save config:', error);
-      throw error;
-    }
-  }
-
-  getConfig(): CursorCliConfig {
-    return { ...this.config };
-  }
-
-  getDefaultModel(): CursorModelId {
-    return this.config.defaultModel || 'auto';
-  }
-
-  setDefaultModel(model: CursorModelId): void {
-    this.config.defaultModel = model;
-    this.saveConfig();
-  }
-
-  getEnabledModels(): CursorModelId[] {
-    return this.config.models || ['auto'];
-  }
-
-  setEnabledModels(models: CursorModelId[]): void {
-    this.config.models = models;
-    this.saveConfig();
-  }
-
-  addModel(model: CursorModelId): void {
-    if (!this.config.models) {
-      this.config.models = [];
-    }
-    if (!this.config.models.includes(model)) {
-      this.config.models.push(model);
-      this.saveConfig();
-    }
-  }
-
-  removeModel(model: CursorModelId): void {
-    if (this.config.models) {
-      this.config.models = this.config.models.filter((m) => m !== model);
-      this.saveConfig();
-    }
-  }
-}
-```
-
----
-
-## Verification
-
-### Test 1: Provider Instantiation
-
-```typescript
-// test-cursor-provider.ts
-import { CursorProvider } from './apps/server/src/providers/cursor-provider';
-
-const provider = new CursorProvider();
-console.log('Provider name:', provider.getName()); // Should be 'cursor'
-
-const status = await provider.detectInstallation();
-console.log('Installation status:', status);
-
-const models = provider.getAvailableModels();
-console.log('Available models:', models.length);
-```
-
-### Test 2: CLI Detection (requires cursor-agent installed)
-
-```bash
-# Check if cursor-agent is found
-node -e "
-const { CursorProvider } = require('./apps/server/dist/providers/cursor-provider');
-const p = new CursorProvider();
-p.isInstalled().then(installed => {
-  console.log('Installed:', installed);
-  if (installed) {
-    p.getVersion().then(v => console.log('Version:', v));
-    p.checkAuth().then(a => console.log('Auth:', a));
-  }
-});
-"
-```
-
-### Test 3: Simple Query (requires cursor-agent authenticated)
-
-```typescript
-// test-cursor-query.ts
-import { CursorProvider } from './apps/server/src/providers/cursor-provider';
-
-const provider = new CursorProvider();
-const stream = provider.executeQuery({
-  prompt: 'What is 2 + 2? Reply with just the number.',
-  model: 'auto',
-  cwd: process.cwd(),
-});
-
-for await (const msg of stream) {
-  console.log('Message:', JSON.stringify(msg, null, 2));
-}
-```
-
-### Test 4: Error Handling
-
-```typescript
-// Test with invalid model
-try {
-  const stream = provider.executeQuery({
-    prompt: 'test',
-    model: 'invalid-model-xyz',
-    cwd: process.cwd(),
-  });
-  for await (const msg of stream) {
-    // Should not reach here
-  }
-} catch (error) {
-  console.log('Error code:', error.code);
-  console.log('Suggestion:', error.suggestion);
-}
-```
-
----
-
-## Verification Checklist
-
-Before marking this phase complete:
-
-- [ ] `cursor-provider.ts` compiles without errors
-- [ ] `cursor-config-manager.ts` compiles without errors
-- [ ] Provider returns correct name ('cursor')
-- [ ] `detectInstallation()` correctly detects CLI
-- [ ] `getAvailableModels()` returns model definitions
-- [ ] `executeQuery()` streams messages (if CLI installed)
-- [ ] Errors are properly mapped to CursorError
-- [ ] Abort signal terminates process
-
----
-
-## Files Changed
-
-| File                                                 | Action | Description       |
-| ---------------------------------------------------- | ------ | ----------------- |
-| `apps/server/src/providers/cursor-provider.ts`       | Create | Main provider     |
-| `apps/server/src/providers/cursor-config-manager.ts` | Create | Config management |
-
----
-
-## Known Limitations
-
-1. **Windows Support**: CLI path detection may need adjustment
-2. **Vision**: Cursor CLI may not support image inputs
-3. **Resume**: Session resumption not implemented in Phase 2
-
----
-
-## Notes
-
-- The provider uses `--stream-partial-output` for real-time character streaming
-- Tool call events are normalized to match Claude SDK format
-- Session IDs are captured from system init event
