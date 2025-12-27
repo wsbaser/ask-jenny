@@ -1153,6 +1153,7 @@ Format your response as a structured markdown document.`;
         allowedTools: sdkOptions.allowedTools as string[],
         abortController,
         settingSources: sdkOptions.settingSources,
+        sandbox: sdkOptions.sandbox, // Pass sandbox configuration
       };
 
       const stream = provider.executeQuery(options);
@@ -1887,6 +1888,7 @@ This mock response was generated because AUTOMAKER_MOCK_AGENT=true was set.
       abortController,
       systemPrompt: sdkOptions.systemPrompt,
       settingSources: sdkOptions.settingSources,
+      sandbox: sdkOptions.sandbox, // Pass sandbox configuration
     };
 
     // Execute via provider

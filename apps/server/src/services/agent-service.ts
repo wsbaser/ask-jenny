@@ -296,6 +296,7 @@ export class AgentService {
         abortController: session.abortController!,
         conversationHistory: conversationHistory.length > 0 ? conversationHistory : undefined,
         settingSources: sdkOptions.settingSources,
+        sandbox: sdkOptions.sandbox, // Pass sandbox configuration
         sdkSessionId: session.sdkSessionId, // Pass SDK session ID for resuming
       };
 

@@ -69,6 +69,8 @@ export class ClaudeProvider extends BaseProvider {
         : {}),
       // Forward settingSources for CLAUDE.md file loading
       ...(options.settingSources && { settingSources: options.settingSources }),
+      // Forward sandbox configuration
+      ...(options.sandbox && { sandbox: options.sandbox }),
     };
 
     console.log('[ClaudeProvider] SDK options prepared:', {
