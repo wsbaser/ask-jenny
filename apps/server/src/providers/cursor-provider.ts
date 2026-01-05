@@ -321,12 +321,19 @@ export class CursorProvider extends CliProvider {
     // Build CLI arguments for cursor-agent
     // NOTE: Prompt is NOT included here - it's passed via stdin to avoid
     // shell escaping issues when content contains $(), backticks, etc.
-    const cliArgs: string[] = [
+    const cliArgs: string[] = [];
+
+    // If using Cursor IDE (cliPath is 'cursor' not 'cursor-agent'), add 'agent' subcommand
+    if (this.cliPath && !this.cliPath.includes('cursor-agent')) {
+      cliArgs.push('agent');
+    }
+
+    cliArgs.push(
       '-p', // Print mode (non-interactive)
       '--output-format',
       'stream-json',
-      '--stream-partial-output', // Real-time streaming
-    ];
+      '--stream-partial-output' // Real-time streaming
+    );
 
     // Only add --force if NOT in read-only mode
     // Without --force, Cursor CLI suggests changes but doesn't apply them
@@ -472,7 +479,9 @@ export class CursorProvider extends CliProvider {
   // ==========================================================================
 
   /**
-   * Override CLI detection to add Cursor-specific versions directory check
+   * Override CLI detection to add Cursor-specific checks:
+   * 1. Versions directory for cursor-agent installations
+   * 2. Cursor IDE with 'cursor agent' subcommand support
    */
   protected detectCli(): CliDetectionResult {
     // First try standard detection (PATH, common paths, WSL)
@@ -504,6 +513,39 @@ export class CursorProvider extends CliProvider {
         }
       } catch {
         // Ignore directory read errors
+      }
+    }
+
+    // If cursor-agent not found, try to find 'cursor' IDE and use 'cursor agent' subcommand
+    // The Cursor IDE includes the agent as a subcommand: cursor agent
+    if (process.platform !== 'win32') {
+      const cursorPaths = [
+        '/usr/bin/cursor',
+        '/usr/local/bin/cursor',
+        path.join(os.homedir(), '.local/bin/cursor'),
+        '/opt/cursor/cursor',
+      ];
+
+      for (const cursorPath of cursorPaths) {
+        if (fs.existsSync(cursorPath)) {
+          // Verify cursor agent subcommand works
+          try {
+            execSync(`"${cursorPath}" agent --version`, {
+              encoding: 'utf8',
+              timeout: 5000,
+              stdio: 'pipe',
+            });
+            logger.debug(`Using cursor agent via Cursor IDE: ${cursorPath}`);
+            // Return cursor path but we'll use 'cursor agent' subcommand
+            return {
+              cliPath: cursorPath,
+              useWsl: false,
+              strategy: 'native',
+            };
+          } catch {
+            // cursor agent subcommand doesn't work, try next path
+          }
+        }
       }
     }
 
@@ -838,9 +880,16 @@ export class CursorProvider extends CliProvider {
         });
         return result;
       }
-      const result = execSync(`"${this.cliPath}" --version`, {
+
+      // If using Cursor IDE, use 'cursor agent --version'
+      const versionCmd = this.cliPath.includes('cursor-agent')
+        ? `"${this.cliPath}" --version`
+        : `"${this.cliPath}" agent --version`;
+
+      const result = execSync(versionCmd, {
         encoding: 'utf8',
         timeout: 5000,
+        stdio: 'pipe',
       }).trim();
       return result;
     } catch {

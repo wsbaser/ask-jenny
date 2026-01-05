@@ -17,7 +17,11 @@ export type {
   McpStdioServerConfig,
   McpSSEServerConfig,
   McpHttpServerConfig,
+  ReasoningEffort,
 } from './provider.js';
+
+// Codex CLI types
+export type { CodexSandboxMode, CodexApprovalPolicy, CodexCliConfig } from './codex.js';
 
 // Feature types
 export type { Feature, FeatureImagePath, FeatureTextFilePath, FeatureStatus } from './feature.js';
@@ -37,7 +41,18 @@ export type { ErrorType, ErrorInfo } from './error.js';
 export type { ImageData, ImageContentBlock } from './image.js';
 
 // Model types and constants
-export { CLAUDE_MODEL_MAP, DEFAULT_MODELS, type ModelAlias } from './model.js';
+export {
+  CLAUDE_MODEL_MAP,
+  CODEX_MODEL_MAP,
+  CODEX_MODEL_IDS,
+  REASONING_CAPABLE_MODELS,
+  supportsReasoningEffort,
+  getAllCodexModelIds,
+  DEFAULT_MODELS,
+  type ModelAlias,
+  type CodexModelId,
+  type AgentModel,
+} from './model.js';
 
 // Event types
 export type { EventType, EventCallback } from './event.js';
@@ -103,11 +118,13 @@ export {
 } from './settings.js';
 
 // Model display constants
-export type { ModelOption, ThinkingLevelOption } from './model-display.js';
+export type { ModelOption, ThinkingLevelOption, ReasoningEffortOption } from './model-display.js';
 export {
   CLAUDE_MODELS,
   THINKING_LEVELS,
   THINKING_LEVEL_LABELS,
+  REASONING_EFFORT_LEVELS,
+  REASONING_EFFORT_LABELS,
   getModelDisplayName,
 } from './model-display.js';
 
@@ -150,6 +167,7 @@ export {
   PROVIDER_PREFIXES,
   isCursorModel,
   isClaudeModel,
+  isCodexModel,
   getModelProvider,
   stripProviderPrefix,
   addProviderPrefix,

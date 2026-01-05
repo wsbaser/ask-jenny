@@ -682,6 +682,51 @@ export interface ElectronAPI {
       user: string | null;
       error?: string;
     }>;
+    getCursorStatus: () => Promise<{
+      success: boolean;
+      installed: boolean;
+      version: string | null;
+      path: string | null;
+      auth: {
+        authenticated: boolean;
+        method: string;
+      };
+      installCommand?: string;
+      loginCommand?: string;
+      error?: string;
+    }>;
+    getCodexStatus: () => Promise<{
+      success: boolean;
+      installed: boolean;
+      version: string | null;
+      path: string | null;
+      auth: {
+        authenticated: boolean;
+        method: string;
+        hasApiKey: boolean;
+      };
+      installCommand?: string;
+      loginCommand?: string;
+      error?: string;
+    }>;
+    installCodex: () => Promise<{
+      success: boolean;
+      message?: string;
+      error?: string;
+    }>;
+    authCodex: () => Promise<{
+      success: boolean;
+      requiresManualAuth?: boolean;
+      command?: string;
+      error?: string;
+      message?: string;
+    }>;
+    verifyCodexAuth: (authMethod?: 'cli' | 'api_key') => Promise<{
+      success: boolean;
+      authenticated: boolean;
+      error?: string;
+      details?: string;
+    }>;
     onInstallProgress?: (callback: (progress: any) => void) => () => void;
     onAuthProgress?: (callback: (progress: any) => void) => () => void;
   };

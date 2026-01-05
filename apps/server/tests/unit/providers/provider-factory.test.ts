@@ -141,9 +141,9 @@ describe('provider-factory.ts', () => {
       expect(hasClaudeProvider).toBe(true);
     });
 
-    it('should return exactly 2 providers', () => {
+    it('should return exactly 3 providers', () => {
       const providers = ProviderFactory.getAllProviders();
-      expect(providers).toHaveLength(2);
+      expect(providers).toHaveLength(3);
     });
 
     it('should include CursorProvider', () => {
@@ -179,7 +179,8 @@ describe('provider-factory.ts', () => {
 
       expect(keys).toContain('claude');
       expect(keys).toContain('cursor');
-      expect(keys).toHaveLength(2);
+      expect(keys).toContain('codex');
+      expect(keys).toHaveLength(3);
     });
 
     it('should include cursor status', async () => {

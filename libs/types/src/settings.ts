@@ -6,10 +6,11 @@
  * (for file I/O via SettingsService) and the UI (for state management and sync).
  */
 
-import type { ModelAlias } from './model.js';
+import type { ModelAlias, AgentModel, CodexModelId } from './model.js';
 import type { CursorModelId } from './cursor-models.js';
 import { CURSOR_MODEL_MAP, getAllCursorModelIds } from './cursor-models.js';
 import type { PromptCustomization } from './prompts.js';
+import type { CodexSandboxMode, CodexApprovalPolicy } from './codex.js';
 
 // Re-export ModelAlias for convenience
 export type { ModelAlias };
@@ -95,7 +96,14 @@ export function getThinkingTokenBudget(level: ThinkingLevel | undefined): number
 }
 
 /** ModelProvider - AI model provider for credentials and API key management */
-export type ModelProvider = 'claude' | 'cursor';
+export type ModelProvider = 'claude' | 'cursor' | 'codex';
+
+const DEFAULT_CODEX_AUTO_LOAD_AGENTS = false;
+const DEFAULT_CODEX_SANDBOX_MODE: CodexSandboxMode = 'workspace-write';
+const DEFAULT_CODEX_APPROVAL_POLICY: CodexApprovalPolicy = 'on-request';
+const DEFAULT_CODEX_ENABLE_WEB_SEARCH = false;
+const DEFAULT_CODEX_ENABLE_IMAGES = true;
+const DEFAULT_CODEX_ADDITIONAL_DIRS: string[] = [];
 
 /**
  * PhaseModelEntry - Configuration for a single phase model
@@ -227,7 +235,7 @@ export interface AIProfile {
   name: string;
   /** User-friendly description */
   description: string;
-  /** Provider selection: 'claude' or 'cursor' */
+  /** Provider selection: 'claude', 'cursor', or 'codex' */
   provider: ModelProvider;
   /** Whether this is a built-in default profile */
   isBuiltIn: boolean;
@@ -245,6 +253,10 @@ export interface AIProfile {
    * Note: For Cursor, thinking is embedded in the model ID (e.g., 'claude-sonnet-4-thinking')
    */
   cursorModel?: CursorModelId;
+
+  // Codex-specific settings
+  /** Which Codex/GPT model to use - only for Codex provider */
+  codexModel?: CodexModelId;
 }
 
 /**
@@ -262,6 +274,12 @@ export function profileHasThinking(profile: AIProfile): boolean {
     return modelConfig?.hasThinking ?? false;
   }
 
+  if (profile.provider === 'codex') {
+    // Codex models handle thinking internally (o-series models)
+    const model = profile.codexModel || 'gpt-5.2';
+    return model.startsWith('o');
+  }
+
   return false;
 }
 
@@ -271,6 +289,10 @@ export function profileHasThinking(profile: AIProfile): boolean {
 export function getProfileModelString(profile: AIProfile): string {
   if (profile.provider === 'cursor') {
     return `cursor:${profile.cursorModel || 'auto'}`;
+  }
+
+  if (profile.provider === 'codex') {
+    return `codex:${profile.codexModel || 'gpt-5.2'}`;
   }
 
   // Claude
@@ -479,6 +501,22 @@ export interface GlobalSettings {
   /** Skip showing the sandbox risk warning dialog */
   skipSandboxWarning?: boolean;
 
+  // Codex CLI Settings
+  /** Auto-load .codex/AGENTS.md instructions into Codex prompts */
+  codexAutoLoadAgents?: boolean;
+  /** Sandbox mode for Codex CLI command execution */
+  codexSandboxMode?: CodexSandboxMode;
+  /** Approval policy for Codex CLI tool execution */
+  codexApprovalPolicy?: CodexApprovalPolicy;
+  /** Enable web search capability for Codex CLI (--search flag) */
+  codexEnableWebSearch?: boolean;
+  /** Enable image attachment support for Codex CLI (-i flag) */
+  codexEnableImages?: boolean;
+  /** Additional directories with write access (--add-dir flags) */
+  codexAdditionalDirs?: string[];
+  /** Last thread ID for session resumption */
+  codexThreadId?: string;
+
   // MCP Server Configuration
   /** List of configured MCP servers for agent use */
   mcpServers: MCPServerConfig[];
@@ -674,6 +712,13 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   autoLoadClaudeMd: false,
   enableSandboxMode: false,
   skipSandboxWarning: false,
+  codexAutoLoadAgents: DEFAULT_CODEX_AUTO_LOAD_AGENTS,
+  codexSandboxMode: DEFAULT_CODEX_SANDBOX_MODE,
+  codexApprovalPolicy: DEFAULT_CODEX_APPROVAL_POLICY,
+  codexEnableWebSearch: DEFAULT_CODEX_ENABLE_WEB_SEARCH,
+  codexEnableImages: DEFAULT_CODEX_ENABLE_IMAGES,
+  codexAdditionalDirs: DEFAULT_CODEX_ADDITIONAL_DIRS,
+  codexThreadId: undefined,
   mcpServers: [],
 };
 
