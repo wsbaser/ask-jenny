@@ -31,6 +31,61 @@ import {
 import { isPathAllowed, PathNotAllowedError, getAllowedRootDirectory } from '@automaker/platform';
 
 /**
+ * Result of sandbox compatibility check
+ */
+export interface SandboxCompatibilityResult {
+  /** Whether sandbox mode can be enabled for this path */
+  enabled: boolean;
+  /** Optional message explaining why sandbox is disabled */
+  message?: string;
+}
+
+/**
+ * Check if a working directory is compatible with sandbox mode.
+ * Some paths (like cloud storage mounts) may not work with sandboxed execution.
+ *
+ * @param cwd - The working directory to check
+ * @param sandboxRequested - Whether sandbox mode was requested by settings
+ * @returns Object indicating if sandbox can be enabled and why not if disabled
+ */
+export function checkSandboxCompatibility(
+  cwd: string,
+  sandboxRequested: boolean
+): SandboxCompatibilityResult {
+  if (!sandboxRequested) {
+    return { enabled: false };
+  }
+
+  const resolvedCwd = path.resolve(cwd);
+
+  // Check for cloud storage paths that may not be compatible with sandbox
+  const cloudStoragePatterns = [
+    /^\/Volumes\/GoogleDrive/i,
+    /^\/Volumes\/Dropbox/i,
+    /^\/Volumes\/OneDrive/i,
+    /^\/Volumes\/iCloud/i,
+    /^\/Users\/[^/]+\/Google Drive/i,
+    /^\/Users\/[^/]+\/Dropbox/i,
+    /^\/Users\/[^/]+\/OneDrive/i,
+    /^\/Users\/[^/]+\/Library\/Mobile Documents/i, // iCloud
+    /^C:\\Users\\[^\\]+\\Google Drive/i,
+    /^C:\\Users\\[^\\]+\\Dropbox/i,
+    /^C:\\Users\\[^\\]+\\OneDrive/i,
+  ];
+
+  for (const pattern of cloudStoragePatterns) {
+    if (pattern.test(resolvedCwd)) {
+      return {
+        enabled: false,
+        message: `Sandbox disabled: Cloud storage path detected (${resolvedCwd}). Sandbox mode may not work correctly with cloud-synced directories.`,
+      };
+    }
+  }
+
+  return { enabled: true };
+}
+
+/**
  * Validate that a working directory is allowed by ALLOWED_ROOT_DIRECTORY.
  * This is the centralized security check for ALL AI model invocations.
  *
