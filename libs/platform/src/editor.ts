@@ -117,7 +117,7 @@ const SUPPORTED_EDITORS: EditorDefinition[] = [
     cliCommand: 'code-insiders',
     macAppName: 'Visual Studio Code - Insiders',
   },
-  { name: 'Kiro', cliCommand: 'kido', macAppName: 'Kiro' },
+  { name: 'Kiro', cliCommand: 'kiro', macAppName: 'Kiro' },
   { name: 'Zed', cliCommand: 'zed', macAppName: 'Zed' },
   { name: 'Sublime Text', cliCommand: 'subl', macAppName: 'Sublime Text' },
   { name: 'Windsurf', cliCommand: 'windsurf', macAppName: 'Windsurf' },
