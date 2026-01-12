@@ -8,6 +8,7 @@ import { Bot, Wand2, Settings2, GitBranch } from 'lucide-react';
 import { UsagePopover } from '@/components/usage-popover';
 import { useAppStore } from '@/store/app-store';
 import { useSetupStore } from '@/store/setup-store';
+import { useIsMobile } from '@/hooks/use-media-query';
 import { AutoModeSettingsDialog } from './dialogs/auto-mode-settings-dialog';
 import { WorktreeSettingsDialog } from './dialogs/worktree-settings-dialog';
 import { PlanSettingsDialog } from './dialogs/plan-settings-dialog';
@@ -15,6 +16,7 @@ import { getHttpApiClient } from '@/lib/http-api-client';
 import { BoardSearchBar } from './board-search-bar';
 import { BoardControls } from './board-controls';
 import { ViewToggle, type ViewMode } from './components';
+import { HeaderMobileMenu } from './header-mobile-menu';
 
 export type { ViewMode };
 
@@ -120,8 +122,10 @@ export function BoardHeader({
   // Show if Codex is authenticated (CLI or API key)
   const showCodexUsage = !!codexAuthStatus?.authenticated;
 
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex items-center justify-between p-4 border-b border-border bg-glass backdrop-blur-md">
+    <div className="flex items-center justify-between gap-5 p-4 border-b border-border bg-glass backdrop-blur-md">
       <div className="flex items-center gap-4">
         <BoardSearchBar
           searchQuery={searchQuery}
@@ -130,12 +134,7 @@ export function BoardHeader({
           creatingSpecProjectPath={creatingSpecProjectPath}
           currentProjectPath={projectPath}
         />
-        {isMounted && (
-          <ViewToggle
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-          />
-        )}
+        {isMounted && <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />}
         <BoardControls
           isMounted={isMounted}
           onShowBoardBackground={onShowBoardBackground}
@@ -143,12 +142,28 @@ export function BoardHeader({
           completedCount={completedCount}
         />
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-4 items-center">
         {/* Usage Popover - show if either provider is authenticated */}
         {isMounted && (showClaudeUsage || showCodexUsage) && <UsagePopover />}
 
+        {/* Mobile view: show hamburger menu with all controls */}
+        {isMounted && isMobile && (
+          <HeaderMobileMenu
+            isWorktreePanelVisible={isWorktreePanelVisible}
+            onWorktreePanelToggle={handleWorktreePanelToggle}
+            maxConcurrency={maxConcurrency}
+            runningAgentsCount={runningAgentsCount}
+            onConcurrencyChange={onConcurrencyChange}
+            isAutoModeRunning={isAutoModeRunning}
+            onAutoModeToggle={onAutoModeToggle}
+            onOpenAutoModeSettings={() => setShowAutoModeSettings(true)}
+            onOpenPlanDialog={onOpenPlanDialog}
+          />
+        )}
+
+        {/* Desktop view: show full controls */}
         {/* Worktrees Toggle - only show after mount to prevent hydration issues */}
-        {isMounted && (
+        {isMounted && !isMobile && (
           <div className={controlContainerClass} data-testid="worktrees-toggle-container">
             <GitBranch className="w-4 h-4 text-muted-foreground" />
             <Label htmlFor="worktrees-toggle" className="text-sm font-medium cursor-pointer">
@@ -180,7 +195,7 @@ export function BoardHeader({
         />
 
         {/* Concurrency Control - only show after mount to prevent hydration issues */}
-        {isMounted && (
+        {isMounted && !isMobile && (
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -223,7 +238,7 @@ export function BoardHeader({
         )}
 
         {/* Auto Mode Toggle - only show after mount to prevent hydration issues */}
-        {isMounted && (
+        {isMounted && !isMobile && (
           <div className={controlContainerClass} data-testid="auto-mode-toggle-container">
             <Label htmlFor="auto-mode-toggle" className="text-sm font-medium cursor-pointer">
               Auto Mode
@@ -253,25 +268,27 @@ export function BoardHeader({
           onSkipVerificationChange={setSkipVerificationInAutoMode}
         />
 
-        {/* Plan Button with Settings */}
-        <div className={controlContainerClass} data-testid="plan-button-container">
-          <button
-            onClick={onOpenPlanDialog}
-            className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-            data-testid="plan-backlog-button"
-          >
-            <Wand2 className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Plan</span>
-          </button>
-          <button
-            onClick={() => setShowPlanSettings(true)}
-            className="p-1 rounded hover:bg-accent/50 transition-colors"
-            title="Plan Settings"
-            data-testid="plan-settings-button"
-          >
-            <Settings2 className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </div>
+        {/* Plan Button with Settings - only show on desktop, mobile has it in the menu */}
+        {!isMobile && (
+          <div className={controlContainerClass} data-testid="plan-button-container">
+            <button
+              onClick={onOpenPlanDialog}
+              className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+              data-testid="plan-backlog-button"
+            >
+              <Wand2 className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Plan</span>
+            </button>
+            <button
+              onClick={() => setShowPlanSettings(true)}
+              className="p-1 rounded hover:bg-accent/50 transition-colors"
+              title="Plan Settings"
+              data-testid="plan-settings-button"
+            >
+              <Settings2 className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
 
         {/* Plan Settings Dialog */}
         <PlanSettingsDialog

@@ -386,6 +386,18 @@ export interface GlobalSettings {
   /** How to pass notification data to the command */
   notificationCommandMode: 'args' | 'stdin' | 'env';
 
+  // ntfy.sh Notifications
+  /** Enable ntfy.sh notifications for task completion */
+  ntfyEnabled: boolean;
+  /** ntfy.sh server URL (default: https://ntfy.sh) */
+  ntfyServerUrl: string;
+  /** ntfy.sh topic to publish notifications to */
+  ntfyTopic: string;
+  /** Optional authentication token for private ntfy servers */
+  ntfyAuthToken?: string;
+  /** Priority for ntfy notifications (1-5, default: 3) */
+  ntfyPriority: 1 | 2 | 3 | 4 | 5;
+
   // AI Model Selection (per-phase configuration)
   /** Phase-specific AI model configuration */
   phaseModels: PhaseModelConfig;
@@ -707,6 +719,11 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   muteDoneSound: false,
   notificationCommand: '',
   notificationCommandMode: 'args',
+  ntfyEnabled: false,
+  ntfyServerUrl: 'https://ntfy.sh',
+  ntfyTopic: '',
+  ntfyAuthToken: undefined,
+  ntfyPriority: 3,
   phaseModels: DEFAULT_PHASE_MODELS,
   enhancementModel: 'sonnet',
   validationModel: 'opus',

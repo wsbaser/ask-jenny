@@ -5,9 +5,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AlertCircle, Lock, Hand, Sparkles, FileText } from 'lucide-react';
 import type { Feature } from '@/store/app-store';
 import type { PipelineConfig } from '@automaker/types';
-import { StatusBadge } from './status-badge';
 import { RowActions, type RowActionHandlers } from './row-actions';
-import { LIST_COLUMNS, getColumnWidth, getColumnAlign } from './list-header';
+import { getColumnWidth, getColumnAlign } from './list-header';
 
 /**
  * Format a date string for display in the table
@@ -123,8 +122,10 @@ const IndicatorBadges = memo(function IndicatorBadges({
   isCurrentAutoTask?: boolean;
 }) {
   const hasError = feature.error && !isCurrentAutoTask;
-  const isBlocked = blockingDependencies.length > 0 && !feature.error && feature.status === 'backlog';
-  const showManualVerification = feature.skipTests && !feature.error && feature.status === 'backlog';
+  const isBlocked =
+    blockingDependencies.length > 0 && !feature.error && feature.status === 'backlog';
+  const showManualVerification =
+    feature.skipTests && !feature.error && feature.status === 'backlog';
   const hasPlan = feature.planSpec?.content;
 
   // Check if just finished (within 2 minutes)
@@ -237,11 +238,7 @@ const IndicatorBadges = memo(function IndicatorBadges({
 /**
  * PriorityBadge displays the priority indicator in the table
  */
-const PriorityBadge = memo(function PriorityBadge({
-  priority,
-}: {
-  priority: number | undefined;
-}) {
+const PriorityBadge = memo(function PriorityBadge({ priority }: { priority: number | undefined }) {
   const display = getPriorityDisplay(priority);
 
   if (!display) {
@@ -358,10 +355,7 @@ export const ListRow = memo(function ListRow({
     >
       {/* Checkbox column */}
       {showCheckbox && (
-        <div
-          role="cell"
-          className="flex items-center justify-center w-10 px-2 py-3 shrink-0"
-        >
+        <div role="cell" className="flex items-center justify-center w-10 px-2 py-3 shrink-0">
           <input
             type="checkbox"
             checked={isSelected}
@@ -376,7 +370,7 @@ export const ListRow = memo(function ListRow({
         </div>
       )}
 
-      {/* Title column */}
+      {/* Title column - full width with margin for actions */}
       <div
         role="cell"
         className={cn(
@@ -414,94 +408,16 @@ export const ListRow = memo(function ListRow({
         </div>
       </div>
 
-      {/* Status column */}
-      <div
-        role="cell"
-        className={cn(
-          'flex items-center px-3 py-3',
-          getColumnWidth('status'),
-          getColumnAlign('status')
-        )}
-      >
-        <StatusBadge
-          status={feature.status}
-          pipelineConfig={pipelineConfig}
-          size="sm"
-        />
-      </div>
-
-      {/* Category column */}
-      <div
-        role="cell"
-        className={cn(
-          'flex items-center px-3 py-3 text-sm text-muted-foreground truncate',
-          getColumnWidth('category'),
-          getColumnAlign('category')
-        )}
-        title={feature.category}
-      >
-        {feature.category || '-'}
-      </div>
-
-      {/* Priority column */}
-      <div
-        role="cell"
-        className={cn(
-          'flex items-center px-3 py-3',
-          getColumnWidth('priority'),
-          getColumnAlign('priority')
-        )}
-      >
-        <PriorityBadge priority={feature.priority} />
-      </div>
-
-      {/* Created At column */}
-      <div
-        role="cell"
-        className={cn(
-          'flex items-center px-3 py-3 text-sm text-muted-foreground',
-          getColumnWidth('createdAt'),
-          getColumnAlign('createdAt')
-        )}
-        title={feature.createdAt ? new Date(feature.createdAt).toLocaleString() : undefined}
-      >
-        {formatRelativeDate(feature.createdAt)}
-      </div>
-
-      {/* Updated At column */}
-      <div
-        role="cell"
-        className={cn(
-          'flex items-center px-3 py-3 text-sm text-muted-foreground',
-          getColumnWidth('updatedAt'),
-          getColumnAlign('updatedAt')
-        )}
-        title={feature.updatedAt ? new Date(feature.updatedAt).toLocaleString() : undefined}
-      >
-        {formatRelativeDate(feature.updatedAt)}
-      </div>
-
       {/* Actions column */}
-      <div
-        role="cell"
-        className="flex items-center justify-end px-3 py-3 w-[80px] shrink-0"
-      >
-        <RowActions
-          feature={feature}
-          handlers={handlers}
-          isCurrentAutoTask={isCurrentAutoTask}
-        />
+      <div role="cell" className="flex items-center justify-end px-3 py-3 w-[80px] shrink-0">
+        <RowActions feature={feature} handlers={handlers} isCurrentAutoTask={isCurrentAutoTask} />
       </div>
     </div>
   );
 
   // Wrap with animated border for currently running auto task
   if (isCurrentAutoTask) {
-    return (
-      <div className="animated-border-wrapper-row">
-        {rowContent}
-      </div>
-    );
+    return <div className="animated-border-wrapper-row">{rowContent}</div>;
   }
 
   return rowContent;

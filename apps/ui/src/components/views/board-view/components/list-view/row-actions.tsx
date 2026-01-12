@@ -13,6 +13,7 @@ import {
   Wand2,
   Archive,
   GitBranch,
+  GitFork,
   ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -80,8 +81,10 @@ const MenuItem = memo(function MenuItem({
     default: '',
     destructive: 'text-destructive focus:text-destructive focus:bg-destructive/10',
     primary: 'text-primary focus:text-primary focus:bg-primary/10',
-    success: 'text-[var(--status-success)] focus:text-[var(--status-success)] focus:bg-[var(--status-success)]/10',
-    warning: 'text-[var(--status-waiting)] focus:text-[var(--status-waiting)] focus:bg-[var(--status-waiting)]/10',
+    success:
+      'text-[var(--status-success)] focus:text-[var(--status-success)] focus:bg-[var(--status-success)]/10',
+    warning:
+      'text-[var(--status-waiting)] focus:text-[var(--status-waiting)] focus:bg-[var(--status-waiting)]/10',
   };
 
   return (
@@ -193,11 +196,12 @@ function getPrimaryAction(
  * - Keyboard accessible (focus, Enter/Space to open)
  *
  * Actions by status:
- * - Backlog: Edit, Delete, Make (implement), View Plan
- * - In Progress: View Logs, Resume, Approve Plan, Manual Verify
- * - Waiting Approval: Refine, Verify, View Logs
- * - Verified: View Logs, Complete
- * - Running (auto task): View Logs, Force Stop, Approve Plan
+ * - Backlog: Edit, Delete, Make (implement), View Plan, Spawn Sub-Task
+ * - In Progress: View Logs, Resume, Approve Plan, Manual Verify, Edit, Spawn Sub-Task, Delete
+ * - Waiting Approval: Refine, Verify, View Logs, View PR, Edit, Spawn Sub-Task, Delete
+ * - Verified: View Logs, View PR, View Branch, Complete, Edit, Spawn Sub-Task, Delete
+ * - Running (auto task): View Logs, Approve Plan, Edit, Spawn Sub-Task, Force Stop
+ * - Pipeline statuses: View Logs, Edit, Spawn Sub-Task, Delete
  *
  * @example
  * ```tsx
@@ -246,12 +250,7 @@ export const RowActions = memo(function RowActions({
 
   return (
     <div
-      className={cn(
-        'flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200',
-        'focus-within:opacity-100',
-        open && 'opacity-100',
-        className
-      )}
+      className={cn('flex items-center gap-1', className)}
       onClick={(e) => e.stopPropagation()}
       data-testid={`row-actions-${feature.id}`}
     >
@@ -262,10 +261,13 @@ export const RowActions = memo(function RowActions({
           size="icon-sm"
           className={cn(
             'h-7 w-7',
-            primaryAction.variant === 'destructive' && 'hover:bg-destructive/10 hover:text-destructive',
+            primaryAction.variant === 'destructive' &&
+              'hover:bg-destructive/10 hover:text-destructive',
             primaryAction.variant === 'primary' && 'hover:bg-primary/10 hover:text-primary',
-            primaryAction.variant === 'success' && 'hover:bg-[var(--status-success)]/10 hover:text-[var(--status-success)]',
-            primaryAction.variant === 'warning' && 'hover:bg-[var(--status-waiting)]/10 hover:text-[var(--status-waiting)]'
+            primaryAction.variant === 'success' &&
+              'hover:bg-[var(--status-success)]/10 hover:text-[var(--status-success)]',
+            primaryAction.variant === 'warning' &&
+              'hover:bg-[var(--status-waiting)]/10 hover:text-[var(--status-waiting)]'
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -284,7 +286,7 @@ export const RowActions = memo(function RowActions({
           <Button
             variant="ghost"
             size="icon-sm"
-            className="h-7 w-7"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
             data-testid={`row-actions-trigger-${feature.id}`}
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -310,6 +312,14 @@ export const RowActions = memo(function RowActions({
                   variant="warning"
                 />
               )}
+              <MenuItem icon={Edit} label="Edit" onClick={withClose(handlers.onEdit)} />
+              {handlers.onSpawnTask && (
+                <MenuItem
+                  icon={GitFork}
+                  label="Spawn Sub-Task"
+                  onClick={withClose(handlers.onSpawnTask)}
+                />
+              )}
               {handlers.onForceStop && (
                 <>
                   <DropdownMenuSeparator />
@@ -327,17 +337,9 @@ export const RowActions = memo(function RowActions({
           {/* Backlog actions */}
           {!isCurrentAutoTask && feature.status === 'backlog' && (
             <>
-              <MenuItem
-                icon={Edit}
-                label="Edit"
-                onClick={withClose(handlers.onEdit)}
-              />
+              <MenuItem icon={Edit} label="Edit" onClick={withClose(handlers.onEdit)} />
               {feature.planSpec?.content && handlers.onViewPlan && (
-                <MenuItem
-                  icon={Eye}
-                  label="View Plan"
-                  onClick={withClose(handlers.onViewPlan)}
-                />
+                <MenuItem icon={Eye} label="View Plan" onClick={withClose(handlers.onViewPlan)} />
               )}
               {handlers.onImplement && (
                 <MenuItem
@@ -345,6 +347,13 @@ export const RowActions = memo(function RowActions({
                   label="Make"
                   onClick={withClose(handlers.onImplement)}
                   variant="primary"
+                />
+              )}
+              {handlers.onSpawnTask && (
+                <MenuItem
+                  icon={GitFork}
+                  label="Spawn Sub-Task"
+                  onClick={withClose(handlers.onSpawnTask)}
                 />
               )}
               <DropdownMenuSeparator />
@@ -391,11 +400,14 @@ export const RowActions = memo(function RowActions({
                 />
               ) : null}
               <DropdownMenuSeparator />
-              <MenuItem
-                icon={Edit}
-                label="Edit"
-                onClick={withClose(handlers.onEdit)}
-              />
+              <MenuItem icon={Edit} label="Edit" onClick={withClose(handlers.onEdit)} />
+              {handlers.onSpawnTask && (
+                <MenuItem
+                  icon={GitFork}
+                  label="Spawn Sub-Task"
+                  onClick={withClose(handlers.onSpawnTask)}
+                />
+              )}
               <MenuItem
                 icon={Trash2}
                 label="Delete"
@@ -416,11 +428,7 @@ export const RowActions = memo(function RowActions({
                 />
               )}
               {handlers.onFollowUp && (
-                <MenuItem
-                  icon={Wand2}
-                  label="Refine"
-                  onClick={withClose(handlers.onFollowUp)}
-                />
+                <MenuItem icon={Wand2} label="Refine" onClick={withClose(handlers.onFollowUp)} />
               )}
               {feature.prUrl && (
                 <MenuItem
@@ -438,11 +446,14 @@ export const RowActions = memo(function RowActions({
                 />
               )}
               <DropdownMenuSeparator />
-              <MenuItem
-                icon={Edit}
-                label="Edit"
-                onClick={withClose(handlers.onEdit)}
-              />
+              <MenuItem icon={Edit} label="Edit" onClick={withClose(handlers.onEdit)} />
+              {handlers.onSpawnTask && (
+                <MenuItem
+                  icon={GitFork}
+                  label="Spawn Sub-Task"
+                  onClick={withClose(handlers.onSpawnTask)}
+                />
+              )}
               <MenuItem
                 icon={Trash2}
                 label="Delete"
@@ -486,11 +497,14 @@ export const RowActions = memo(function RowActions({
                 />
               )}
               <DropdownMenuSeparator />
-              <MenuItem
-                icon={Edit}
-                label="Edit"
-                onClick={withClose(handlers.onEdit)}
-              />
+              <MenuItem icon={Edit} label="Edit" onClick={withClose(handlers.onEdit)} />
+              {handlers.onSpawnTask && (
+                <MenuItem
+                  icon={GitFork}
+                  label="Spawn Sub-Task"
+                  onClick={withClose(handlers.onSpawnTask)}
+                />
+              )}
               <MenuItem
                 icon={Trash2}
                 label="Delete"
@@ -501,30 +515,32 @@ export const RowActions = memo(function RowActions({
           )}
 
           {/* Pipeline status actions (generic fallback) */}
-          {!isCurrentAutoTask &&
-            feature.status.startsWith('pipeline_') && (
-              <>
-                {handlers.onViewOutput && (
-                  <MenuItem
-                    icon={FileText}
-                    label="View Logs"
-                    onClick={withClose(handlers.onViewOutput)}
-                  />
-                )}
+          {!isCurrentAutoTask && feature.status.startsWith('pipeline_') && (
+            <>
+              {handlers.onViewOutput && (
                 <MenuItem
-                  icon={Edit}
-                  label="Edit"
-                  onClick={withClose(handlers.onEdit)}
+                  icon={FileText}
+                  label="View Logs"
+                  onClick={withClose(handlers.onViewOutput)}
                 />
-                <DropdownMenuSeparator />
+              )}
+              <MenuItem icon={Edit} label="Edit" onClick={withClose(handlers.onEdit)} />
+              {handlers.onSpawnTask && (
                 <MenuItem
-                  icon={Trash2}
-                  label="Delete"
-                  onClick={withClose(handlers.onDelete)}
-                  variant="destructive"
+                  icon={GitFork}
+                  label="Spawn Sub-Task"
+                  onClick={withClose(handlers.onSpawnTask)}
                 />
-              </>
-            )}
+              )}
+              <DropdownMenuSeparator />
+              <MenuItem
+                icon={Trash2}
+                label="Delete"
+                onClick={withClose(handlers.onDelete)}
+                variant="destructive"
+              />
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

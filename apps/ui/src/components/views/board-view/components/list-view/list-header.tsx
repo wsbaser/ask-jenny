@@ -23,6 +23,7 @@ interface ColumnDef {
 
 /**
  * Default column definitions for the list view
+ * Only showing title column with full width for a cleaner, more spacious layout
  */
 export const LIST_COLUMNS: ColumnDef[] = [
   {
@@ -30,42 +31,7 @@ export const LIST_COLUMNS: ColumnDef[] = [
     label: 'Title',
     sortable: true,
     width: 'flex-1',
-    minWidth: 'min-w-[200px]',
-    align: 'left',
-  },
-  {
-    id: 'status',
-    label: 'Status',
-    sortable: true,
-    width: 'w-[140px]',
-    align: 'left',
-  },
-  {
-    id: 'category',
-    label: 'Category',
-    sortable: true,
-    width: 'w-[120px]',
-    align: 'left',
-  },
-  {
-    id: 'priority',
-    label: 'Priority',
-    sortable: true,
-    width: 'w-[100px]',
-    align: 'center',
-  },
-  {
-    id: 'createdAt',
-    label: 'Created',
-    sortable: true,
-    width: 'w-[110px]',
-    align: 'left',
-  },
-  {
-    id: 'updatedAt',
-    label: 'Updated',
-    sortable: true,
-    width: 'w-[110px]',
+    minWidth: 'min-w-0',
     align: 'left',
   },
 ];
@@ -92,13 +58,7 @@ export interface ListHeaderProps {
 /**
  * SortIcon displays the current sort state for a column
  */
-function SortIcon({
-  column,
-  sortConfig,
-}: {
-  column: SortColumn;
-  sortConfig: SortConfig;
-}) {
+function SortIcon({ column, sortConfig }: { column: SortColumn; sortConfig: SortConfig }) {
   if (sortConfig.column !== column) {
     // Not sorted by this column - show neutral indicator
     return (
@@ -173,11 +133,7 @@ const SortableColumnHeader = memo(function SortableColumnHeader({
 /**
  * StaticColumnHeader renders a non-sortable header cell
  */
-const StaticColumnHeader = memo(function StaticColumnHeader({
-  column,
-}: {
-  column: ColumnDef;
-}) {
+const StaticColumnHeader = memo(function StaticColumnHeader({ column }: { column: ColumnDef }) {
   return (
     <div
       role="columnheader"
