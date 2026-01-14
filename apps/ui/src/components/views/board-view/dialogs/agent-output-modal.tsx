@@ -380,7 +380,7 @@ export function AgentOutputModal({
         <TaskProgressPanel
           featureId={featureId}
           projectPath={projectPath}
-          className="shrink mx-1"
+          className="flex-shrink-0 mx-3 my-2"
         />
 
         {effectiveViewMode === 'changes' ? (
