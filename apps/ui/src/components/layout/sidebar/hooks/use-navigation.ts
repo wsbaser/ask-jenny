@@ -206,9 +206,9 @@ export function useNavigation({
       });
     }
 
-    // Add Other section with notifications
+    // Add Notifications and Project Settings as a standalone section (no label for visual separation)
     sections.push({
-      label: 'Other',
+      label: '',
       items: [
         {
           id: 'notifications',
@@ -217,13 +217,6 @@ export function useNavigation({
           shortcut: shortcuts.notifications,
           count: unreadNotificationsCount,
         },
-      ],
-    });
-
-    // Add Project Settings as a standalone section (no label for visual separation)
-    sections.push({
-      label: '',
-      items: [
         {
           id: 'project-settings',
           label: 'Project Settings',
