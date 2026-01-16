@@ -41,7 +41,13 @@ export function SidebarNavigation({
                 </span>
               </div>
             )}
-            {section.label && !sidebarOpen && <div className="h-px bg-border/30 mx-2 my-1.5"></div>}
+            {/* Separator for sections without label (visual separation) */}
+            {!section.label && sectionIdx > 0 && sidebarOpen && (
+              <div className="h-px bg-border/40 mx-3 mb-4"></div>
+            )}
+            {(section.label || sectionIdx > 0) && !sidebarOpen && (
+              <div className="h-px bg-border/30 mx-2 my-1.5"></div>
+            )}
 
             {/* Nav Items */}
             <div className="space-y-1.5">

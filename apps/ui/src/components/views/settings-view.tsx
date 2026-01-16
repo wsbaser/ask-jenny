@@ -6,7 +6,6 @@ import { useSettingsView, type SettingsViewId } from './settings-view/hooks';
 import { NAV_ITEMS } from './settings-view/config/navigation';
 import { SettingsHeader } from './settings-view/components/settings-header';
 import { KeyboardMapDialog } from './settings-view/components/keyboard-map-dialog';
-import { DeleteProjectDialog } from './settings-view/components/delete-project-dialog';
 import { SettingsNavigation } from './settings-view/components/settings-navigation';
 import { ApiKeysSection } from './settings-view/api-keys/api-keys-section';
 import { ModelDefaultsSection } from './settings-view/model-defaults';
@@ -16,7 +15,6 @@ import { AudioSection } from './settings-view/audio/audio-section';
 import { KeyboardShortcutsSection } from './settings-view/keyboard-shortcuts/keyboard-shortcuts-section';
 import { FeatureDefaultsSection } from './settings-view/feature-defaults/feature-defaults-section';
 import { WorktreesSection } from './settings-view/worktrees';
-import { DangerZoneSection } from './settings-view/danger-zone/danger-zone-section';
 import { AccountSection } from './settings-view/account';
 import { SecuritySection } from './settings-view/security';
 import { DeveloperSection } from './settings-view/developer/developer-section';
@@ -30,8 +28,7 @@ import { MCPServersSection } from './settings-view/mcp-servers';
 import { PromptCustomizationSection } from './settings-view/prompts';
 import { EventHooksSection } from './settings-view/event-hooks';
 import { ImportExportDialog } from './settings-view/components/import-export-dialog';
-import type { Project as SettingsProject, Theme } from './settings-view/shared/types';
-import type { Project as ElectronProject } from '@/lib/electron';
+import type { Theme } from './settings-view/shared/types';
 
 // Breakpoint constant for mobile (matches Tailwind lg breakpoint)
 const LG_BREAKPOINT = 1024;
@@ -40,7 +37,6 @@ export function SettingsView() {
   const {
     theme,
     setTheme,
-    setProjectTheme,
     defaultSkipTests,
     setDefaultSkipTests,
     enableDependencyBlocking,
@@ -54,7 +50,6 @@ export function SettingsView() {
     muteDoneSound,
     setMuteDoneSound,
     currentProject,
-    moveProjectToTrash,
     defaultPlanningMode,
     setDefaultPlanningMode,
     defaultRequirePlanApproval,
@@ -69,34 +64,8 @@ export function SettingsView() {
     setSkipSandboxWarning,
   } = useAppStore();
 
-  // Convert electron Project to settings-view Project type
-  const convertProject = (project: ElectronProject | null): SettingsProject | null => {
-    if (!project) return null;
-    return {
-      id: project.id,
-      name: project.name,
-      path: project.path,
-      theme: project.theme as Theme | undefined,
-      icon: project.icon,
-      customIconPath: project.customIconPath,
-    };
-  };
-
-  const settingsProject = convertProject(currentProject);
-
-  // Compute the effective theme for the current project
-  const effectiveTheme = (settingsProject?.theme || theme) as Theme;
-
-  // Handler to set theme - always updates global theme (user's preference),
-  // and also sets per-project theme if a project is selected
-  const handleSetTheme = (newTheme: typeof theme) => {
-    // Always update global theme so user's preference persists across all projects
-    setTheme(newTheme);
-    // Also set per-project theme if a project is selected
-    if (currentProject) {
-      setProjectTheme(currentProject.id, newTheme);
-    }
-  };
+  // Global theme (project-specific themes are managed in Project Settings)
+  const globalTheme = theme as Theme;
 
   // Get initial view from URL search params
   const { view: initialView } = useSearch({ from: '/settings' });
@@ -113,7 +82,6 @@ export function SettingsView() {
     }
   };
 
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showKeyboardMapDialog, setShowKeyboardMapDialog] = useState(false);
   const [showImportExportDialog, setShowImportExportDialog] = useState(false);
 
@@ -172,9 +140,8 @@ export function SettingsView() {
       case 'appearance':
         return (
           <AppearanceSection
-            effectiveTheme={effectiveTheme as any}
-            currentProject={settingsProject as any}
-            onThemeChange={(theme) => handleSetTheme(theme as any)}
+            effectiveTheme={globalTheme}
+            onThemeChange={(newTheme) => setTheme(newTheme as typeof theme)}
           />
         );
       case 'terminal':
@@ -223,13 +190,6 @@ export function SettingsView() {
         );
       case 'developer':
         return <DeveloperSection />;
-      case 'danger':
-        return (
-          <DangerZoneSection
-            project={settingsProject}
-            onDeleteClick={() => setShowDeleteDialog(true)}
-          />
-        );
       default:
         return <ApiKeysSection />;
     }
@@ -264,14 +224,6 @@ export function SettingsView() {
 
       {/* Keyboard Map Dialog */}
       <KeyboardMapDialog open={showKeyboardMapDialog} onOpenChange={setShowKeyboardMapDialog} />
-
-      {/* Delete Project Confirmation Dialog */}
-      <DeleteProjectDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        project={currentProject}
-        onConfirm={moveProjectToTrash}
-      />
 
       {/* Import/Export Settings Dialog */}
       <ImportExportDialog open={showImportExportDialog} onOpenChange={setShowImportExportDialog} />

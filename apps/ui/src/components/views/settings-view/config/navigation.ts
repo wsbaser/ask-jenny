@@ -8,13 +8,11 @@ import {
   Settings2,
   Volume2,
   FlaskConical,
-  Trash2,
   Workflow,
   Plug,
   MessageSquareText,
   User,
   Shield,
-  Cpu,
   GitBranch,
   Code2,
   Webhook,
@@ -84,10 +82,5 @@ export const GLOBAL_NAV_GROUPS: NavigationGroup[] = [
 // Flat list of all global nav items for backwards compatibility
 export const GLOBAL_NAV_ITEMS: NavigationItem[] = GLOBAL_NAV_GROUPS.flatMap((group) => group.items);
 
-// Project-specific settings - only visible when a project is selected
-export const PROJECT_NAV_ITEMS: NavigationItem[] = [
-  { id: 'danger', label: 'Danger Zone', icon: Trash2 },
-];
-
 // Legacy export for backwards compatibility
-export const NAV_ITEMS: NavigationItem[] = [...GLOBAL_NAV_ITEMS, ...PROJECT_NAV_ITEMS];
+export const NAV_ITEMS: NavigationItem[] = GLOBAL_NAV_ITEMS;

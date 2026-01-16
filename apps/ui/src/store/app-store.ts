@@ -231,6 +231,7 @@ export interface KeyboardShortcuts {
   context: string;
   memory: string;
   settings: string;
+  projectSettings: string;
   terminal: string;
   ideation: string;
   githubIssues: string;
@@ -266,6 +267,7 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcuts = {
   context: 'C',
   memory: 'Y',
   settings: 'S',
+  projectSettings: 'Shift+S',
   terminal: 'T',
   ideation: 'I',
   githubIssues: 'G',
@@ -730,6 +732,10 @@ export interface AppState {
   // Whether to auto-dismiss the indicator after completion (default: true)
   autoDismissInitScriptIndicatorByProject: Record<string, boolean>;
 
+  // Use Worktrees Override (per-project, keyed by project path)
+  // undefined = use global setting, true/false = project-specific override
+  useWorktreesByProject: Record<string, boolean | undefined>;
+
   // UI State (previously in localStorage, now synced via API)
   /** Whether worktree panel is collapsed in board view */
   worktreePanelCollapsed: boolean;
@@ -1183,6 +1189,11 @@ export interface AppActions {
   setAutoDismissInitScriptIndicator: (projectPath: string, autoDismiss: boolean) => void;
   getAutoDismissInitScriptIndicator: (projectPath: string) => boolean;
 
+  // Use Worktrees Override actions (per-project)
+  setProjectUseWorktrees: (projectPath: string, useWorktrees: boolean | null) => void; // null = use global
+  getProjectUseWorktrees: (projectPath: string) => boolean | undefined; // undefined = using global
+  getEffectiveUseWorktrees: (projectPath: string) => boolean; // Returns actual value (project or global fallback)
+
   // UI State actions (previously in localStorage, now synced via API)
   setWorktreePanelCollapsed: (collapsed: boolean) => void;
   setLastProjectDir: (dir: string) => void;
@@ -1343,6 +1354,7 @@ const initialState: AppState = {
   showInitScriptIndicatorByProject: {},
   defaultDeleteBranchByProject: {},
   autoDismissInitScriptIndicatorByProject: {},
+  useWorktreesByProject: {},
   // UI State (previously in localStorage, now synced via API)
   worktreePanelCollapsed: false,
   lastProjectDir: '',
@@ -3524,6 +3536,31 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
   getAutoDismissInitScriptIndicator: (projectPath) => {
     // Default to true (auto-dismiss enabled) if not set
     return get().autoDismissInitScriptIndicatorByProject[projectPath] ?? true;
+  },
+
+  // Use Worktrees Override actions (per-project)
+  setProjectUseWorktrees: (projectPath, useWorktrees) => {
+    const newValue = useWorktrees === null ? undefined : useWorktrees;
+    set({
+      useWorktreesByProject: {
+        ...get().useWorktreesByProject,
+        [projectPath]: newValue,
+      },
+    });
+  },
+
+  getProjectUseWorktrees: (projectPath) => {
+    // Returns undefined if using global setting, true/false if project-specific
+    return get().useWorktreesByProject[projectPath];
+  },
+
+  getEffectiveUseWorktrees: (projectPath) => {
+    // Returns the actual value to use (project override or global fallback)
+    const projectSetting = get().useWorktreesByProject[projectPath];
+    if (projectSetting !== undefined) {
+      return projectSetting;
+    }
+    return get().useWorktrees;
   },
 
   // UI State actions (previously in localStorage, now synced via API)

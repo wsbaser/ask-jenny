@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { Project } from '@/lib/electron';
 import type { NavigationItem, NavigationGroup } from '../config/navigation';
-import { GLOBAL_NAV_GROUPS, PROJECT_NAV_ITEMS } from '../config/navigation';
+import { GLOBAL_NAV_GROUPS } from '../config/navigation';
 import type { SettingsViewId } from '../hooks/use-settings-view';
 import { useAppStore } from '@/store/app-store';
 import type { ModelProvider } from '@automaker/types';
@@ -272,31 +272,6 @@ export function SettingsNavigation({
               </div>
             </div>
           ))}
-
-          {/* Project Settings - only show when a project is selected */}
-          {currentProject && (
-            <>
-              {/* Divider */}
-              <div className="my-3 border-t border-border/50" />
-
-              {/* Project Settings Label */}
-              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
-                Project Settings
-              </div>
-
-              {/* Project Settings Items */}
-              <div className="space-y-1">
-                {PROJECT_NAV_ITEMS.map((item) => (
-                  <NavButton
-                    key={item.id}
-                    item={item}
-                    isActive={activeSection === item.id}
-                    onNavigate={onNavigate}
-                  />
-                ))}
-              </div>
-            </>
-          )}
         </div>
       </nav>
     </>

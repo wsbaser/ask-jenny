@@ -151,7 +151,7 @@ export function SidebarFooter({
             sidebarOpen ? 'justify-start' : 'justify-center',
             'hover:scale-[1.02] active:scale-[0.97]'
           )}
-          title={!sidebarOpen ? 'Settings' : undefined}
+          title={!sidebarOpen ? 'Global Settings' : undefined}
           data-testid="settings-button"
         >
           <Settings
@@ -168,7 +168,7 @@ export function SidebarFooter({
               sidebarOpen ? 'block' : 'hidden'
             )}
           >
-            Settings
+            Global Settings
           </span>
           {sidebarOpen && (
             <span
@@ -194,7 +194,7 @@ export function SidebarFooter({
                 'translate-x-1 group-hover:translate-x-0'
               )}
             >
-              Settings
+              Global Settings
               <span className="ml-2 px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono text-muted-foreground">
                 {formatShortcut(shortcuts.settings, true)}
               </span>
