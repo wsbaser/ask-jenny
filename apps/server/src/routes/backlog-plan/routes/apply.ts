@@ -147,12 +147,21 @@ export function createApplyHandler() {
         }
       }
 
+      // Clear the plan before responding
+      try {
+        await clearBacklogPlan(projectPath);
+      } catch (error) {
+        logger.warn(
+          `[BacklogPlan] Failed to clear backlog plan after apply:`,
+          getErrorMessage(error)
+        );
+        // Don't throw - operation succeeded, just cleanup failed
+      }
+
       res.json({
         success: true,
         appliedChanges,
       });
-
-      await clearBacklogPlan(projectPath);
     } catch (error) {
       logError(error, 'Apply backlog plan failed');
       res.status(500).json({ success: false, error: getErrorMessage(error) });

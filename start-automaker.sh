@@ -37,11 +37,11 @@ DEFAULT_SERVER_PORT=3008
 WEB_PORT=$DEFAULT_WEB_PORT
 SERVER_PORT=$DEFAULT_SERVER_PORT
 
-# Extract VERSION from package.json (using node for reliable JSON parsing)
+# Extract VERSION from apps/ui/package.json (the actual app version, not monorepo version)
 if command -v node &> /dev/null; then
-    VERSION="v$(node -p "require('$SCRIPT_DIR/package.json').version" 2>/dev/null || echo "0.0.0")"
+    VERSION="v$(node -p "require('$SCRIPT_DIR/apps/ui/package.json').version" 2>/dev/null || echo "0.11.0")"
 else
-    VERSION=$(grep '"version"' "$SCRIPT_DIR/package.json" | head -1 | sed 's/.*"version"[^"]*"\([^"]*\)".*/v\1/')
+    VERSION=$(grep '"version"' "$SCRIPT_DIR/apps/ui/package.json" 2>/dev/null | head -1 | sed 's/.*"version"[^"]*"\([^"]*\)".*/v\1/' || echo "v0.11.0")
 fi
 
 # ANSI Color codes (256-color palette)
@@ -200,6 +200,8 @@ check_required_commands() {
     fi
 }
 
+DOCKER_CMD="docker"
+
 check_docker() {
     if ! command -v docker &> /dev/null; then
         echo "${C_RED}Error:${RESET} Docker is not installed or not in PATH"
@@ -207,12 +209,22 @@ check_docker() {
         return 1
     fi
 
-    if ! docker info &> /dev/null; then
-        echo "${C_RED}Error:${RESET} Docker daemon is not running"
-        echo "Please start Docker and try again"
-        return 1
+    if ! docker info &> /dev/null 2>&1; then
+        if sg docker -c "docker info" &> /dev/null 2>&1; then
+            DOCKER_CMD="sg docker -c"
+        else
+            echo "${C_RED}Error:${RESET} Docker daemon is not running or not accessible"
+            echo ""
+            echo "To fix, run:"
+            echo "  sudo usermod -aG docker \$USER"
+            echo ""
+            echo "Then either log out and back in, or run:"
+            echo "  newgrp docker"
+            return 1
+        fi
     fi
 
+    export DOCKER_CMD
     return 0
 }
 
@@ -291,7 +303,11 @@ check_running_containers() {
     local running_containers=""
 
     # Get list of running automaker containers
-    running_containers=$(docker ps --filter "name=automaker-dev" --format "{{.Names}}" 2>/dev/null | tr '\n' ' ')
+    if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+        running_containers=$(sg docker -c "docker ps --filter 'name=automaker-dev' --format '{{{{Names}}}}'" 2>/dev/null | tr '\n' ' ' || true)
+    else
+        running_containers=$($DOCKER_CMD ps --filter "name=automaker-dev" --format "{{.Names}}" 2>/dev/null | tr '\n' ' ' || true)
+    fi
 
     if [ -n "$running_containers" ] && [ "$running_containers" != " " ]; then
         get_term_size
@@ -319,9 +335,13 @@ check_running_containers() {
                 [sS]|[sS][tT][oO][pP])
                     echo ""
                     center_print "Stopping existing containers..." "$C_YELLOW"
-                    docker compose -f "$compose_file" down 2>/dev/null || true
-                    # Also try stopping any orphaned containers
-                    docker ps --filter "name=automaker-dev" -q 2>/dev/null | xargs -r docker stop 2>/dev/null || true
+                    if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+                        sg docker -c "docker compose -f '$compose_file' down" 2>/dev/null || true
+                        sg docker -c "docker ps --filter 'name=automaker-dev' -q" 2>/dev/null | xargs -r sg docker -c "docker stop" 2>/dev/null || true
+                    else
+                        $DOCKER_CMD compose -f "$compose_file" down 2>/dev/null || true
+                        $DOCKER_CMD ps --filter "name=automaker-dev" -q 2>/dev/null | xargs -r $DOCKER_CMD stop 2>/dev/null || true
+                    fi
                     center_print "✓ Containers stopped" "$C_GREEN"
                     echo ""
                     return 0  # Continue with fresh start
@@ -329,7 +349,11 @@ check_running_containers() {
                 [rR]|[rR][eE][sS][tT][aA][rR][tT])
                     echo ""
                     center_print "Stopping and rebuilding containers..." "$C_YELLOW"
-                    docker compose -f "$compose_file" down 2>/dev/null || true
+                    if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+                        sg docker -c "docker compose -f '$compose_file' down" 2>/dev/null || true
+                    else
+                        $DOCKER_CMD compose -f "$compose_file" down 2>/dev/null || true
+                    fi
                     center_print "✓ Ready to rebuild" "$C_GREEN"
                     echo ""
                     return 0  # Continue with rebuild
@@ -1170,10 +1194,18 @@ case $MODE in
             center_print "API: http://localhost:$DEFAULT_SERVER_PORT" "$C_GREEN"
             center_print "Press Ctrl+C to detach" "$C_MUTE"
             echo ""
-            if [ -f "docker-compose.override.yml" ]; then
-                docker compose -f docker-compose.dev.yml -f docker-compose.override.yml logs -f
+            if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+                if [ -f "docker-compose.override.yml" ]; then
+                    sg docker -c "docker compose -f 'docker-compose.dev.yml' -f 'docker-compose.override.yml' logs -f"
+                else
+                    sg docker -c "docker compose -f 'docker-compose.dev.yml' logs -f"
+                fi
             else
-                docker compose -f docker-compose.dev.yml logs -f
+                if [ -f "docker-compose.override.yml" ]; then
+                    $DOCKER_CMD compose -f docker-compose.dev.yml -f docker-compose.override.yml logs -f
+                else
+                    $DOCKER_CMD compose -f docker-compose.dev.yml logs -f
+                fi
             fi
         else
             echo ""
@@ -1192,10 +1224,18 @@ case $MODE in
             echo ""
             center_print "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" "$C_GRAY"
             echo ""
-            if [ -f "docker-compose.override.yml" ]; then
-                docker compose -f docker-compose.dev.yml -f docker-compose.override.yml up --build
+            if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+                if [ -f "docker-compose.override.yml" ]; then
+                    sg docker -c "docker compose -f 'docker-compose.dev.yml' -f 'docker-compose.override.yml' up --build"
+                else
+                    sg docker -c "docker compose -f 'docker-compose.dev.yml' up --build"
+                fi
             else
-                docker compose -f docker-compose.dev.yml up --build
+                if [ -f "docker-compose.override.yml" ]; then
+                    $DOCKER_CMD compose -f docker-compose.dev.yml -f docker-compose.override.yml up --build
+                else
+                    $DOCKER_CMD compose -f docker-compose.dev.yml up --build
+                fi
             fi
         fi
         ;;
@@ -1235,10 +1275,18 @@ case $MODE in
         else
             center_print "Starting Docker server container..." "$C_MUTE"
             echo ""
-            if [ -f "docker-compose.override.yml" ]; then
-                docker compose -f docker-compose.dev-server.yml -f docker-compose.override.yml up --build &
+            if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+                if [ -f "docker-compose.override.yml" ]; then
+                    sg docker -c "docker compose -f 'docker-compose.dev-server.yml' -f 'docker-compose.override.yml' up --build" &
+                else
+                    sg docker -c "docker compose -f 'docker-compose.dev-server.yml' up --build" &
+                fi
             else
-                docker compose -f docker-compose.dev-server.yml up --build &
+                if [ -f "docker-compose.override.yml" ]; then
+                    $DOCKER_CMD compose -f docker-compose.dev-server.yml -f docker-compose.override.yml up --build &
+                else
+                    $DOCKER_CMD compose -f docker-compose.dev-server.yml up --build &
+                fi
             fi
             DOCKER_PID=$!
         fi
@@ -1284,7 +1332,11 @@ case $MODE in
         echo ""
         center_print "Shutting down Docker container..." "$C_MUTE"
         [ -n "$DOCKER_PID" ] && kill $DOCKER_PID 2>/dev/null || true
-        docker compose -f docker-compose.dev-server.yml down 2>/dev/null || true
+        if [ "$DOCKER_CMD" = "sg docker -c" ]; then
+            sg docker -c "docker compose -f 'docker-compose.dev-server.yml' down" 2>/dev/null || true
+        else
+            $DOCKER_CMD compose -f docker-compose.dev-server.yml down 2>/dev/null || true
+        fi
         center_print "Done!" "$C_GREEN"
         ;;
 esac

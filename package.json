@@ -67,6 +67,7 @@
     "tree-kill": "1.2.2"
   },
   "devDependencies": {
+    "dmg-license": "^1.0.11",
     "husky": "9.1.7",
     "lint-staged": "16.2.7",
     "prettier": "3.7.4",

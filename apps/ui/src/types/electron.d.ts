@@ -705,7 +705,8 @@ export interface WorktreeAPI {
   // List all worktrees with details (for worktree selector)
   listAll: (
     projectPath: string,
-    includeDetails?: boolean
+    includeDetails?: boolean,
+    forceRefreshGitHub?: boolean
   ) => Promise<{
     success: boolean;
     worktrees?: Array<{

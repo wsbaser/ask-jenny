@@ -28,6 +28,7 @@ import type {
   EventHookHttpAction,
 } from '@automaker/types';
 import { EVENT_HOOK_TRIGGER_LABELS } from '@automaker/types';
+import { generateUUID } from '@/lib/utils';
 
 interface EventHookDialogProps {
   open: boolean;
@@ -109,7 +110,7 @@ export function EventHookDialog({ open, onOpenChange, editingHook, onSave }: Eve
 
   const handleSave = () => {
     const hook: EventHook = {
-      id: editingHook?.id || crypto.randomUUID(),
+      id: editingHook?.id || generateUUID(),
       name: name.trim() || undefined,
       trigger,
       enabled: editingHook?.enabled ?? true,

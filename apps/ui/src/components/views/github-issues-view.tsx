@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ErrorState } from '@/components/ui/error-state';
-import { cn, pathsEqual } from '@/lib/utils';
+import { cn, pathsEqual, generateUUID } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useGithubIssues, useIssueValidation, useIssuesFilter } from './github-issues-view/hooks';
 import { IssueRow, IssueDetailPanel, IssuesListHeader } from './github-issues-view/components';
@@ -137,7 +137,7 @@ export function GitHubIssuesView() {
             .join('\n');
 
           const feature = {
-            id: `issue-${issue.number}-${crypto.randomUUID()}`,
+            id: `issue-${issue.number}-${generateUUID()}`,
             title: issue.title,
             description,
             category: 'From GitHub',

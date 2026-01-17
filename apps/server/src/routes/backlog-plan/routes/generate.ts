@@ -63,6 +63,7 @@ export function createGenerateHandler(events: EventEmitter, settingsService?: Se
         })
         .finally(() => {
           setRunningState(false, null);
+          setRunningDetails(null);
         });
 
       res.json({ success: true });

@@ -214,9 +214,28 @@ npm run build:electron
 # Platform-specific builds
 npm run build:electron:mac     # macOS (DMG + ZIP, x64 + arm64)
 npm run build:electron:win     # Windows (NSIS installer, x64)
-npm run build:electron:linux   # Linux (AppImage + DEB, x64)
+npm run build:electron:linux   # Linux (AppImage + DEB + RPM, x64)
 
 # Output directory: apps/ui/release/
+```
+
+**Linux Distribution Packages:**
+
+- **AppImage**: Universal format, works on any Linux distribution
+- **DEB**: Ubuntu, Debian, Linux Mint, Pop!\_OS
+- **RPM**: Fedora, RHEL, Rocky Linux, AlmaLinux, openSUSE
+
+**Installing on Fedora/RHEL:**
+
+```bash
+# Download the RPM package
+wget https://github.com/AutoMaker-Org/automaker/releases/latest/download/Automaker-<version>-x86_64.rpm
+
+# Install with dnf (Fedora)
+sudo dnf install ./Automaker-<version>-x86_64.rpm
+
+# Or with yum (RHEL/CentOS)
+sudo yum localinstall ./Automaker-<version>-x86_64.rpm
 ```
 
 #### Docker Deployment

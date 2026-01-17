@@ -1724,8 +1724,8 @@ export class HttpApiClient implements ElectronAPI {
     getStatus: (projectPath: string, featureId: string) =>
       this.post('/api/worktree/status', { projectPath, featureId }),
     list: (projectPath: string) => this.post('/api/worktree/list', { projectPath }),
-    listAll: (projectPath: string, includeDetails?: boolean) =>
-      this.post('/api/worktree/list', { projectPath, includeDetails }),
+    listAll: (projectPath: string, includeDetails?: boolean, forceRefreshGitHub?: boolean) =>
+      this.post('/api/worktree/list', { projectPath, includeDetails, forceRefreshGitHub }),
     create: (projectPath: string, branchName: string, baseBranch?: string) =>
       this.post('/api/worktree/create', {
         projectPath,

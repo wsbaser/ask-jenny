@@ -1596,10 +1596,15 @@ function createMockWorktreeAPI(): WorktreeAPI {
       return { success: true, worktrees: [] };
     },
 
-    listAll: async (projectPath: string, includeDetails?: boolean) => {
+    listAll: async (
+      projectPath: string,
+      includeDetails?: boolean,
+      forceRefreshGitHub?: boolean
+    ) => {
       console.log('[Mock] Listing all worktrees:', {
         projectPath,
         includeDetails,
+        forceRefreshGitHub,
       });
       return {
         success: true,

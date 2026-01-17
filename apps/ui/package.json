@@ -220,12 +220,34 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Development",
       "icon": "public/logo_larger.png",
       "maintainer": "webdevcody@gmail.com",
-      "executableName": "automaker"
+      "executableName": "automaker",
+      "description": "An autonomous AI development studio that helps you build software faster using AI-powered agents",
+      "synopsis": "AI-powered autonomous development studio"
+    },
+    "rpm": {
+      "depends": [
+        "gtk3",
+        "libnotify",
+        "nss",
+        "libXScrnSaver",
+        "libXtst",
+        "xdg-utils",
+        "at-spi2-core",
+        "libuuid"
+      ],
+      "compression": "xz",
+      "vendor": "AutoMaker Team"
     },
     "nsis": {
       "oneClick": false,
