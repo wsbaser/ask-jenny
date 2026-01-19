@@ -6,8 +6,10 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Bot, Folder, Loader2, RefreshCw, Square, Activity, FileText } from 'lucide-react';
-import type { RunningAgent } from '@/lib/electron';
+import { createLogger } from '@automaker/utils/logger';
+import { Bot, Folder, RefreshCw, Square, Activity, FileText } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { getElectronAPI, type RunningAgent } from '@/lib/electron';
 import { useAppStore } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,6 +22,8 @@ export function RunningAgentsView() {
   const [selectedAgent, setSelectedAgent] = useState<RunningAgent | null>(null);
   const { setCurrentProject, projects } = useAppStore();
   const navigate = useNavigate();
+
+  const logger = createLogger('RunningAgentsView');
 
   // Use React Query for running agents with auto-refresh
   const { data, isLoading, isFetching, refetch } = useRunningAgents();
@@ -34,31 +38,54 @@ export function RunningAgentsView() {
   }, [refetch]);
 
   const handleStopAgent = useCallback(
-    (featureId: string, projectPath: string) => {
-      stopFeature.mutate({ featureId, projectPath });
+    async (agent: RunningAgent) => {
+      const api = getElectronAPI();
+      // Handle backlog plans separately - they use a different API
+      const isBacklogPlan = agent.featureId.startsWith('backlog-plan:');
+      if (isBacklogPlan && api.backlogPlan) {
+        logger.debug('Stopping backlog plan agent', { featureId: agent.featureId });
+        await api.backlogPlan.stop();
+        refetch();
+        return;
+      }
+      // Use mutation for regular features
+      stopFeature.mutate({ featureId: agent.featureId, projectPath: agent.projectPath });
     },
-    [stopFeature]
+    [stopFeature, refetch, logger]
   );
 
   const handleNavigateToProject = useCallback(
     (agent: RunningAgent) => {
       const project = projects.find((p) => p.path === agent.projectPath);
       if (project) {
+        logger.debug('Navigating to running agent project', {
+          projectPath: agent.projectPath,
+          featureId: agent.featureId,
+        });
         setCurrentProject(project);
         navigate({ to: '/board' });
+      } else {
+        logger.debug('Project not found for running agent', {
+          projectPath: agent.projectPath,
+          featureId: agent.featureId,
+        });
       }
     },
     [projects, setCurrentProject, navigate]
   );
 
   const handleViewLogs = useCallback((agent: RunningAgent) => {
+    logger.debug('Opening running agent logs', {
+      featureId: agent.featureId,
+      projectPath: agent.projectPath,
+    });
     setSelectedAgent(agent);
   }, []);
 
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -81,7 +108,11 @@ export function RunningAgentsView() {
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isFetching}>
-          <RefreshCw className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')} />
+          {isFetching ? (
+            <Spinner size="sm" className="mr-2" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
           Refresh
         </Button>
       </div>
@@ -147,7 +178,7 @@ export function RunningAgentsView() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -168,7 +199,7 @@ export function RunningAgentsView() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleStopAgent(agent.featureId, agent.projectPath)}
+                    onClick={() => handleStopAgent(agent)}
                     disabled={stopFeature.isPending}
                   >
                     <Square className="h-3.5 w-3.5 mr-1.5" />

@@ -78,8 +78,9 @@ describe('model-resolver', () => {
         const result = resolveModelString('sonnet');
 
         expect(result).toBe(CLAUDE_MODEL_MAP.sonnet);
+        // Legacy aliases are migrated to canonical IDs then resolved
         expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Resolved Claude model alias: "sonnet"')
+          expect.stringContaining('Migrated legacy ID: "sonnet" -> "claude-sonnet"')
         );
       });
 
@@ -88,7 +89,7 @@ describe('model-resolver', () => {
 
         expect(result).toBe(CLAUDE_MODEL_MAP.opus);
         expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Resolved Claude model alias: "opus"')
+          expect.stringContaining('Migrated legacy ID: "opus" -> "claude-opus"')
         );
       });
 
@@ -101,8 +102,9 @@ describe('model-resolver', () => {
       it('should log the resolution for aliases', () => {
         resolveModelString('sonnet');
 
+        // Legacy aliases get migrated and resolved via canonical map
         expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Resolved Claude model alias')
+          expect.stringContaining('Resolved Claude canonical ID')
         );
         expect(consoleLogSpy).toHaveBeenCalledWith(
           expect.stringContaining(CLAUDE_MODEL_MAP.sonnet)
@@ -134,8 +136,9 @@ describe('model-resolver', () => {
         const result = resolveModelString('composer-1');
 
         expect(result).toBe('cursor-composer-1');
+        // Legacy bare IDs are migrated to canonical prefixed format
         expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Detected bare Cursor model ID')
+          expect.stringContaining('Migrated legacy ID: "composer-1" -> "cursor-composer-1"')
         );
       });
 
@@ -149,17 +152,18 @@ describe('model-resolver', () => {
         const result = resolveModelString('cursor-unknown-future-model');
 
         expect(result).toBe('cursor-unknown-future-model');
-        expect(consoleLogSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Passing through cursor-prefixed model')
-        );
+        // Unknown cursor-prefixed models pass through as Cursor models
+        expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Using Cursor model'));
       });
 
       it('should handle all known Cursor model IDs', () => {
+        // CURSOR_MODEL_MAP now uses prefixed keys (e.g., 'cursor-auto')
         const cursorModelIds = Object.keys(CURSOR_MODEL_MAP);
 
         for (const modelId of cursorModelIds) {
-          const result = resolveModelString(`cursor-${modelId}`);
-          expect(result).toBe(`cursor-${modelId}`);
+          // modelId is already prefixed (e.g., 'cursor-auto')
+          const result = resolveModelString(modelId);
+          expect(result).toBe(modelId);
         }
       });
     });

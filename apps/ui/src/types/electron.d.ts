@@ -367,6 +367,11 @@ export interface SpecRegenerationAPI {
     error?: string;
   }>;
 
+  sync: (projectPath: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+
   stop: (projectPath?: string) => Promise<{
     success: boolean;
     error?: string;
@@ -700,7 +705,8 @@ export interface WorktreeAPI {
   // List all worktrees with details (for worktree selector)
   listAll: (
     projectPath: string,
-    includeDetails?: boolean
+    includeDetails?: boolean,
+    forceRefreshGitHub?: boolean
   ) => Promise<{
     success: boolean;
     worktrees?: Array<{
@@ -940,6 +946,58 @@ export interface WorktreeAPI {
     };
     error?: string;
   }>;
+
+  // Get available external terminals
+  getAvailableTerminals: () => Promise<{
+    success: boolean;
+    result?: {
+      terminals: Array<{
+        id: string;
+        name: string;
+        command: string;
+      }>;
+    };
+    error?: string;
+  }>;
+
+  // Get default external terminal
+  getDefaultTerminal: () => Promise<{
+    success: boolean;
+    result?: {
+      terminalId: string;
+      terminalName: string;
+      terminalCommand: string;
+    } | null;
+    error?: string;
+  }>;
+
+  // Refresh terminal cache and re-detect available terminals
+  refreshTerminals: () => Promise<{
+    success: boolean;
+    result?: {
+      terminals: Array<{
+        id: string;
+        name: string;
+        command: string;
+      }>;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // Open worktree in an external terminal
+  openInExternalTerminal: (
+    worktreePath: string,
+    terminalId?: string
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      message: string;
+      terminalName: string;
+    };
+    error?: string;
+  }>;
+
   // Initialize git repository in a project
   initGit: (projectPath: string) => Promise<{
     success: boolean;
@@ -994,6 +1052,7 @@ export interface WorktreeAPI {
     result?: {
       worktreePath: string;
       port: number;
+      url: string;
       logs: string;
       startedAt: string;
     };

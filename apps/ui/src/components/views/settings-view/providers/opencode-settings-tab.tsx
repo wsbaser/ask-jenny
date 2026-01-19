@@ -129,6 +129,9 @@ export function OpencodeSettingsTab() {
 
   return (
     <div className="space-y-6">
+      {/* Provider Visibility Toggle */}
+      <ProviderToggle provider="opencode" providerLabel="OpenCode" />
+
       <OpencodeCliStatus
         status={cliStatus}
         authStatus={authStatus}

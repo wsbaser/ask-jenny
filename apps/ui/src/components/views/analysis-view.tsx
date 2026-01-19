@@ -16,13 +16,13 @@ import {
   RefreshCw,
   BarChart3,
   FileCode,
-  Loader2,
   FileText,
   CheckCircle,
   AlertCircle,
   ListChecks,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
+import { cn, generateUUID } from '@/lib/utils';
 
 const logger = createLogger('AnalysisView');
 
@@ -641,7 +641,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
 
       for (const detectedFeature of detectedFeatures) {
         await api.features.create(currentProject.path, {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           category: detectedFeature.category,
           description: detectedFeature.description,
           status: 'backlog',
@@ -750,7 +750,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
         <Button onClick={runAnalysis} disabled={isAnalyzing} data-testid="analyze-project-button">
           {isAnalyzing ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Spinner size="sm" className="mr-2" />
               Analyzing...
             </>
           ) : (
@@ -779,7 +779,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
           </div>
         ) : isAnalyzing ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+            <Spinner size="xl" className="mb-4" />
             <p className="text-muted-foreground">Scanning project files...</p>
           </div>
         ) : projectAnalysis ? (
@@ -858,7 +858,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
                   >
                     {isGeneratingSpec ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Spinner size="sm" className="mr-2" />
                         Generating...
                       </>
                     ) : (
@@ -911,7 +911,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
                   >
                     {isGeneratingFeatureList ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Spinner size="sm" className="mr-2" />
                         Generating...
                       </>
                     ) : (

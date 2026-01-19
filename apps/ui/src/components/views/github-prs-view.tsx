@@ -5,7 +5,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import { GitPullRequest, Loader2, RefreshCw, ExternalLink, GitMerge, X } from 'lucide-react';
+import { GitPullRequest, RefreshCw, ExternalLink, GitMerge, X } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { getElectronAPI, type GitHubPR } from '@/lib/electron';
 import { useAppStore } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ export function GitHubPRsView() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Spinner size="xl" />
       </div>
     );
   }
@@ -113,7 +114,7 @@ export function GitHubPRsView() {
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+            {refreshing ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
           </Button>
         </div>
 

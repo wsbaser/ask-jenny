@@ -68,6 +68,9 @@ export type ThemeMode =
 /** PlanningMode - Planning levels for feature generation workflows */
 export type PlanningMode = 'skip' | 'lite' | 'spec' | 'full';
 
+/** ServerLogLevel - Log verbosity level for the API server */
+export type ServerLogLevel = 'error' | 'warn' | 'info' | 'debug';
+
 /** ThinkingLevel - Extended thinking levels for Claude models (reasoning intensity) */
 export type ThinkingLevel = 'none' | 'low' | 'medium' | 'high' | 'ultrathink';
 
@@ -97,6 +100,100 @@ export function getThinkingTokenBudget(level: ThinkingLevel | undefined): number
 
 /** ModelProvider - AI model provider for credentials and API key management */
 export type ModelProvider = 'claude' | 'cursor' | 'codex' | 'opencode';
+
+// ============================================================================
+// Event Hooks - Custom actions triggered by system events
+// ============================================================================
+
+/**
+ * EventHookTrigger - Event types that can trigger custom hooks
+ *
+ * - feature_created: A new feature was created
+ * - feature_success: Feature completed successfully
+ * - feature_error: Feature failed with an error
+ * - auto_mode_complete: Auto mode finished processing all features
+ * - auto_mode_error: Auto mode encountered a critical error and paused
+ */
+export type EventHookTrigger =
+  | 'feature_created'
+  | 'feature_success'
+  | 'feature_error'
+  | 'auto_mode_complete'
+  | 'auto_mode_error';
+
+/** HTTP methods supported for webhook requests */
+export type EventHookHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH';
+
+/**
+ * EventHookShellAction - Configuration for executing a shell command
+ *
+ * Shell commands are executed in the server's working directory.
+ * Supports variable substitution using {{variableName}} syntax.
+ */
+export interface EventHookShellAction {
+  type: 'shell';
+  /** Shell command to execute. Supports {{variable}} substitution. */
+  command: string;
+  /** Timeout in milliseconds (default: 30000) */
+  timeout?: number;
+}
+
+/**
+ * EventHookHttpAction - Configuration for making an HTTP webhook request
+ *
+ * Supports variable substitution in URL, headers, and body.
+ */
+export interface EventHookHttpAction {
+  type: 'http';
+  /** URL to send the request to. Supports {{variable}} substitution. */
+  url: string;
+  /** HTTP method to use */
+  method: EventHookHttpMethod;
+  /** Optional headers to include. Values support {{variable}} substitution. */
+  headers?: Record<string, string>;
+  /** Optional request body (JSON string). Supports {{variable}} substitution. */
+  body?: string;
+}
+
+/** Union type for all hook action configurations */
+export type EventHookAction = EventHookShellAction | EventHookHttpAction;
+
+/**
+ * EventHook - Configuration for a single event hook
+ *
+ * Event hooks allow users to execute custom shell commands or HTTP requests
+ * when specific events occur in the system.
+ *
+ * Available variables for substitution:
+ * - {{featureId}} - ID of the feature (if applicable)
+ * - {{featureName}} - Name of the feature (if applicable)
+ * - {{projectPath}} - Absolute path to the project
+ * - {{projectName}} - Name of the project
+ * - {{error}} - Error message (for error events)
+ * - {{timestamp}} - ISO timestamp of the event
+ * - {{eventType}} - The event type that triggered the hook
+ */
+export interface EventHook {
+  /** Unique identifier for this hook */
+  id: string;
+  /** Which event type triggers this hook */
+  trigger: EventHookTrigger;
+  /** Whether this hook is currently enabled */
+  enabled: boolean;
+  /** The action to execute when triggered */
+  action: EventHookAction;
+  /** Optional friendly name for display */
+  name?: string;
+}
+
+/** Human-readable labels for event hook triggers */
+export const EVENT_HOOK_TRIGGER_LABELS: Record<EventHookTrigger, string> = {
+  feature_created: 'Feature created',
+  feature_success: 'Feature completed successfully',
+  feature_error: 'Feature failed with error',
+  auto_mode_complete: 'Auto mode completed all features',
+  auto_mode_error: 'Auto mode paused due to error',
+};
 
 const DEFAULT_CODEX_AUTO_LOAD_AGENTS = false;
 const DEFAULT_CODEX_SANDBOX_MODE: CodexSandboxMode = 'workspace-write';
@@ -202,8 +299,12 @@ export interface KeyboardShortcuts {
   context: string;
   /** Open settings */
   settings: string;
+  /** Open project settings */
+  projectSettings: string;
   /** Open terminal */
   terminal: string;
+  /** Open notifications */
+  notifications: string;
   /** Toggle sidebar visibility */
   toggleSidebar: string;
   /** Add new feature */
@@ -295,6 +396,10 @@ export interface ProjectRef {
   lastOpened?: string;
   /** Project-specific theme override (or undefined to use global) */
   theme?: string;
+  /** Project-specific UI/sans font override (or undefined to use global) */
+  fontFamilySans?: string;
+  /** Project-specific code/mono font override (or undefined to use global) */
+  fontFamilyMono?: string;
   /** Whether project is pinned to favorites on dashboard */
   isFavorite?: boolean;
   /** Lucide icon name for project identification */
@@ -362,6 +467,18 @@ export interface GlobalSettings {
   /** Currently selected theme */
   theme: ThemeMode;
 
+  // Font Configuration
+  /** Global UI/Sans font family (undefined = use default Geist Sans) */
+  fontFamilySans?: string;
+  /** Global Code/Mono font family (undefined = use default Geist Mono) */
+  fontFamilyMono?: string;
+  /** Terminal font family (undefined = use default Menlo/Monaco) */
+  terminalFontFamily?: string;
+
+  // Terminal Configuration
+  /** How to open terminals from "Open in Terminal" worktree action */
+  openTerminalMode?: 'newTab' | 'split';
+
   // UI State Preferences
   /** Whether sidebar is currently open */
   sidebarOpen: boolean;
@@ -390,6 +507,12 @@ export interface GlobalSettings {
   /** Mute completion notification sound */
   muteDoneSound: boolean;
 
+  // Server Logging Preferences
+  /** Log level for the API server (error, warn, info, debug). Default: info */
+  serverLogLevel?: ServerLogLevel;
+  /** Enable HTTP request logging (Morgan). Default: true */
+  enableRequestLogging?: boolean;
+
   // AI Commit Message Generation
   /** Enable AI-generated commit messages when opening commit dialog (default: true) */
   enableAiCommitMessages: boolean;
@@ -417,6 +540,10 @@ export interface GlobalSettings {
   opencodeDefaultModel?: OpencodeModelId;
   /** Which dynamic OpenCode models are enabled (empty = all discovered) */
   enabledDynamicModelIds?: string[];
+
+  // Provider Visibility Settings
+  /** Providers that are disabled and should not appear in model dropdowns */
+  disabledProviders?: ModelProvider[];
 
   // Input Configuration
   /** User's keyboard shortcut bindings */
@@ -480,6 +607,10 @@ export interface GlobalSettings {
   /** Default editor command for "Open In" action (null = auto-detect: Cursor > VS Code > first available) */
   defaultEditorCommand: string | null;
 
+  // Terminal Configuration
+  /** Default external terminal ID for "Open In Terminal" action (null = integrated terminal) */
+  defaultTerminalId: string | null;
+
   // Prompt Customization
   /** Custom prompts for Auto Mode, Agent Runner, Backlog Planning, and Enhancements */
   promptCustomization?: PromptCustomization;
@@ -520,6 +651,13 @@ export interface GlobalSettings {
    * Value: agent configuration
    */
   customSubagents?: Record<string, import('./provider.js').AgentDefinition>;
+
+  // Event Hooks Configuration
+  /**
+   * Event hooks for executing custom commands or HTTP requests on events
+   * @see EventHook for configuration details
+   */
+  eventHooks?: EventHook[];
 }
 
 /**
@@ -600,6 +738,12 @@ export interface ProjectSettings {
   /** Project theme (undefined = use global setting) */
   theme?: ThemeMode;
 
+  // Font Configuration (project-specific override)
+  /** UI/Sans font family override (undefined = use default Geist Sans) */
+  fontFamilySans?: string;
+  /** Code/Mono font family override (undefined = use default Geist Mono) */
+  fontFamilyMono?: string;
+
   // Worktree Management
   /** Project-specific worktree preference override */
   useWorktrees?: boolean;
@@ -644,34 +788,42 @@ export interface ProjectSettings {
    * Value: agent configuration
    */
   customSubagents?: Record<string, import('./provider.js').AgentDefinition>;
+
+  // Auto Mode Configuration (per-project)
+  /** Whether auto mode is enabled for this project (backend-controlled loop) */
+  automodeEnabled?: boolean;
+  /** Maximum concurrent agents for this project (overrides global maxConcurrency) */
+  maxConcurrentAgents?: number;
 }
 
 /**
  * Default values and constants
  */
 
-/** Default phase model configuration - sensible defaults for each task type */
+/** Default phase model configuration - sensible defaults for each task type
+ * Uses canonical prefixed model IDs for consistent routing.
+ */
 export const DEFAULT_PHASE_MODELS: PhaseModelConfig = {
   // Quick tasks - use fast models for speed and cost
-  enhancementModel: { model: 'sonnet' },
-  fileDescriptionModel: { model: 'haiku' },
-  imageDescriptionModel: { model: 'haiku' },
+  enhancementModel: { model: 'claude-sonnet' },
+  fileDescriptionModel: { model: 'claude-haiku' },
+  imageDescriptionModel: { model: 'claude-haiku' },
 
   // Validation - use smart models for accuracy
-  validationModel: { model: 'sonnet' },
+  validationModel: { model: 'claude-sonnet' },
 
   // Generation - use powerful models for quality
-  specGenerationModel: { model: 'opus' },
-  featureGenerationModel: { model: 'sonnet' },
-  backlogPlanningModel: { model: 'sonnet' },
-  projectAnalysisModel: { model: 'sonnet' },
-  suggestionsModel: { model: 'sonnet' },
+  specGenerationModel: { model: 'claude-opus' },
+  featureGenerationModel: { model: 'claude-sonnet' },
+  backlogPlanningModel: { model: 'claude-sonnet' },
+  projectAnalysisModel: { model: 'claude-sonnet' },
+  suggestionsModel: { model: 'claude-sonnet' },
 
   // Memory - use fast model for learning extraction (cost-effective)
-  memoryExtractionModel: { model: 'haiku' },
+  memoryExtractionModel: { model: 'claude-haiku' },
 
   // Commit messages - use fast model for speed
-  commitMessageModel: { model: 'haiku' },
+  commitMessageModel: { model: 'claude-haiku' },
 };
 
 /** Current version of the global settings schema */
@@ -688,7 +840,9 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcuts = {
   spec: 'D',
   context: 'C',
   settings: 'S',
+  projectSettings: 'Shift+S',
   terminal: 'T',
+  notifications: 'X',
   toggleSidebar: '`',
   addFeature: 'N',
   addContextFile: 'N',
@@ -719,17 +873,20 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   useWorktrees: true,
   defaultPlanningMode: 'skip',
   defaultRequirePlanApproval: false,
-  defaultFeatureModel: { model: 'opus' },
+  defaultFeatureModel: { model: 'claude-opus' }, // Use canonical ID
   muteDoneSound: false,
+  serverLogLevel: 'info',
+  enableRequestLogging: true,
   enableAiCommitMessages: true,
   phaseModels: DEFAULT_PHASE_MODELS,
-  enhancementModel: 'sonnet',
-  validationModel: 'opus',
-  enabledCursorModels: getAllCursorModelIds(),
-  cursorDefaultModel: 'auto',
-  enabledOpencodeModels: getAllOpencodeModelIds(),
-  opencodeDefaultModel: DEFAULT_OPENCODE_MODEL,
+  enhancementModel: 'sonnet', // Legacy alias still supported
+  validationModel: 'opus', // Legacy alias still supported
+  enabledCursorModels: getAllCursorModelIds(), // Returns prefixed IDs
+  cursorDefaultModel: 'cursor-auto', // Use canonical prefixed ID
+  enabledOpencodeModels: getAllOpencodeModelIds(), // Returns prefixed IDs
+  opencodeDefaultModel: DEFAULT_OPENCODE_MODEL, // Already prefixed
   enabledDynamicModelIds: [],
+  disabledProviders: [],
   keyboardShortcuts: DEFAULT_KEYBOARD_SHORTCUTS,
   projects: [],
   trashedProjects: [],
@@ -740,7 +897,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   recentFolders: [],
   worktreePanelCollapsed: false,
   lastSelectedSessionByProject: {},
-  autoLoadClaudeMd: false,
+  autoLoadClaudeMd: true,
   skipSandboxWarning: false,
   codexAutoLoadAgents: DEFAULT_CODEX_AUTO_LOAD_AGENTS,
   codexSandboxMode: DEFAULT_CODEX_SANDBOX_MODE,
@@ -751,6 +908,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   codexThreadId: undefined,
   mcpServers: [],
   defaultEditorCommand: null,
+  defaultTerminalId: null,
   enableSkills: true,
   skillsSources: ['user', 'project'],
   enableSubagents: true,

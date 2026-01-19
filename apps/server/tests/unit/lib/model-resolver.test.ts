@@ -37,7 +37,7 @@ describe('model-resolver.ts', () => {
       const result = resolveModelString('opus');
       expect(result).toBe('claude-opus-4-5-20251101');
       expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Resolved Claude model alias: "opus"')
+        expect.stringContaining('Migrated legacy ID: "opus" -> "claude-opus"')
       );
     });
 

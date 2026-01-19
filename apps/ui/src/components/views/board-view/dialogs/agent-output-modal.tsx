@@ -6,7 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, List, FileText, GitBranch, ClipboardList } from 'lucide-react';
+import { List, FileText, GitBranch, ClipboardList } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { getElectronAPI } from '@/lib/electron';
 import { LogViewer } from '@/components/ui/log-viewer';
 import { GitDiffPanel } from '@/components/ui/git-diff-panel';
@@ -41,6 +42,8 @@ export function AgentOutputModal({
   onNumberKeyPress,
   projectPath: projectPathProp,
 }: AgentOutputModalProps) {
+  const isBacklogPlan = featureId.startsWith('backlog-plan:');
+
   // Resolve project path - prefer prop, fallback to window.__currentProject
   const resolvedProjectPath = projectPathProp || (window as any).__currentProject?.path || '';
 
@@ -86,7 +89,7 @@ export function AgentOutputModal({
     if (!open) return;
 
     const api = getElectronAPI();
-    if (!api?.autoMode) return;
+    if (!api?.autoMode || isBacklogPlan) return;
 
     console.log('[AgentOutputModal] Subscribing to events for featureId:', featureId);
 
@@ -247,7 +250,43 @@ export function AgentOutputModal({
     return () => {
       unsubscribe();
     };
-  }, [open, featureId]);
+  }, [open, featureId, isBacklogPlan]);
+
+  // Listen to backlog plan events and update output
+  useEffect(() => {
+    if (!open || !isBacklogPlan) return;
+
+    const api = getElectronAPI();
+    if (!api?.backlogPlan) return;
+
+    const unsubscribe = api.backlogPlan.onEvent((event: any) => {
+      if (!event?.type) return;
+
+      let newContent = '';
+      switch (event.type) {
+        case 'backlog_plan_progress':
+          newContent = `\n🧭 ${event.content || 'Backlog plan progress update'}\n`;
+          break;
+        case 'backlog_plan_error':
+          newContent = `\n❌ Backlog plan error: ${event.error || 'Unknown error'}\n`;
+          break;
+        case 'backlog_plan_complete':
+          newContent = `\n✅ Backlog plan completed\n`;
+          break;
+        default:
+          newContent = `\nℹ️ ${event.type}\n`;
+          break;
+      }
+
+      if (newContent) {
+        setOutput((prev) => `${prev}${newContent}`);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [open, isBacklogPlan]);
 
   // Handle scroll to detect if user scrolled up
   const handleScroll = () => {
@@ -286,7 +325,7 @@ export function AgentOutputModal({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pr-8">
             <DialogTitle className="flex items-center gap-2">
               {featureStatus !== 'verified' && featureStatus !== 'waiting_approval' && (
-                <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                <Spinner size="md" />
               )}
               Agent Output
             </DialogTitle>
@@ -344,7 +383,7 @@ export function AgentOutputModal({
             </div>
           </div>
           <DialogDescription
-            className="mt-1 max-h-24 overflow-y-auto break-words"
+            className="mt-1 max-h-24 overflow-y-auto wrap-break-word"
             data-testid="agent-output-description"
           >
             {featureDescription}
@@ -352,11 +391,13 @@ export function AgentOutputModal({
         </DialogHeader>
 
         {/* Task Progress Panel - shows when tasks are being executed */}
-        <TaskProgressPanel
-          featureId={featureId}
-          projectPath={resolvedProjectPath}
-          className="flex-shrink-0 mx-3 my-2"
-        />
+        {!isBacklogPlan && (
+          <TaskProgressPanel
+            featureId={featureId}
+            projectPath={resolvedProjectPath}
+            className="shrink-0 mx-3 my-2"
+          />
+        )}
 
         {effectiveViewMode === 'changes' ? (
           <div className="flex-1 min-h-0 sm:min-h-[200px] sm:max-h-[60vh] overflow-y-auto scrollbar-visible">
@@ -370,7 +411,7 @@ export function AgentOutputModal({
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                <Spinner size="lg" className="mr-2" />
                 Loading...
               </div>
             )}
@@ -384,11 +425,11 @@ export function AgentOutputModal({
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 min-h-0 sm:min-h-[200px] sm:max-h-[60vh] overflow-y-auto bg-zinc-950 rounded-lg p-4 font-mono text-xs scrollbar-visible"
+              className="flex-1 min-h-0 sm:min-h-[200px] sm:max-h-[60vh] overflow-y-auto bg-popover border border-border/50 rounded-lg p-4 font-mono text-xs scrollbar-visible"
             >
               {isLoading && !output ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                  <Spinner size="lg" className="mr-2" />
                   Loading output...
                 </div>
               ) : !output ? (
@@ -398,11 +439,13 @@ export function AgentOutputModal({
               ) : effectiveViewMode === 'parsed' ? (
                 <LogViewer output={output} />
               ) : (
-                <div className="whitespace-pre-wrap break-words text-zinc-300">{output}</div>
+                <div className="whitespace-pre-wrap wrap-break-word text-foreground/80">
+                  {output}
+                </div>
               )}
             </div>
 
-            <div className="text-xs text-muted-foreground text-center flex-shrink-0">
+            <div className="text-xs text-muted-foreground text-center shrink-0">
               {autoScrollRef.current
                 ? 'Auto-scrolling enabled'
                 : 'Scroll to bottom to enable auto-scroll'}

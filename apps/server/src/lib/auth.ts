@@ -130,19 +130,47 @@ function ensureApiKey(): string {
 // API key - always generated/loaded on startup for CSRF protection
 const API_KEY = ensureApiKey();
 
+// Width for log box content (excluding borders)
+const BOX_CONTENT_WIDTH = 67;
+
 // Print API key to console for web mode users (unless suppressed for production logging)
 if (process.env.AUTOMAKER_HIDE_API_KEY !== 'true') {
+  const autoLoginEnabled = process.env.AUTOMAKER_AUTO_LOGIN === 'true';
+  const autoLoginStatus = autoLoginEnabled ? 'enabled (auto-login active)' : 'disabled';
+
+  // Build box lines with exact padding
+  const header = '🔐 API Key for Web Mode Authentication'.padEnd(BOX_CONTENT_WIDTH);
+  const line1 = "When accessing via browser, you'll be prompted to enter this key:".padEnd(
+    BOX_CONTENT_WIDTH
+  );
+  const line2 = API_KEY.padEnd(BOX_CONTENT_WIDTH);
+  const line3 = 'In Electron mode, authentication is handled automatically.'.padEnd(
+    BOX_CONTENT_WIDTH
+  );
+  const line4 = `Auto-login (AUTOMAKER_AUTO_LOGIN): ${autoLoginStatus}`.padEnd(BOX_CONTENT_WIDTH);
+  const tipHeader = '💡 Tips'.padEnd(BOX_CONTENT_WIDTH);
+  const line5 = 'Set AUTOMAKER_API_KEY env var to use a fixed key'.padEnd(BOX_CONTENT_WIDTH);
+  const line6 = 'Set AUTOMAKER_AUTO_LOGIN=true to skip the login prompt'.padEnd(BOX_CONTENT_WIDTH);
+
   logger.info(`
-╔═══════════════════════════════════════════════════════════════════════╗
-║  🔐 API Key for Web Mode Authentication                               ║
-╠═══════════════════════════════════════════════════════════════════════╣
-║                                                                       ║
-║  When accessing via browser, you'll be prompted to enter this key:    ║
-║                                                                       ║
-║    ${API_KEY}
-║                                                                       ║
-║  In Electron mode, authentication is handled automatically.          ║
-╚═══════════════════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════════════╗
+║  ${header}║
+╠═════════════════════════════════════════════════════════════════════╣
+║                                                                     ║
+║  ${line1}║
+║                                                                     ║
+║  ${line2}║
+║                                                                     ║
+║  ${line3}║
+║                                                                     ║
+║  ${line4}║
+║                                                                     ║
+╠═════════════════════════════════════════════════════════════════════╣
+║  ${tipHeader}║
+╠═════════════════════════════════════════════════════════════════════╣
+║  ${line5}║
+║  ${line6}║
+╚═════════════════════════════════════════════════════════════════════╝
 `);
 } else {
   logger.info('API key banner hidden (AUTOMAKER_HIDE_API_KEY=true)');
@@ -318,6 +346,15 @@ function checkAuthentication(
     return { authenticated: false, errorType: 'invalid_api_key' };
   }
 
+  // Check for session token in query parameter (web mode - needed for image loads)
+  const queryToken = query.token;
+  if (queryToken) {
+    if (validateSession(queryToken)) {
+      return { authenticated: true };
+    }
+    return { authenticated: false, errorType: 'invalid_session' };
+  }
+
   // Check for session cookie (web mode)
   const sessionToken = cookies[SESSION_COOKIE_NAME];
   if (sessionToken && validateSession(sessionToken)) {
@@ -333,8 +370,9 @@ function checkAuthentication(
  * Accepts either:
  * 1. X-API-Key header (for Electron mode)
  * 2. X-Session-Token header (for web mode with explicit token)
- * 3. apiKey query parameter (fallback for cases where headers can't be set)
- * 4. Session cookie (for web mode)
+ * 3. apiKey query parameter (fallback for Electron, cases where headers can't be set)
+ * 4. token query parameter (fallback for web mode, needed for image loads via CSS/img tags)
+ * 5. Session cookie (for web mode)
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const result = checkAuthentication(

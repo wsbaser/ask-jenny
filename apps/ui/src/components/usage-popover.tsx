@@ -3,6 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, AlertTriangle, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { useSetupStore } from '@/store/setup-store';
 import { AnthropicIcon, OpenAIIcon } from '@/components/ui/provider-icon';
@@ -245,19 +246,43 @@ export function UsagePopover() {
     return 'bg-green-500';
   };
 
+  // Determine which provider icon and percentage to show based on active tab
+  const getTabInfo = () => {
+    if (activeTab === 'claude') {
+      return {
+        icon: AnthropicIcon,
+        percentage: claudeMaxPercentage,
+        isStale: isClaudeStale,
+      };
+    }
+    return {
+      icon: OpenAIIcon,
+      percentage: codexMaxPercentage,
+      isStale: isCodexStale,
+    };
+  };
+
+  const tabInfo = getTabInfo();
+  const statusColor = getStatusInfo(tabInfo.percentage).color;
+  const ProviderIcon = tabInfo.icon;
+
   const trigger = (
-    <Button variant="ghost" size="sm" className="h-9 gap-3 bg-secondary border border-border px-3">
+    <Button variant="ghost" size="sm" className="h-9 gap-2 bg-secondary border border-border px-3">
+      {(claudeUsage || codexUsage) && <ProviderIcon className={cn('w-4 h-4', statusColor)} />}
       <span className="text-sm font-medium">Usage</span>
       {(claudeUsage || codexUsage) && (
         <div
           className={cn(
             'h-1.5 w-16 bg-muted-foreground/20 rounded-full overflow-hidden transition-opacity',
-            isStale && 'opacity-60'
+            tabInfo.isStale && 'opacity-60'
           )}
         >
           <div
-            className={cn('h-full transition-all duration-500', getProgressBarColor(maxPercentage))}
-            style={{ width: `${Math.min(maxPercentage, 100)}%` }}
+            className={cn(
+              'h-full transition-all duration-500',
+              getProgressBarColor(tabInfo.percentage)
+            )}
+            style={{ width: `${Math.min(tabInfo.percentage, 100)}%` }}
           />
         </div>
       )}
@@ -337,7 +362,7 @@ export function UsagePopover() {
                 </div>
               ) : !claudeUsage ? (
                 <div className="flex flex-col items-center justify-center py-8 space-y-2">
-                  <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground/50" />
+                  <Spinner size="lg" />
                   <p className="text-xs text-muted-foreground">Loading usage data...</p>
                 </div>
               ) : (
@@ -456,7 +481,7 @@ export function UsagePopover() {
                 </div>
               ) : !codexUsage ? (
                 <div className="flex flex-col items-center justify-center py-8 space-y-2">
-                  <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground/50" />
+                  <Spinner size="lg" />
                   <p className="text-xs text-muted-foreground">Loading usage data...</p>
                 </div>
               ) : codexUsage.rateLimits ? (

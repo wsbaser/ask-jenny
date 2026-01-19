@@ -7,8 +7,11 @@
  * - Per-project settings ({projectPath}/.automaker/settings.json)
  */
 
-import { createLogger } from '@automaker/utils';
+import { createLogger, atomicWriteJson, DEFAULT_BACKUP_COUNT } from '@automaker/utils';
 import * as secureFs from '../lib/secure-fs.js';
+import os from 'os';
+import path from 'path';
+import fs from 'fs/promises';
 
 import {
   getGlobalSettingsPath,
@@ -38,32 +41,13 @@ import {
   CREDENTIALS_VERSION,
   PROJECT_SETTINGS_VERSION,
 } from '../types/settings.js';
+import { migrateModelId, migrateCursorModelIds, migrateOpencodeModelIds } from '@automaker/types';
 
 const logger = createLogger('SettingsService');
 
 /**
- * Atomic file write - write to temp file then rename
- */
-async function atomicWriteJson(filePath: string, data: unknown): Promise<void> {
-  const tempPath = `${filePath}.tmp.${Date.now()}`;
-  const content = JSON.stringify(data, null, 2);
-
-  try {
-    await secureFs.writeFile(tempPath, content, 'utf-8');
-    await secureFs.rename(tempPath, filePath);
-  } catch (error) {
-    // Clean up temp file if it exists
-    try {
-      await secureFs.unlink(tempPath);
-    } catch {
-      // Ignore cleanup errors
-    }
-    throw error;
-  }
-}
-
-/**
- * Safely read JSON file with fallback to default
+ * Wrapper for readJsonFile from utils that uses the local secureFs
+ * to maintain compatibility with the server's secure file system
  */
 async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
   try {
@@ -88,6 +72,13 @@ async function fileExists(filePath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Write settings atomically with backup support
+ */
+async function writeSettingsJson(filePath: string, data: unknown): Promise<void> {
+  await atomicWriteJson(filePath, data, { backupCount: DEFAULT_BACKUP_COUNT });
 }
 
 /**
@@ -137,10 +128,14 @@ export class SettingsService {
     // Migrate legacy enhancementModel/validationModel to phaseModels
     const migratedPhaseModels = this.migratePhaseModels(settings);
 
+    // Migrate model IDs to canonical format
+    const migratedModelSettings = this.migrateModelSettings(settings);
+
     // Apply any missing defaults (for backwards compatibility)
     let result: GlobalSettings = {
       ...DEFAULT_GLOBAL_SETTINGS,
       ...settings,
+      ...migratedModelSettings,
       keyboardShortcuts: {
         ...DEFAULT_GLOBAL_SETTINGS.keyboardShortcuts,
         ...settings.keyboardShortcuts,
@@ -180,7 +175,7 @@ export class SettingsService {
     if (needsSave) {
       try {
         await ensureDataDir(this.dataDir);
-        await atomicWriteJson(settingsPath, result);
+        await writeSettingsJson(settingsPath, result);
         logger.info('Settings migration complete');
       } catch (error) {
         logger.error('Failed to save migrated settings:', error);
@@ -236,19 +231,70 @@ export class SettingsService {
    * Convert a phase model value to PhaseModelEntry format
    *
    * Handles migration from string format (v2) to object format (v3).
-   * - String values like 'sonnet' become { model: 'sonnet' }
-   * - Object values are returned as-is (with type assertion)
+   * Also migrates legacy model IDs to canonical prefixed format.
+   * - String values like 'sonnet' become { model: 'claude-sonnet' }
+   * - Object values have their model ID migrated if needed
    *
    * @param value - Phase model value (string or PhaseModelEntry)
-   * @returns PhaseModelEntry object
+   * @returns PhaseModelEntry object with canonical model ID
    */
   private toPhaseModelEntry(value: string | PhaseModelEntry): PhaseModelEntry {
     if (typeof value === 'string') {
-      // v2 format: just a model string
-      return { model: value as PhaseModelEntry['model'] };
+      // v2 format: just a model string - migrate to canonical ID
+      return { model: migrateModelId(value) as PhaseModelEntry['model'] };
     }
-    // v3 format: already a PhaseModelEntry object
-    return value;
+    // v3 format: PhaseModelEntry object - migrate model ID if needed
+    return {
+      ...value,
+      model: migrateModelId(value.model) as PhaseModelEntry['model'],
+    };
+  }
+
+  /**
+   * Migrate model-related settings to canonical format
+   *
+   * Migrates:
+   * - enabledCursorModels: legacy IDs to cursor- prefixed
+   * - enabledOpencodeModels: legacy slash format to dash format
+   * - cursorDefaultModel: legacy ID to cursor- prefixed
+   *
+   * @param settings - Settings to migrate
+   * @returns Settings with migrated model IDs
+   */
+  private migrateModelSettings(settings: Partial<GlobalSettings>): Partial<GlobalSettings> {
+    const migrated: Partial<GlobalSettings> = { ...settings };
+
+    // Migrate Cursor models
+    if (settings.enabledCursorModels) {
+      migrated.enabledCursorModels = migrateCursorModelIds(
+        settings.enabledCursorModels as string[]
+      );
+    }
+
+    // Migrate Cursor default model
+    if (settings.cursorDefaultModel) {
+      const migratedDefault = migrateCursorModelIds([settings.cursorDefaultModel as string]);
+      if (migratedDefault.length > 0) {
+        migrated.cursorDefaultModel = migratedDefault[0];
+      }
+    }
+
+    // Migrate OpenCode models
+    if (settings.enabledOpencodeModels) {
+      migrated.enabledOpencodeModels = migrateOpencodeModelIds(
+        settings.enabledOpencodeModels as string[]
+      );
+    }
+
+    // Migrate OpenCode default model
+    if (settings.opencodeDefaultModel) {
+      const migratedDefault = migrateOpencodeModelIds([settings.opencodeDefaultModel as string]);
+      if (migratedDefault.length > 0) {
+        migrated.opencodeDefaultModel = migratedDefault[0];
+      }
+    }
+
+    return migrated;
   }
 
   /**
@@ -286,13 +332,39 @@ export class SettingsService {
     };
 
     const currentProjectsLen = Array.isArray(current.projects) ? current.projects.length : 0;
+    // Check if this is a legitimate project removal (moved to trash) vs accidental wipe
+    const newTrashedProjectsLen = Array.isArray(sanitizedUpdates.trashedProjects)
+      ? sanitizedUpdates.trashedProjects.length
+      : Array.isArray(current.trashedProjects)
+        ? current.trashedProjects.length
+        : 0;
+
     if (
       Array.isArray(sanitizedUpdates.projects) &&
       sanitizedUpdates.projects.length === 0 &&
       currentProjectsLen > 0
     ) {
-      attemptedProjectWipe = true;
-      delete sanitizedUpdates.projects;
+      // Only treat as accidental wipe if trashedProjects is also empty
+      // (If projects are moved to trash, they appear in trashedProjects)
+      if (newTrashedProjectsLen === 0) {
+        logger.warn(
+          '[WIPE_PROTECTION] Attempted to set projects to empty array with no trash! Ignoring update.',
+          {
+            currentProjectsLen,
+            newProjectsLen: 0,
+            newTrashedProjectsLen,
+            currentProjects: current.projects?.map((p) => p.name),
+          }
+        );
+        attemptedProjectWipe = true;
+        delete sanitizedUpdates.projects;
+      } else {
+        logger.info('[LEGITIMATE_REMOVAL] Removing all projects to trash', {
+          currentProjectsLen,
+          newProjectsLen: 0,
+          movedToTrash: newTrashedProjectsLen,
+        });
+      }
     }
 
     ignoreEmptyArrayOverwrite('trashedProjects');
@@ -340,7 +412,7 @@ export class SettingsService {
       };
     }
 
-    await atomicWriteJson(settingsPath, updated);
+    await writeSettingsJson(settingsPath, updated);
     logger.info('Global settings updated');
 
     return updated;
@@ -414,7 +486,7 @@ export class SettingsService {
       };
     }
 
-    await atomicWriteJson(credentialsPath, updated);
+    await writeSettingsJson(credentialsPath, updated);
     logger.info('Credentials updated');
 
     return updated;
@@ -525,7 +597,7 @@ export class SettingsService {
       };
     }
 
-    await atomicWriteJson(settingsPath, updated);
+    await writeSettingsJson(settingsPath, updated);
     logger.info(`Project settings updated for ${projectPath}`);
 
     return updated;
@@ -778,5 +850,204 @@ export class SettingsService {
    */
   getDataDir(): string {
     return this.dataDir;
+  }
+
+  /**
+   * Get the legacy Electron userData directory path
+   *
+   * Returns the platform-specific path where Electron previously stored settings
+   * before the migration to shared data directories.
+   *
+   * @returns Absolute path to legacy userData directory
+   */
+  private getLegacyElectronUserDataPath(): string {
+    const homeDir = os.homedir();
+
+    switch (process.platform) {
+      case 'darwin':
+        // macOS: ~/Library/Application Support/Automaker
+        return path.join(homeDir, 'Library', 'Application Support', 'Automaker');
+      case 'win32':
+        // Windows: %APPDATA%\Automaker
+        return path.join(
+          process.env.APPDATA || path.join(homeDir, 'AppData', 'Roaming'),
+          'Automaker'
+        );
+      default:
+        // Linux and others: ~/.config/Automaker
+        return path.join(process.env.XDG_CONFIG_HOME || path.join(homeDir, '.config'), 'Automaker');
+    }
+  }
+
+  /**
+   * Migrate entire data directory from legacy Electron userData location to new shared data directory
+   *
+   * This handles the migration from when Electron stored data in the platform-specific
+   * userData directory (e.g., ~/.config/Automaker) to the new shared ./data directory.
+   *
+   * Migration only occurs if:
+   * 1. The new location does NOT have settings.json
+   * 2. The legacy location DOES have settings.json
+   *
+   * Migrates all files and directories including:
+   * - settings.json (global settings)
+   * - credentials.json (API keys)
+   * - sessions-metadata.json (chat session metadata)
+   * - agent-sessions/ (conversation histories)
+   * - Any other files in the data directory
+   *
+   * @returns Promise resolving to migration result
+   */
+  async migrateFromLegacyElectronPath(): Promise<{
+    migrated: boolean;
+    migratedFiles: string[];
+    legacyPath: string;
+    errors: string[];
+  }> {
+    const legacyPath = this.getLegacyElectronUserDataPath();
+    const migratedFiles: string[] = [];
+    const errors: string[] = [];
+
+    // Skip if legacy path is the same as current data dir (no migration needed)
+    if (path.resolve(legacyPath) === path.resolve(this.dataDir)) {
+      logger.debug('Legacy path same as current data dir, skipping migration');
+      return { migrated: false, migratedFiles, legacyPath, errors };
+    }
+
+    logger.info(`Checking for legacy data migration from: ${legacyPath}`);
+    logger.info(`Current data directory: ${this.dataDir}`);
+
+    // Check if new settings already exist
+    const newSettingsPath = getGlobalSettingsPath(this.dataDir);
+    let newSettingsExist = false;
+    try {
+      await fs.access(newSettingsPath);
+      newSettingsExist = true;
+    } catch {
+      // New settings don't exist, migration may be needed
+    }
+
+    if (newSettingsExist) {
+      logger.debug('Settings already exist in new location, skipping migration');
+      return { migrated: false, migratedFiles, legacyPath, errors };
+    }
+
+    // Check if legacy directory exists and has settings
+    const legacySettingsPath = path.join(legacyPath, 'settings.json');
+    let legacySettingsExist = false;
+    try {
+      await fs.access(legacySettingsPath);
+      legacySettingsExist = true;
+    } catch {
+      // Legacy settings don't exist
+    }
+
+    if (!legacySettingsExist) {
+      logger.debug('No legacy settings found, skipping migration');
+      return { migrated: false, migratedFiles, legacyPath, errors };
+    }
+
+    // Perform migration of specific application data files only
+    // (not Electron internal caches like Code Cache, GPU Cache, etc.)
+    logger.info('Found legacy data directory, migrating application data to new location...');
+
+    // Ensure new data directory exists
+    try {
+      await ensureDataDir(this.dataDir);
+    } catch (error) {
+      const msg = `Failed to create data directory: ${error}`;
+      logger.error(msg);
+      errors.push(msg);
+      return { migrated: false, migratedFiles, legacyPath, errors };
+    }
+
+    // Only migrate specific application data files/directories
+    const itemsToMigrate = [
+      'settings.json',
+      'credentials.json',
+      'sessions-metadata.json',
+      'agent-sessions',
+      '.api-key',
+      '.sessions',
+    ];
+
+    for (const item of itemsToMigrate) {
+      const srcPath = path.join(legacyPath, item);
+      const destPath = path.join(this.dataDir, item);
+
+      // Check if source exists
+      try {
+        await fs.access(srcPath);
+      } catch {
+        // Source doesn't exist, skip
+        continue;
+      }
+
+      // Check if destination already exists
+      try {
+        await fs.access(destPath);
+        logger.debug(`Skipping ${item} - already exists in destination`);
+        continue;
+      } catch {
+        // Destination doesn't exist, proceed with copy
+      }
+
+      // Copy file or directory
+      try {
+        const stat = await fs.stat(srcPath);
+        if (stat.isDirectory()) {
+          await this.copyDirectory(srcPath, destPath);
+          migratedFiles.push(item + '/');
+          logger.info(`Migrated directory: ${item}/`);
+        } else {
+          const content = await fs.readFile(srcPath);
+          await fs.writeFile(destPath, content);
+          migratedFiles.push(item);
+          logger.info(`Migrated file: ${item}`);
+        }
+      } catch (error) {
+        const msg = `Failed to migrate ${item}: ${error}`;
+        logger.error(msg);
+        errors.push(msg);
+      }
+    }
+
+    if (migratedFiles.length > 0) {
+      logger.info(
+        `Migration complete. Migrated ${migratedFiles.length} item(s): ${migratedFiles.join(', ')}`
+      );
+      logger.info(`Legacy path: ${legacyPath}`);
+      logger.info(`New path: ${this.dataDir}`);
+    }
+
+    return {
+      migrated: migratedFiles.length > 0,
+      migratedFiles,
+      legacyPath,
+      errors,
+    };
+  }
+
+  /**
+   * Recursively copy a directory from source to destination
+   *
+   * @param srcDir - Source directory path
+   * @param destDir - Destination directory path
+   */
+  private async copyDirectory(srcDir: string, destDir: string): Promise<void> {
+    await fs.mkdir(destDir, { recursive: true });
+    const entries = await fs.readdir(srcDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const srcPath = path.join(srcDir, entry.name);
+      const destPath = path.join(destDir, entry.name);
+
+      if (entry.isDirectory()) {
+        await this.copyDirectory(srcPath, destPath);
+      } else if (entry.isFile()) {
+        const content = await fs.readFile(srcPath);
+        await fs.writeFile(destPath, content);
+      }
+    }
   }
 }

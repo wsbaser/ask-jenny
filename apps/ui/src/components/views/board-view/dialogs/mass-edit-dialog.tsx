@@ -126,7 +126,7 @@ export function MassEditDialog({
   });
 
   // Field values
-  const [model, setModel] = useState<ModelAlias>('sonnet');
+  const [model, setModel] = useState<ModelAlias>('claude-sonnet');
   const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>('none');
   const [planningMode, setPlanningMode] = useState<PlanningMode>('skip');
   const [requirePlanApproval, setRequirePlanApproval] = useState(false);
@@ -160,7 +160,7 @@ export function MassEditDialog({
         skipTests: false,
         branchName: false,
       });
-      setModel(getInitialValue(selectedFeatures, 'model', 'sonnet') as ModelAlias);
+      setModel(getInitialValue(selectedFeatures, 'model', 'claude-sonnet') as ModelAlias);
       setThinkingLevel(getInitialValue(selectedFeatures, 'thinkingLevel', 'none') as ThinkingLevel);
       setPlanningMode(getInitialValue(selectedFeatures, 'planningMode', 'skip') as PlanningMode);
       setRequirePlanApproval(getInitialValue(selectedFeatures, 'requirePlanApproval', false));

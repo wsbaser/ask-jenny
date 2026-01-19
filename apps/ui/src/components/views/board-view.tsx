@@ -34,7 +34,7 @@ import { pathsEqual } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getBlockingDependencies } from '@automaker/dependency-resolver';
 import { BoardBackgroundModal } from '@/components/dialogs/board-background-modal';
-import { RefreshCw } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { useAutoMode } from '@/hooks/use-auto-mode';
 import { useKeyboardShortcutsConfig } from '@/hooks/use-keyboard-shortcuts';
 import { useWindowState } from '@/hooks/use-window-state';
@@ -195,6 +195,7 @@ export function BoardView() {
   // Selection mode hook for mass editing
   const {
     isSelectionMode,
+    selectionTarget,
     selectedFeatureIds,
     selectedCount,
     toggleSelectionMode,
@@ -509,9 +510,9 @@ export function BoardView() {
           // Empty string clears the branch assignment, moving features to main/current branch
           finalBranchName = '';
         } else if (workMode === 'auto') {
-          // Auto-generate a branch name based on current branch and timestamp
-          const baseBranch =
-            currentWorktreeBranch || getPrimaryWorktreeBranch(currentProject.path) || 'main';
+          // Auto-generate a branch name based on primary branch (main/master) and timestamp
+          // Always use primary branch to avoid nested feature/feature/... paths
+          const baseBranch = getPrimaryWorktreeBranch(currentProject.path) || 'main';
           const timestamp = Date.now();
           const randomSuffix = Math.random().toString(36).substring(2, 6);
           finalBranchName = `feature/${baseBranch}-${timestamp}-${randomSuffix}`;
@@ -591,7 +592,6 @@ export function BoardView() {
       selectedFeatureIds,
       updateFeature,
       exitSelectionMode,
-      currentWorktreeBranch,
       getPrimaryWorktreeBranch,
       addAndSelectWorktree,
       setWorktreeRefreshKey,
@@ -672,6 +672,67 @@ export function BoardView() {
     currentProject?.path,
     isPrimaryWorktreeBranch,
   ]);
+
+  // Get waiting_approval feature IDs in current branch for "Select All"
+  const allSelectableWaitingApprovalFeatureIds = useMemo(() => {
+    return hookFeatures
+      .filter((f) => {
+        // Only waiting_approval features
+        if (f.status !== 'waiting_approval') return false;
+
+        // Filter by current worktree branch
+        const featureBranch = f.branchName;
+        if (!featureBranch) {
+          // No branch assigned - only selectable on primary worktree
+          return currentWorktreePath === null;
+        }
+        if (currentWorktreeBranch === null) {
+          // Viewing main but branch hasn't been initialized
+          return currentProject?.path
+            ? isPrimaryWorktreeBranch(currentProject.path, featureBranch)
+            : false;
+        }
+        // Match by branch name
+        return featureBranch === currentWorktreeBranch;
+      })
+      .map((f) => f.id);
+  }, [
+    hookFeatures,
+    currentWorktreePath,
+    currentWorktreeBranch,
+    currentProject?.path,
+    isPrimaryWorktreeBranch,
+  ]);
+
+  // Handler for bulk verifying multiple features
+  const handleBulkVerify = useCallback(async () => {
+    if (!currentProject || selectedFeatureIds.size === 0) return;
+
+    try {
+      const api = getHttpApiClient();
+      const featureIds = Array.from(selectedFeatureIds);
+      const updates = { status: 'verified' as const };
+
+      // Use bulk update API for efficient batch processing
+      const result = await api.features.bulkUpdate(currentProject.path, featureIds, updates);
+
+      if (result.success) {
+        // Update local state for all features
+        featureIds.forEach((featureId) => {
+          updateFeature(featureId, updates);
+        });
+        toast.success(`Verified ${result.updatedCount} features`);
+        exitSelectionMode();
+      } else {
+        toast.error('Failed to verify some features', {
+          description: `${result.failedCount} features failed to verify`,
+        });
+      }
+    } catch (error) {
+      logger.error('Bulk verify failed:', error);
+      toast.error('Failed to verify features');
+    }
+  }, [currentProject, selectedFeatureIds, updateFeature, exitSelectionMode]);
 
   // Handler for addressing PR comments - creates a feature and starts it automatically
   const handleAddressPRComments = useCallback(
@@ -784,68 +845,9 @@ export function BoardView() {
     [handleAddFeature, handleStartImplementation]
   );
 
-  // Client-side auto mode: periodically check for backlog items and move them to in-progress
-  // Use a ref to track the latest auto mode state so async operations always check the current value
-  const autoModeRunningRef = useRef(autoMode.isRunning);
-  useEffect(() => {
-    autoModeRunningRef.current = autoMode.isRunning;
-  }, [autoMode.isRunning]);
-
-  // Use a ref to track the latest features to avoid effect re-runs when features change
-  const hookFeaturesRef = useRef(hookFeatures);
-  useEffect(() => {
-    hookFeaturesRef.current = hookFeatures;
-  }, [hookFeatures]);
-
-  // Use a ref to track running tasks to avoid effect re-runs that clear pendingFeaturesRef
-  const runningAutoTasksRef = useRef(runningAutoTasks);
-  useEffect(() => {
-    runningAutoTasksRef.current = runningAutoTasks;
-  }, [runningAutoTasks]);
-
-  // Keep latest start handler without retriggering the auto mode effect
-  const handleStartImplementationRef = useRef(handleStartImplementation);
-  useEffect(() => {
-    handleStartImplementationRef.current = handleStartImplementation;
-  }, [handleStartImplementation]);
-
-  // Track features that are pending (started but not yet confirmed running)
-  const pendingFeaturesRef = useRef<Set<string>>(new Set());
-
-  // Listen to auto mode events to remove features from pending when they start running
-  useEffect(() => {
-    const api = getElectronAPI();
-    if (!api?.autoMode) return;
-
-    const unsubscribe = api.autoMode.onEvent((event: AutoModeEvent) => {
-      if (!currentProject) return;
-
-      // Only process events for the current project
-      const eventProjectPath = 'projectPath' in event ? event.projectPath : undefined;
-      if (eventProjectPath && eventProjectPath !== currentProject.path) {
-        return;
-      }
-
-      switch (event.type) {
-        case 'auto_mode_feature_start':
-          // Feature is now confirmed running - remove from pending
-          if (event.featureId) {
-            pendingFeaturesRef.current.delete(event.featureId);
-          }
-          break;
-
-        case 'auto_mode_feature_complete':
-        case 'auto_mode_error':
-          // Feature completed or errored - remove from pending if still there
-          if (event.featureId) {
-            pendingFeaturesRef.current.delete(event.featureId);
-          }
-          break;
-      }
-    });
-
-    return unsubscribe;
-  }, [currentProject]);
+  // NOTE: Auto mode polling loop has been moved to the backend.
+  // The frontend now just toggles the backend's auto loop via API calls.
+  // See use-auto-mode.ts for the start/stop logic that calls the backend.
 
   // Listen for backlog plan events (for background generation)
   useEffect(() => {
@@ -878,218 +880,31 @@ export function BoardView() {
     return unsubscribe;
   }, []);
 
+  // Load any saved plan from disk when opening the board
   useEffect(() => {
-    logger.info(
-      '[AutoMode] Effect triggered - isRunning:',
-      autoMode.isRunning,
-      'hasProject:',
-      !!currentProject
-    );
-    if (!autoMode.isRunning || !currentProject) {
-      return;
-    }
+    if (!currentProject || pendingBacklogPlan) return;
 
-    logger.info('[AutoMode] Starting auto mode polling loop for project:', currentProject.path);
-    let isChecking = false;
-    let isActive = true; // Track if this effect is still active
+    let isActive = true;
+    const loadSavedPlan = async () => {
+      const api = getElectronAPI();
+      if (!api?.backlogPlan) return;
 
-    const checkAndStartFeatures = async () => {
-      // Check if auto mode is still running and effect is still active
-      // Use ref to get the latest value, not the closure value
-      if (!isActive || !autoModeRunningRef.current || !currentProject) {
-        return;
-      }
-
-      // Prevent concurrent executions
-      if (isChecking) {
-        return;
-      }
-
-      isChecking = true;
-      try {
-        // Double-check auto mode is still running before proceeding
-        if (!isActive || !autoModeRunningRef.current || !currentProject) {
-          logger.debug(
-            '[AutoMode] Skipping check - isActive:',
-            isActive,
-            'autoModeRunning:',
-            autoModeRunningRef.current,
-            'hasProject:',
-            !!currentProject
-          );
-          return;
-        }
-
-        // Count currently running tasks + pending features
-        // Use ref to get the latest running tasks without causing effect re-runs
-        const currentRunning = runningAutoTasksRef.current.length + pendingFeaturesRef.current.size;
-        const availableSlots = maxConcurrency - currentRunning;
-        logger.debug(
-          '[AutoMode] Checking features - running:',
-          currentRunning,
-          'available slots:',
-          availableSlots
-        );
-
-        // No available slots, skip check
-        if (availableSlots <= 0) {
-          return;
-        }
-
-        // Filter backlog features by the currently selected worktree branch
-        // This logic mirrors use-board-column-features.ts for consistency.
-        // HOWEVER: auto mode should still run even if the user is viewing a non-primary worktree,
-        // so we fall back to "all backlog features" when none are visible in the current view.
-        // Use ref to get the latest features without causing effect re-runs
-        const currentFeatures = hookFeaturesRef.current;
-        const backlogFeaturesInView = currentFeatures.filter((f) => {
-          if (f.status !== 'backlog') return false;
-
-          const featureBranch = f.branchName;
-
-          // Features without branchName are considered unassigned (show only on primary worktree)
-          if (!featureBranch) {
-            // No branch assigned - show only when viewing primary worktree
-            const isViewingPrimary = currentWorktreePath === null;
-            return isViewingPrimary;
-          }
-
-          if (currentWorktreeBranch === null) {
-            // We're viewing main but branch hasn't been initialized yet
-            // Show features assigned to primary worktree's branch
-            return currentProject.path
-              ? isPrimaryWorktreeBranch(currentProject.path, featureBranch)
-              : false;
-          }
-
-          // Match by branch name
-          return featureBranch === currentWorktreeBranch;
-        });
-
-        const backlogFeatures =
-          backlogFeaturesInView.length > 0
-            ? backlogFeaturesInView
-            : currentFeatures.filter((f) => f.status === 'backlog');
-
-        logger.debug(
-          '[AutoMode] Features - total:',
-          currentFeatures.length,
-          'backlog in view:',
-          backlogFeaturesInView.length,
-          'backlog total:',
-          backlogFeatures.length
-        );
-
-        if (backlogFeatures.length === 0) {
-          logger.debug(
-            '[AutoMode] No backlog features found, statuses:',
-            currentFeatures.map((f) => f.status).join(', ')
-          );
-          return;
-        }
-
-        // Sort by priority (lower number = higher priority, priority 1 is highest)
-        const sortedBacklog = [...backlogFeatures].sort(
-          (a, b) => (a.priority || 999) - (b.priority || 999)
-        );
-
-        // Filter out features with blocking dependencies if dependency blocking is enabled
-        // NOTE: skipVerificationInAutoMode means "ignore unmet dependency verification" so we
-        // should NOT exclude blocked features in that mode.
-        const eligibleFeatures =
-          enableDependencyBlocking && !skipVerificationInAutoMode
-            ? sortedBacklog.filter((f) => {
-                const blockingDeps = getBlockingDependencies(f, currentFeatures);
-                if (blockingDeps.length > 0) {
-                  logger.debug('[AutoMode] Feature', f.id, 'blocked by deps:', blockingDeps);
-                }
-                return blockingDeps.length === 0;
-              })
-            : sortedBacklog;
-
-        logger.debug(
-          '[AutoMode] Eligible features after dep check:',
-          eligibleFeatures.length,
-          'dependency blocking enabled:',
-          enableDependencyBlocking
-        );
-
-        // Start features up to available slots
-        const featuresToStart = eligibleFeatures.slice(0, availableSlots);
-        const startImplementation = handleStartImplementationRef.current;
-        if (!startImplementation) {
-          return;
-        }
-
-        logger.info(
-          '[AutoMode] Starting',
-          featuresToStart.length,
-          'features:',
-          featuresToStart.map((f) => f.id).join(', ')
-        );
-
-        for (const feature of featuresToStart) {
-          // Check again before starting each feature
-          if (!isActive || !autoModeRunningRef.current || !currentProject) {
-            return;
-          }
-
-          // Simplified: No worktree creation on client - server derives workDir from feature.branchName
-          // If feature has no branchName, assign it to the primary branch so it can run consistently
-          // even when the user is viewing a non-primary worktree.
-          if (!feature.branchName) {
-            const primaryBranch =
-              (currentProject.path ? getPrimaryWorktreeBranch(currentProject.path) : null) ||
-              'main';
-            await persistFeatureUpdate(feature.id, {
-              branchName: primaryBranch,
-            });
-          }
-
-          // Final check before starting implementation
-          if (!isActive || !autoModeRunningRef.current || !currentProject) {
-            return;
-          }
-
-          // Start the implementation - server will derive workDir from feature.branchName
-          const started = await startImplementation(feature);
-
-          // If successfully started, track it as pending until we receive the start event
-          if (started) {
-            pendingFeaturesRef.current.add(feature.id);
-          }
-        }
-      } finally {
-        isChecking = false;
+      const result = await api.backlogPlan.status(currentProject.path);
+      if (
+        isActive &&
+        result.success &&
+        result.savedPlan?.result &&
+        result.savedPlan.result.changes?.length > 0
+      ) {
+        setPendingBacklogPlan(result.savedPlan.result);
       }
     };
 
-    // Check immediately, then every 3 seconds
-    checkAndStartFeatures();
-    const interval = setInterval(checkAndStartFeatures, 3000);
-
+    loadSavedPlan();
     return () => {
-      // Mark as inactive to prevent any pending async operations from continuing
       isActive = false;
-      clearInterval(interval);
-      // Clear pending features when effect unmounts or dependencies change
-      pendingFeaturesRef.current.clear();
     };
-  }, [
-    autoMode.isRunning,
-    currentProject,
-    // runningAutoTasks is accessed via runningAutoTasksRef to prevent effect re-runs
-    // that would clear pendingFeaturesRef and cause concurrency issues
-    maxConcurrency,
-    // hookFeatures is accessed via hookFeaturesRef to prevent effect re-runs
-    currentWorktreeBranch,
-    currentWorktreePath,
-    getPrimaryWorktreeBranch,
-    isPrimaryWorktreeBranch,
-    enableDependencyBlocking,
-    skipVerificationInAutoMode,
-    persistFeatureUpdate,
-  ]);
+  }, [currentProject, pendingBacklogPlan]);
 
   // Use keyboard shortcuts hook (after actions hook)
   useBoardKeyboardShortcuts({
@@ -1284,7 +1099,7 @@ export function BoardView() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center" data-testid="board-view-loading">
-        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -1303,12 +1118,18 @@ export function BoardView() {
         isAutoModeRunning={autoMode.isRunning}
         onAutoModeToggle={(enabled) => {
           if (enabled) {
-            autoMode.start();
+            autoMode.start().catch((error) => {
+              logger.error('[AutoMode] Failed to start:', error);
+            });
           } else {
-            autoMode.stop();
+            autoMode.stop().catch((error) => {
+              logger.error('[AutoMode] Failed to stop:', error);
+            });
           }
         }}
         onOpenPlanDialog={() => setShowPlanDialog(true)}
+        hasPendingPlan={Boolean(pendingBacklogPlan)}
+        onOpenPendingPlan={() => setShowPlanDialog(true)}
         isMounted={isMounted}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -1435,6 +1256,7 @@ export function BoardView() {
             pipelineConfig={pipelineConfig}
             onOpenPipelineSettings={() => setShowPipelineSettings(true)}
             isSelectionMode={isSelectionMode}
+            selectionTarget={selectionTarget}
             selectedFeatureIds={selectedFeatureIds}
             onToggleFeatureSelection={toggleFeatureSelection}
             onToggleSelectionMode={toggleSelectionMode}
@@ -1450,11 +1272,23 @@ export function BoardView() {
       {isSelectionMode && (
         <SelectionActionBar
           selectedCount={selectedCount}
-          totalCount={allSelectableFeatureIds.length}
-          onEdit={() => setShowMassEditDialog(true)}
-          onDelete={handleBulkDelete}
+          totalCount={
+            selectionTarget === 'waiting_approval'
+              ? allSelectableWaitingApprovalFeatureIds.length
+              : allSelectableFeatureIds.length
+          }
+          onEdit={selectionTarget === 'backlog' ? () => setShowMassEditDialog(true) : undefined}
+          onDelete={selectionTarget === 'backlog' ? handleBulkDelete : undefined}
+          onVerify={selectionTarget === 'waiting_approval' ? handleBulkVerify : undefined}
           onClear={clearSelection}
-          onSelectAll={() => selectAll(allSelectableFeatureIds)}
+          onSelectAll={() =>
+            selectAll(
+              selectionTarget === 'waiting_approval'
+                ? allSelectableWaitingApprovalFeatureIds
+                : allSelectableFeatureIds
+            )
+          }
+          mode={selectionTarget === 'waiting_approval' ? 'waiting_approval' : 'backlog'}
         />
       )}
 

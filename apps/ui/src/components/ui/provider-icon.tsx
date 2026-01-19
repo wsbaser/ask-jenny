@@ -536,7 +536,15 @@ function getUnderlyingModelIcon(model?: AgentModel | string): ProviderIconKey {
   if (modelStr.includes('grok')) {
     return 'grok';
   }
-  if (modelStr.includes('cursor') || modelStr === 'auto' || modelStr === 'composer-1') {
+  // Cursor models - canonical format includes 'cursor-' prefix
+  // Also support legacy IDs for backward compatibility
+  if (
+    modelStr.includes('cursor') ||
+    modelStr === 'auto' ||
+    modelStr === 'composer-1' ||
+    modelStr === 'cursor-auto' ||
+    modelStr === 'cursor-composer-1'
+  ) {
     return 'cursor';
   }
 

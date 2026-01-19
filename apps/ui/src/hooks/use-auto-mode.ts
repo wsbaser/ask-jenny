@@ -94,21 +94,33 @@ export function useAutoMode() {
   // Check if we can start a new task based on concurrency limit
   const canStartNewTask = runningAutoTasks.length < maxConcurrency;
 
-  // Restore auto-mode toggle after a renderer refresh (e.g. dev HMR reload).
-  // This is intentionally session-scoped to avoid auto-running features after a full app restart.
+  // On mount, query backend for current auto loop status and sync UI state.
+  // This handles cases where the backend is still running after a page refresh.
   useEffect(() => {
     if (!currentProject) return;
 
-    const session = readAutoModeSession();
-    const desired = session[currentProject.path];
-    if (typeof desired !== 'boolean') return;
+    const syncWithBackend = async () => {
+      try {
+        const api = getElectronAPI();
+        if (!api?.autoMode?.status) return;
 
-    if (desired !== isAutoModeRunning) {
-      logger.info(
-        `[AutoMode] Restoring session state for ${currentProject.path}: ${desired ? 'ON' : 'OFF'}`
-      );
-      setAutoModeRunning(currentProject.id, desired);
-    }
+        const result = await api.autoMode.status(currentProject.path);
+        if (result.success && result.isAutoLoopRunning !== undefined) {
+          const backendIsRunning = result.isAutoLoopRunning;
+          if (backendIsRunning !== isAutoModeRunning) {
+            logger.info(
+              `[AutoMode] Syncing UI state with backend for ${currentProject.path}: ${backendIsRunning ? 'ON' : 'OFF'}`
+            );
+            setAutoModeRunning(currentProject.id, backendIsRunning);
+            setAutoModeSessionForProjectPath(currentProject.path, backendIsRunning);
+          }
+        }
+      } catch (error) {
+        logger.error('Error syncing auto mode state with backend:', error);
+      }
+    };
+
+    syncWithBackend();
   }, [currentProject, isAutoModeRunning, setAutoModeRunning]);
 
   // Handle auto mode events - listen globally for all projects
@@ -139,6 +151,22 @@ export function useAutoMode() {
       }
 
       switch (event.type) {
+        case 'auto_mode_started':
+          // Backend started auto loop - update UI state
+          logger.info('[AutoMode] Backend started auto loop for project');
+          if (eventProjectId) {
+            setAutoModeRunning(eventProjectId, true);
+          }
+          break;
+
+        case 'auto_mode_stopped':
+          // Backend stopped auto loop - update UI state
+          logger.info('[AutoMode] Backend stopped auto loop for project');
+          if (eventProjectId) {
+            setAutoModeRunning(eventProjectId, false);
+          }
+          break;
+
         case 'auto_mode_feature_start':
           if (event.featureId) {
             addRunningTask(eventProjectId, event.featureId);
@@ -374,35 +402,92 @@ export function useAutoMode() {
     addAutoModeActivity,
     getProjectIdFromPath,
     setPendingPlanApproval,
+    setAutoModeRunning,
     currentProject?.path,
   ]);
 
-  // Start auto mode - UI only, feature pickup is handled in board-view.tsx
-  const start = useCallback(() => {
+  // Start auto mode - calls backend to start the auto loop
+  const start = useCallback(async () => {
     if (!currentProject) {
       logger.error('No project selected');
       return;
     }
 
-    setAutoModeSessionForProjectPath(currentProject.path, true);
-    setAutoModeRunning(currentProject.id, true);
-    logger.debug(`[AutoMode] Started with maxConcurrency: ${maxConcurrency}`);
+    try {
+      const api = getElectronAPI();
+      if (!api?.autoMode?.start) {
+        throw new Error('Start auto mode API not available');
+      }
+
+      logger.info(
+        `[AutoMode] Starting auto loop for ${currentProject.path} with maxConcurrency: ${maxConcurrency}`
+      );
+
+      // Optimistically update UI state (backend will confirm via event)
+      setAutoModeSessionForProjectPath(currentProject.path, true);
+      setAutoModeRunning(currentProject.id, true);
+
+      // Call backend to start the auto loop
+      const result = await api.autoMode.start(currentProject.path, maxConcurrency);
+
+      if (!result.success) {
+        // Revert UI state on failure
+        setAutoModeSessionForProjectPath(currentProject.path, false);
+        setAutoModeRunning(currentProject.id, false);
+        logger.error('Failed to start auto mode:', result.error);
+        throw new Error(result.error || 'Failed to start auto mode');
+      }
+
+      logger.debug(`[AutoMode] Started successfully`);
+    } catch (error) {
+      // Revert UI state on error
+      setAutoModeSessionForProjectPath(currentProject.path, false);
+      setAutoModeRunning(currentProject.id, false);
+      logger.error('Error starting auto mode:', error);
+      throw error;
+    }
   }, [currentProject, setAutoModeRunning, maxConcurrency]);
 
-  // Stop auto mode - UI only, running tasks continue until natural completion
-  const stop = useCallback(() => {
+  // Stop auto mode - calls backend to stop the auto loop
+  const stop = useCallback(async () => {
     if (!currentProject) {
       logger.error('No project selected');
       return;
     }
 
-    setAutoModeSessionForProjectPath(currentProject.path, false);
-    setAutoModeRunning(currentProject.id, false);
-    // NOTE: We intentionally do NOT clear running tasks here.
-    // Stopping auto mode only turns off the toggle to prevent new features
-    // from being picked up. Running tasks will complete naturally and be
-    // removed via the auto_mode_feature_complete event.
-    logger.info('Stopped - running tasks will continue');
+    try {
+      const api = getElectronAPI();
+      if (!api?.autoMode?.stop) {
+        throw new Error('Stop auto mode API not available');
+      }
+
+      logger.info(`[AutoMode] Stopping auto loop for ${currentProject.path}`);
+
+      // Optimistically update UI state (backend will confirm via event)
+      setAutoModeSessionForProjectPath(currentProject.path, false);
+      setAutoModeRunning(currentProject.id, false);
+
+      // Call backend to stop the auto loop
+      const result = await api.autoMode.stop(currentProject.path);
+
+      if (!result.success) {
+        // Revert UI state on failure
+        setAutoModeSessionForProjectPath(currentProject.path, true);
+        setAutoModeRunning(currentProject.id, true);
+        logger.error('Failed to stop auto mode:', result.error);
+        throw new Error(result.error || 'Failed to stop auto mode');
+      }
+
+      // NOTE: Running tasks will continue until natural completion.
+      // The backend stops picking up new features but doesn't abort running ones.
+      logger.info('Stopped - running tasks will continue');
+    } catch (error) {
+      // Revert UI state on error
+      setAutoModeSessionForProjectPath(currentProject.path, true);
+      setAutoModeRunning(currentProject.id, true);
+      logger.error('Error stopping auto mode:', error);
+      throw error;
+    }
   }, [currentProject, setAutoModeRunning]);
 
   // Stop a specific feature

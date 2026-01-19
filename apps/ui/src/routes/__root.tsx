@@ -10,7 +10,7 @@ import {
   useFileBrowser,
   setGlobalFileBrowser,
 } from '@/contexts/file-browser-context';
-import { useAppStore, getStoredTheme } from '@/store/app-store';
+import { useAppStore, getStoredTheme, type ThemeMode } from '@/store/app-store';
 import { useSetupStore } from '@/store/setup-store';
 import { useAuthStore } from '@/store/auth-store';
 import { getElectronAPI, isElectron } from '@/lib/electron';
@@ -31,12 +31,12 @@ import {
 } from '@/hooks/use-settings-migration';
 import { queryClient } from '@/lib/query-client';
 import { Toaster } from 'sonner';
-import { Menu } from 'lucide-react';
 import { ThemeOption, themeOptions } from '@/config/theme-options';
 import { SandboxRiskDialog } from '@/components/dialogs/sandbox-risk-dialog';
 import { SandboxRejectionScreen } from '@/components/dialogs/sandbox-rejection-screen';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useProjectSettingsLoader } from '@/hooks/use-project-settings-loader';
+import { useIsCompact } from '@/hooks/use-media-query';
 import type { Project } from '@/lib/electron';
 
 const logger = createLogger('RootLayout');
@@ -161,6 +161,12 @@ function RootLayoutContent() {
     projectHistory,
     upsertAndSetCurrentProject,
     getEffectiveTheme,
+    getEffectiveFontSans,
+    getEffectiveFontMono,
+    // Subscribe to theme and font state to trigger re-renders when they change
+    theme,
+    fontFamilySans,
+    fontFamilyMono,
     skipSandboxWarning,
     setSkipSandboxWarning,
     fetchCodexModels,
@@ -178,6 +184,9 @@ function RootLayoutContent() {
 
   // Load project settings when switching projects
   useProjectSettingsLoader();
+
+  // Check if we're in compact mode (< 1240px) to hide project switcher
+  const isCompact = useIsCompact();
 
   const isSetupRoute = location.pathname === '/setup';
   const isLoginRoute = location.pathname === '/login';
@@ -248,19 +257,31 @@ function RootLayoutContent() {
   // Defer the theme value to keep UI responsive during rapid hover changes
   const deferredTheme = useDeferredValue(effectiveTheme);
 
+  // Get effective theme and fonts for the current project
+  // Note: theme/fontFamilySans/fontFamilyMono are destructured above to ensure re-renders when they change
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void theme; // Used for subscription
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void fontFamilySans; // Used for subscription
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void fontFamilyMono; // Used for subscription
+  const effectiveFontSans = getEffectiveFontSans();
+  const effectiveFontMono = getEffectiveFontMono();
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Check sandbox environment only after user is authenticated and setup is complete
+  // Check sandbox environment only after user is authenticated, setup is complete, and settings are loaded
   useEffect(() => {
     // Skip if already decided
     if (sandboxStatus !== 'pending') {
       return;
     }
 
-    // Don't check sandbox until user is authenticated and has completed setup
-    if (!authChecked || !isAuthenticated || !setupComplete) {
+    // Don't check sandbox until user is authenticated, has completed setup, and settings are loaded
+    // CRITICAL: settingsLoaded must be true to ensure skipSandboxWarning has been hydrated from server
+    if (!authChecked || !isAuthenticated || !setupComplete || !settingsLoaded) {
       return;
     }
 
@@ -271,8 +292,8 @@ function RootLayoutContent() {
         if (result.isContainerized) {
           // Running in a container, no warning needed
           setSandboxStatus('containerized');
-        } else if (skipSandboxWarning) {
-          // User opted to skip the warning, auto-confirm
+        } else if (result.skipSandboxWarning || skipSandboxWarning) {
+          // Skip if env var is set OR if user preference is set
           setSandboxStatus('confirmed');
         } else {
           // Not containerized, show warning dialog
@@ -290,7 +311,14 @@ function RootLayoutContent() {
     };
 
     checkSandbox();
-  }, [sandboxStatus, skipSandboxWarning, authChecked, isAuthenticated, setupComplete]);
+  }, [
+    sandboxStatus,
+    skipSandboxWarning,
+    authChecked,
+    isAuthenticated,
+    setupComplete,
+    settingsLoaded,
+  ]);
 
   // Handle sandbox risk confirmation
   const handleSandboxConfirm = useCallback(
@@ -664,7 +692,7 @@ function RootLayoutContent() {
           upsertAndSetCurrentProject(
             autoOpenCandidate.path,
             autoOpenCandidate.name,
-            autoOpenCandidate.theme
+            autoOpenCandidate.theme as ThemeMode | undefined
           );
         }
 
@@ -726,6 +754,23 @@ function RootLayoutContent() {
       root.classList.add('light');
     }
   }, [deferredTheme]);
+
+  // Apply font CSS variables for project-specific font overrides
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (effectiveFontSans) {
+      root.style.setProperty('--font-sans', effectiveFontSans);
+    } else {
+      root.style.removeProperty('--font-sans');
+    }
+
+    if (effectiveFontMono) {
+      root.style.setProperty('--font-mono', effectiveFontMono);
+    } else {
+      root.style.removeProperty('--font-mono');
+    }
+  }, [effectiveFontSans, effectiveFontMono]);
 
   // Show sandbox rejection screen if user denied the risk warning
   if (sandboxStatus === 'denied') {
@@ -808,8 +853,9 @@ function RootLayoutContent() {
   }
 
   // Show project switcher on all app pages (not on dashboard, setup, or login)
+  // Also hide on compact screens (< 1240px) - the sidebar will show a logo instead
   const showProjectSwitcher =
-    !isDashboardRoute && !isSetupRoute && !isLoginRoute && !isLoggedOutRoute;
+    !isDashboardRoute && !isSetupRoute && !isLoginRoute && !isLoggedOutRoute && !isCompact;
 
   return (
     <>
@@ -823,16 +869,6 @@ function RootLayoutContent() {
         )}
         {showProjectSwitcher && <ProjectSwitcher />}
         <Sidebar />
-        {/* Mobile menu toggle button - only shows when sidebar is closed on mobile */}
-        {!sidebarOpen && (
-          <button
-            onClick={toggleSidebar}
-            className="fixed top-3 left-3 z-50 p-2 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-lg lg:hidden"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5 text-foreground" />
-          </button>
-        )}
         <div
           className="flex-1 flex flex-col overflow-hidden transition-all duration-300"
           style={{ marginRight: streamerPanelOpen ? '250px' : '0' }}

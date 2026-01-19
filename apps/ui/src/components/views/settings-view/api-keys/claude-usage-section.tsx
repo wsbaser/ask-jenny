@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useSetupStore } from '@/store/setup-store';
 import { useClaudeUsage } from '@/hooks/queries';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 
 const CLAUDE_USAGE_TITLE = 'Claude Usage';
@@ -127,7 +128,7 @@ export function ClaudeUsageSection() {
             data-testid="refresh-claude-usage"
             title={CLAUDE_REFRESH_LABEL}
           >
-            <RefreshCw className={cn('w-4 h-4', isFetching && 'animate-spin')} />
+            {isFetching ? <Spinner size="sm" /> : <RefreshCw className="w-4 h-4" />}
           </Button>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">{CLAUDE_USAGE_SUBTITLE}</p>

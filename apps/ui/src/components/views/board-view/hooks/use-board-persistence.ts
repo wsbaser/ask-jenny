@@ -34,6 +34,7 @@ export function useBoardPersistence({ currentProject }: UseBoardPersistenceProps
           return;
         }
 
+        logger.info('Calling API features.update', { featureId, updates });
         const result = await api.features.update(
           currentProject.path,
           featureId,
@@ -42,12 +43,18 @@ export function useBoardPersistence({ currentProject }: UseBoardPersistenceProps
           enhancementMode,
           preEnhancementDescription
         );
+        logger.info('API features.update result', {
+          success: result.success,
+          feature: result.feature,
+        });
         if (result.success && result.feature) {
           updateFeature(result.feature.id, result.feature);
           // Invalidate React Query cache to sync UI
           queryClient.invalidateQueries({
             queryKey: queryKeys.features.all(currentProject.path),
           });
+        } else if (!result.success) {
+          logger.error('API features.update failed', result);
         }
       } catch (error) {
         logger.error('Failed to persist feature update:', error);
