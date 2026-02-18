@@ -41,6 +41,10 @@ export {
   getIdeationDraftsDir,
   getIdeationAnalysisPath,
   ensureIdeationDir,
+  // Jira mapping paths
+  getJiraMappingsDir,
+  getJiraMappingsIndexPath,
+  ensureJiraMappingsDir,
 } from './paths.js';
 
 // Subprocess management

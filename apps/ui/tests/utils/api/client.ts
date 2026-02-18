@@ -4,6 +4,7 @@
  */
 
 import { Page, APIResponse } from '@playwright/test';
+import { STATIC_PORT } from '@automaker/types';
 import { API_BASE_URL, API_ENDPOINTS } from '../core/constants';
 
 // ============================================================================
@@ -300,7 +301,7 @@ export async function authenticateWithApiKey(page: Page, apiKey: string): Promis
     // Ensure we're on a page (needed for cookies to work)
     const currentUrl = page.url();
     if (!currentUrl || currentUrl === 'about:blank') {
-      await page.goto('http://localhost:3007', { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${STATIC_PORT}`, { waitUntil: 'domcontentloaded' });
     }
 
     // Use Playwright request API (tied to this browser context) to avoid flakiness

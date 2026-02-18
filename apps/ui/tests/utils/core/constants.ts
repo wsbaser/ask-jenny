@@ -3,14 +3,17 @@
  * This file contains all shared constants like URLs, timeouts, and selectors
  */
 
+import { SERVER_PORT } from '@automaker/types';
+
 // ============================================================================
 // API Configuration
 // ============================================================================
 
 /**
  * Base URL for the API server
+ * Uses SERVER_PORT constant from @automaker/types for consistency
  */
-export const API_BASE_URL = 'http://localhost:3008';
+export const API_BASE_URL = `http://localhost:${SERVER_PORT}`;
 
 /**
  * API endpoints for worktree operations

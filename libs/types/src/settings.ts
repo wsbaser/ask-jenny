@@ -1061,6 +1061,71 @@ export interface Credentials {
     /** OpenAI API key (for compatibility or alternative providers) */
     openai: string;
   };
+  /** Jira connection credentials (stored separately for security) */
+  jiraConnections?: JiraConnectionCredentials[];
+}
+
+/**
+ * JiraAuthMethod - Authentication method for Jira connection
+ * Re-declared here to avoid circular dependency with jira-integration.ts
+ */
+export type JiraCredentialsAuthMethod = 'basic' | 'oauth2' | 'pat';
+
+/**
+ * JiraDeploymentType - Jira Cloud vs Server/Data Center deployment type
+ * Re-declared here to avoid circular dependency with jira-integration.ts
+ */
+export type JiraCredentialsDeploymentType = 'cloud' | 'server' | 'datacenter';
+
+/**
+ * JiraConnectionCredentials - Credentials for a single Jira connection
+ *
+ * Stores sensitive authentication data for connecting to a Jira instance.
+ * Multiple connections can be stored to support different Jira instances
+ * (e.g., work and personal, or different clients).
+ */
+export interface JiraConnectionCredentials {
+  /** Unique identifier for this connection (UUID) */
+  id: string;
+  /** Display name for this connection (e.g., "Work Jira", "Personal Jira") */
+  name: string;
+  /** Jira host URL (e.g., "https://mycompany.atlassian.net") */
+  host: string;
+  /** Deployment type (cloud, server, datacenter) */
+  deploymentType: JiraCredentialsDeploymentType;
+  /** Authentication method (basic, oauth2, pat) */
+  authMethod: JiraCredentialsAuthMethod;
+
+  // Basic Auth credentials (Jira Cloud with API token)
+  /** Email address for basic auth */
+  email?: string;
+  /** API token for basic auth (Jira Cloud) - SENSITIVE */
+  apiToken?: string;
+
+  // Personal Access Token credentials (Server/Data Center)
+  /** Personal Access Token (PAT) - SENSITIVE */
+  personalAccessToken?: string;
+
+  // OAuth2 credentials
+  /** OAuth2 client ID */
+  clientId?: string;
+  /** OAuth2 client secret - SENSITIVE */
+  clientSecret?: string;
+  /** OAuth2 access token (obtained after OAuth flow) - SENSITIVE */
+  accessToken?: string;
+  /** OAuth2 refresh token - SENSITIVE */
+  refreshToken?: string;
+  /** OAuth2 token expiry timestamp (ISO string) */
+  tokenExpiresAt?: string;
+  /** Cloud ID for Atlassian Cloud (obtained during OAuth) */
+  cloudId?: string;
+
+  /** Whether this is the active/default connection */
+  isActive?: boolean;
+  /** Timestamp when this connection was created */
+  createdAt?: string;
+  /** Timestamp when this connection was last used successfully */
+  lastUsedAt?: string;
 }
 
 /**
@@ -1227,8 +1292,8 @@ export const DEFAULT_PHASE_MODELS: PhaseModelConfig = {
 
 /** Current version of the global settings schema */
 export const SETTINGS_VERSION = 6;
-/** Current version of the credentials schema */
-export const CREDENTIALS_VERSION = 1;
+/** Current version of the credentials schema (2: added jiraConnections) */
+export const CREDENTIALS_VERSION = 2;
 /** Current version of the project settings schema */
 export const PROJECT_SETTINGS_VERSION = 1;
 
@@ -1331,6 +1396,7 @@ export const DEFAULT_CREDENTIALS: Credentials = {
     google: '',
     openai: '',
   },
+  jiraConnections: [],
 };
 
 /** Default project settings (empty - all settings are optional and fall back to global) */

@@ -34,8 +34,11 @@ import type {
   ConvertToFeatureOptions,
   NotificationsAPI,
   EventHistoryAPI,
+  JiraAPI,
+  JiraIssueValidationEvent,
 } from './electron';
 import type { EventHistoryFilter } from '@automaker/types';
+import { SERVER_PORT } from '@automaker/types';
 import type { Message, SessionListItem } from '@/types/electron';
 import type { Feature, ClaudeUsageResponse, CodexUsageResponse } from '@/store/app-store';
 import type { WorktreeAPI, GitAPI, ModelDefinition, ProviderStatus } from '@/types/electron';
@@ -164,8 +167,9 @@ const getServerUrl = (): string => {
     }
   }
   // Use VITE_HOSTNAME if set, otherwise default to localhost
+  // Uses SERVER_PORT constant from @automaker/types for consistency
   const hostname = import.meta.env.VITE_HOSTNAME || 'localhost';
-  return `http://${hostname}:3008`;
+  return `http://${hostname}:${SERVER_PORT}`;
 };
 
 /**
@@ -553,6 +557,7 @@ type EventType =
   | 'suggestions:event'
   | 'spec-regeneration:event'
   | 'issue-validation:event'
+  | 'jira-validation:event'
   | 'backlog-plan:event'
   | 'ideation:stream'
   | 'ideation:analysis'
@@ -2004,6 +2009,80 @@ export class HttpApiClient implements ElectronAPI {
       this.subscribeToEvent('issue-validation:event', callback as EventCallback),
     getIssueComments: (projectPath: string, issueNumber: number, cursor?: string) =>
       this.post('/api/github/issue-comments', { projectPath, issueNumber, cursor }),
+  };
+
+  // Jira API
+  jira: JiraAPI = {
+    getConnectionStatus: () => this.get('/api/jira/status'),
+
+    connect: (config) => this.post('/api/jira/auth/connect', config),
+
+    disconnect: () => this.httpDelete('/api/jira/connection'),
+
+    listProjects: () => this.get('/api/jira/projects'),
+
+    searchIssues: (params) => this.post('/api/jira/issues/search', params),
+
+    getIssue: (issueKey) => this.get(`/api/jira/issues/${encodeURIComponent(issueKey)}`),
+
+    getIssueComments: (issueKey, startAt) =>
+      this.get(`/api/jira/issues/${encodeURIComponent(issueKey)}/comments${startAt !== undefined ? `?startAt=${startAt}` : ''}`),
+
+    createComment: (issueKey, body) =>
+      this.post(`/api/jira/issues/${encodeURIComponent(issueKey)}/comments`, { body }),
+
+    validateIssue: (projectPath, jiraProjectKey, issue, model, thinkingLevel, reasoningEffort) =>
+      this.post('/api/jira/validate-issue', {
+        projectPath,
+        jiraProjectKey,
+        ...issue,
+        model,
+        thinkingLevel,
+        reasoningEffort,
+      }),
+
+    getValidationStatus: (projectPath) =>
+      this.post('/api/jira/validation-status', { projectPath }),
+
+    getValidations: (projectPath, issueKey) =>
+      this.post('/api/jira/validations', { projectPath, issueKey }),
+
+    markValidationViewed: (projectPath, issueKey) =>
+      this.post('/api/jira/validation-mark-viewed', { projectPath, issueKey }),
+
+    onValidationEvent: (callback: (event: JiraIssueValidationEvent) => void) =>
+      this.subscribeToEvent('jira-validation:event', callback as EventCallback),
+
+    getIssueTransitions: (issueKey) =>
+      this.get(`/api/jira/issues/${encodeURIComponent(issueKey)}/transitions`),
+
+    transitionIssue: (issueKey, transitionId, comment) =>
+      this.post(`/api/jira/issues/${encodeURIComponent(issueKey)}/transitions`, { transitionId, comment }),
+
+    assignIssue: (issueKey, accountId) =>
+      this.post(`/api/jira/issues/${encodeURIComponent(issueKey)}/assign`, { accountId }),
+
+    listBoards: (projectKey) =>
+      this.get(`/api/jira/boards${projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : ''}`),
+
+    listSprints: (boardId, state) =>
+      this.get(`/api/jira/boards/${boardId}/sprints${state ? `?state=${state}` : ''}`),
+
+    getSprintIssues: (sprintId) =>
+      this.get(`/api/jira/sprints/${sprintId}/issues`),
+
+    createFeatureFromIssue: (projectPath, options) =>
+      this.post<{ success: boolean; imported?: Array<{ featureId: string }> }>('/api/jira/import', {
+        projectPath,
+        issueKeys: [options.issue.key],
+        options: {
+          includeComments: options.includeComments,
+          includeDependencies: options.includeDependencies,
+        },
+      }).then((result) => ({
+        success: result.success,
+        featureId: result.imported?.[0]?.featureId,
+      })),
   };
 
   // Workspace API

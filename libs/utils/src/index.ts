@@ -105,3 +105,32 @@ export {
   type LearningEntry,
   type SimpleMemoryFile,
 } from './memory-loader.js';
+
+// Encrypted storage
+export {
+  encrypt,
+  encryptSync,
+  decrypt,
+  decryptSync,
+  encryptToken,
+  decryptToken,
+  decryptTokenSync,
+  deriveKey,
+  deriveKeySync,
+  generateMasterKey,
+  isValidMasterKey,
+  hashMasterKey,
+  isValidEncryptedData,
+  isEncryptedCredential,
+  isPlaintextCredential,
+  secureCompare,
+  migrateToEncrypted,
+  batchMigrateToEncrypted,
+  batchDecrypt,
+  type EncryptionOptions,
+  type EncryptedData,
+  type DecryptionResult,
+  type EncryptedCredentials,
+  type PlaintextCredentials,
+  type StoredCredential,
+} from './encrypted-storage.js';

@@ -370,6 +370,163 @@ export interface GitHubAPI {
   }>;
 }
 
+// Re-export Jira types
+import type {
+  JiraIssue,
+  JiraProject,
+  JiraComment as JiraCommentType,
+  JiraSprint,
+  JiraBoard,
+  JiraConnectionConfig,
+  JiraConnectionStatus,
+  StoredJiraValidation,
+  JiraIssueValidationInput,
+  JiraIssueValidationEvent,
+  JiraLinkedIssue,
+  CreateFeatureFromJiraOptions,
+} from '@automaker/types';
+
+export type { JiraIssue, JiraProject, JiraSprint, JiraBoard, JiraConnectionConfig, JiraConnectionStatus, StoredJiraValidation, JiraIssueValidationEvent };
+
+// Jira API interface
+export interface JiraAPI {
+  /** Get Jira connection status */
+  getConnectionStatus: () => Promise<{
+    success: boolean;
+    connected?: boolean;
+    userDisplayName?: string;
+    userAccountId?: string;
+    lastConnectedAt?: string;
+    error?: string;
+  }>;
+  /** Connect to Jira with configuration */
+  connect: (config: JiraConnectionConfig) => Promise<{
+    success: boolean;
+    connected?: boolean;
+    userDisplayName?: string;
+    error?: string;
+  }>;
+  /** Disconnect from Jira */
+  disconnect: () => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  /** List accessible Jira projects */
+  listProjects: () => Promise<{
+    success: boolean;
+    projects?: JiraProject[];
+    error?: string;
+  }>;
+  /** Search issues with JQL */
+  searchIssues: (params: { jql: string; startAt?: number; maxResults?: number }) => Promise<{
+    success: boolean;
+    issues?: JiraIssue[];
+    total?: number;
+    hasMore?: boolean;
+    error?: string;
+  }>;
+  /** Get a single issue */
+  getIssue: (issueKey: string) => Promise<{
+    success: boolean;
+    issue?: JiraIssue;
+    error?: string;
+  }>;
+  /** Get comments for an issue */
+  getIssueComments: (issueKey: string, startAt?: number) => Promise<{
+    success: boolean;
+    comments?: JiraCommentType[];
+    totalCount?: number;
+    startAt?: number;
+    maxResults?: number;
+    hasMore?: boolean;
+    error?: string;
+  }>;
+  /** Create a comment on an issue */
+  createComment: (issueKey: string, body: string) => Promise<{
+    success: boolean;
+    comment?: JiraCommentType;
+    error?: string;
+  }>;
+  /** Start async validation of a Jira issue */
+  validateIssue: (
+    projectPath: string,
+    jiraProjectKey: string,
+    issue: JiraIssueValidationInput,
+    model?: ModelId,
+    thinkingLevel?: number,
+    reasoningEffort?: string
+  ) => Promise<{
+    success: boolean;
+    message?: string;
+    issueKey?: string;
+    error?: string;
+  }>;
+  /** Get validation status for running validations */
+  getValidationStatus: (projectPath: string) => Promise<{
+    success: boolean;
+    runningIssues?: string[];
+    error?: string;
+  }>;
+  /** Get stored validations */
+  getValidations: (projectPath: string, issueKey?: string) => Promise<{
+    success: boolean;
+    validations?: StoredJiraValidation[];
+    error?: string;
+  }>;
+  /** Mark a validation as viewed */
+  markValidationViewed: (projectPath: string, issueKey: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  /** Subscribe to validation events */
+  onValidationEvent: (callback: (event: JiraIssueValidationEvent) => void) => () => void;
+  /** Get available transitions for an issue */
+  getIssueTransitions: (issueKey: string) => Promise<{
+    success: boolean;
+    transitions?: Array<{ id: string; name: string; to: { name: string } }>;
+    error?: string;
+  }>;
+  /** Transition an issue to a new status */
+  transitionIssue: (issueKey: string, transitionId: string, comment?: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  /** Assign an issue to a user */
+  assignIssue: (issueKey: string, accountId: string | null) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  /** List boards for a project */
+  listBoards: (projectKey: string) => Promise<{
+    success: boolean;
+    boards?: JiraBoard[];
+    error?: string;
+  }>;
+  /** List sprints for a board */
+  listSprints: (boardId: number, state?: 'active' | 'future' | 'closed') => Promise<{
+    success: boolean;
+    sprints?: JiraSprint[];
+    error?: string;
+  }>;
+  /** Get issues in a sprint */
+  getSprintIssues: (sprintId: number) => Promise<{
+    success: boolean;
+    issues?: JiraIssue[];
+    total?: number;
+    hasMore?: boolean;
+    error?: string;
+  }>;
+  /** Create a feature from a Jira issue */
+  createFeatureFromIssue: (
+    projectPath: string,
+    options: CreateFeatureFromJiraOptions
+  ) => Promise<{
+    success: boolean;
+    featureId?: string;
+    error?: string;
+  }>;
+}
+
 // Feature Suggestions types
 export interface FeatureSuggestion {
   id: string;
@@ -708,6 +865,7 @@ export interface ElectronAPI {
   features?: FeaturesAPI;
   runningAgents?: RunningAgentsAPI;
   github?: GitHubAPI;
+  jira?: JiraAPI;
   enhancePrompt?: {
     enhance: (
       originalText: string,

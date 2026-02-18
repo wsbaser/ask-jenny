@@ -1396,8 +1396,9 @@ export function TerminalView({ initialCwd, initialBranch, initialMode, nonce }: 
   // Loading state
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Spinner size="xl" />
+      <div className="flex-1 flex items-center justify-center" role="status" aria-live="polite">
+        <Spinner size="xl" aria-hidden="true" />
+        <span className="sr-only">Loading terminal...</span>
       </div>
     );
   }
@@ -1405,14 +1406,18 @@ export function TerminalView({ initialCwd, initialBranch, initialMode, nonce }: 
   // Error state
   if (error) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-        <div className="p-4 rounded-full bg-destructive/10 mb-4">
+      <div
+        className="flex-1 flex flex-col items-center justify-center text-center p-6"
+        role="alert"
+        aria-live="assertive"
+      >
+        <div className="p-4 rounded-full bg-destructive/10 mb-4" aria-hidden="true">
           <AlertCircle className="h-12 w-12 text-destructive" />
         </div>
         <h2 className="text-lg font-medium mb-2">Terminal Unavailable</h2>
         <p className="text-muted-foreground max-w-md mb-4">{error}</p>
         <Button variant="outline" onClick={fetchStatus}>
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
           Retry
         </Button>
       </div>

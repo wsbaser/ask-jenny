@@ -171,6 +171,10 @@ export type {
   // Claude API profile types (deprecated)
   ClaudeApiProfile,
   ClaudeApiProfileTemplate,
+  // Jira credentials types
+  JiraCredentialsAuthMethod,
+  JiraCredentialsDeploymentType,
+  JiraConnectionCredentials,
 } from './settings.js';
 export {
   DEFAULT_KEYBOARD_SHORTCUTS,
@@ -329,3 +333,49 @@ export { PR_STATES, validatePRState } from './worktree.js';
 
 // Terminal types
 export type { TerminalInfo } from './terminal.js';
+
+// Jira integration types
+export type {
+  // Connection & Authentication
+  JiraAuthMethod,
+  JiraDeploymentType,
+  JiraConnectionConfig,
+  JiraConnectionStatus,
+  // Simplified Jira types
+  JiraUser,
+  JiraStatus,
+  JiraPriority,
+  JiraIssueType,
+  JiraComponent,
+  JiraLabel,
+  JiraVersion,
+  JiraSprint,
+  JiraComment,
+  JiraLinkedIssue,
+  JiraIssue,
+  JiraProject,
+  // Validation types
+  JiraIssueValidationVerdict,
+  JiraIssueValidationConfidence,
+  JiraIssueComplexity,
+  JiraIssueValidationInput,
+  JiraIssueValidationRequest,
+  JiraIssueValidationResult,
+  JiraIssueValidationResponse,
+  JiraIssueValidationErrorResponse,
+  JiraIssueValidationEvent,
+  StoredJiraValidation,
+  // Search & Query types
+  JiraSearchRequest,
+  JiraSearchResult,
+  JiraCommentsResult,
+  // Board & Sprint types (Agile)
+  JiraBoard,
+  JiraBacklogItem,
+  // Webhook & Event types
+  JiraWebhookEventType,
+  JiraWebhookPayload,
+  // Feature mapping types
+  JiraFeatureMapping,
+  CreateFeatureFromJiraOptions,
+} from './jira-integration.js';

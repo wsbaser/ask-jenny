@@ -348,6 +348,46 @@ export async function ensureIdeationDir(projectPath: string): Promise<string> {
 }
 
 // ============================================================================
+// Jira Mapping Paths
+// ============================================================================
+
+/**
+ * Get the Jira mappings directory for a project
+ *
+ * Contains mapping files that link Jira issues to AutoMaker features.
+ *
+ * @param projectPath - Absolute path to project directory
+ * @returns Absolute path to {projectPath}/.automaker/jira-mappings
+ */
+export function getJiraMappingsDir(projectPath: string): string {
+  return path.join(getAutomakerDir(projectPath), 'jira-mappings');
+}
+
+/**
+ * Get the Jira mappings index file path
+ *
+ * Stores an index of all Jira issue to feature mappings for quick lookup.
+ *
+ * @param projectPath - Absolute path to project directory
+ * @returns Absolute path to {projectPath}/.automaker/jira-mappings/index.json
+ */
+export function getJiraMappingsIndexPath(projectPath: string): string {
+  return path.join(getJiraMappingsDir(projectPath), 'index.json');
+}
+
+/**
+ * Create the Jira mappings directory for a project if it doesn't exist
+ *
+ * @param projectPath - Absolute path to project directory
+ * @returns Promise resolving to the created Jira mappings directory path
+ */
+export async function ensureJiraMappingsDir(projectPath: string): Promise<string> {
+  const mappingsDir = getJiraMappingsDir(projectPath);
+  await secureFs.mkdir(mappingsDir, { recursive: true });
+  return mappingsDir;
+}
+
+// ============================================================================
 // Event History Paths
 // ============================================================================
 

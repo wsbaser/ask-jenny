@@ -816,6 +816,11 @@ export interface AppState {
   codexUsage: CodexUsage | null;
   codexUsageLastUpdated: number | null;
 
+  // Jira Integration State
+  jiraConnectionStatus: JiraConnectionStatus | null;
+  jiraConnectionLoading: boolean;
+  jiraConnectionLastChecked: number | null;
+
   // Codex Models (dynamically fetched)
   codexModels: Array<{
     id: string;
@@ -926,6 +931,28 @@ export interface CodexUsage {
 
 // Response type for Codex usage API (can be success or error)
 export type CodexUsageResponse = CodexUsage | { error: string; message?: string };
+
+// Jira Connection Status types
+export interface JiraConnectionStatus {
+  /** Whether connection is established and working */
+  connected: boolean;
+  /** Whether Jira credentials are configured */
+  configured: boolean;
+  /** User display name if connected */
+  userDisplayName?: string;
+  /** User account ID if connected */
+  userAccountId?: string;
+  /** Display name of the connection profile */
+  connectionName?: string;
+  /** Jira host URL */
+  host?: string;
+  /** OAuth token expiry timestamp (ISO string) */
+  tokenExpiresAt?: string;
+  /** Whether the OAuth token has expired */
+  tokenExpired?: boolean;
+  /** Error message if connection check failed */
+  error?: string;
+}
 
 /**
  * Check if Claude usage is at its limit (any of: session >= 100%, weekly >= 100%, OR cost >= limit)
@@ -1390,6 +1417,12 @@ export interface AppActions {
   // Codex Usage Tracking actions
   setCodexUsage: (usage: CodexUsage | null) => void;
 
+  // Jira Integration actions
+  setJiraConnectionStatus: (status: JiraConnectionStatus | null) => void;
+  setJiraConnectionLoading: (loading: boolean) => void;
+  fetchJiraConnectionStatus: (forceRefresh?: boolean) => Promise<void>;
+  clearJiraConnectionStatus: () => void;
+
   // Codex Models actions
   fetchCodexModels: (forceRefresh?: boolean) => Promise<void>;
   setCodexModels: (
@@ -1534,6 +1567,9 @@ const initialState: AppState = {
   claudeUsageLastUpdated: null,
   codexUsage: null,
   codexUsageLastUpdated: null,
+  jiraConnectionStatus: null,
+  jiraConnectionLoading: false,
+  jiraConnectionLastChecked: null,
   codexModels: [],
   codexModelsLoading: false,
   codexModelsError: null,
@@ -3858,6 +3894,91 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
     set({
       codexUsage: usage,
       codexUsageLastUpdated: usage ? Date.now() : null,
+    }),
+
+  // Jira Integration actions
+  setJiraConnectionStatus: (status: JiraConnectionStatus | null) =>
+    set({
+      jiraConnectionStatus: status,
+      jiraConnectionLastChecked: status ? Date.now() : null,
+    }),
+
+  setJiraConnectionLoading: (loading: boolean) => set({ jiraConnectionLoading: loading }),
+
+  fetchJiraConnectionStatus: async (forceRefresh = false) => {
+    const CACHE_TTL_MS = 30 * 1000; // 30 seconds cache
+
+    const { jiraConnectionLastChecked, jiraConnectionLoading } = get();
+
+    // Skip if already loading
+    if (jiraConnectionLoading) return;
+
+    // Skip if recently checked and not forcing refresh
+    if (
+      !forceRefresh &&
+      jiraConnectionLastChecked &&
+      Date.now() - jiraConnectionLastChecked < CACHE_TTL_MS
+    ) {
+      return;
+    }
+
+    set({ jiraConnectionLoading: true });
+
+    try {
+      const response = await fetch('/api/jira/status', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        set({
+          jiraConnectionStatus: {
+            connected: data.connected,
+            configured: data.configured,
+            userDisplayName: data.userDisplayName,
+            userAccountId: data.userAccountId,
+            connectionName: data.connectionName,
+            host: data.host,
+            tokenExpiresAt: data.tokenExpiresAt,
+            tokenExpired: data.tokenExpired,
+            error: data.error,
+          },
+          jiraConnectionLoading: false,
+          jiraConnectionLastChecked: Date.now(),
+        });
+      } else {
+        set({
+          jiraConnectionStatus: {
+            connected: false,
+            configured: false,
+            error: data.error || 'Failed to check Jira connection',
+          },
+          jiraConnectionLoading: false,
+          jiraConnectionLastChecked: Date.now(),
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Failed to fetch Jira connection status:', errorMessage);
+      set({
+        jiraConnectionStatus: {
+          connected: false,
+          configured: false,
+          error: 'Failed to check connection',
+        },
+        jiraConnectionLoading: false,
+        jiraConnectionLastChecked: Date.now(),
+      });
+    }
+  },
+
+  clearJiraConnectionStatus: () =>
+    set({
+      jiraConnectionStatus: null,
+      jiraConnectionLoading: false,
+      jiraConnectionLastChecked: null,
     }),
 
   // Codex Models actions

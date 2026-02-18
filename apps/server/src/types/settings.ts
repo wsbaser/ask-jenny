@@ -33,6 +33,10 @@ export type {
   // Legacy profile types (deprecated)
   ClaudeApiProfile,
   ClaudeApiProfileTemplate,
+  // Jira credentials types
+  JiraConnectionCredentials,
+  JiraCredentialsAuthMethod,
+  JiraCredentialsDeploymentType,
 } from '@automaker/types';
 
 export {

@@ -119,7 +119,7 @@ npm install
 # 3. Start Automaker
 npm run dev
 # Choose between:
-#   1. Web Application (browser at localhost:3007)
+#   1. Web Application (browser at localhost:7007)
 #   2. Desktop Application (Electron - recommended)
 ```
 
@@ -158,7 +158,7 @@ npm run dev:electron:wsl:gpu
 #### Web Browser Mode
 
 ```bash
-# Run in web browser (http://localhost:3007)
+# Run in web browser (http://localhost:7007)
 npm run dev:web
 ```
 
@@ -246,8 +246,8 @@ Docker provides the most secure way to run Automaker by isolating it from your h
 # Build and run with Docker Compose
 docker-compose up -d
 
-# Access UI at http://localhost:3007
-# API at http://localhost:3008
+# Access UI at http://localhost:7007
+# API at http://localhost:7008
 
 # View logs
 docker-compose logs -f
@@ -358,7 +358,7 @@ npm run test:all                 # Packages + server tests
 
 #### Test Configuration
 
-- E2E tests run on ports 3007 (UI) and 3008 (server)
+- E2E tests run on ports 7007 (UI) and 7008 (server)
 - Automatically starts test servers before running
 - Uses Chromium browser via Playwright
 - Mock agent mode available in CI with `AUTOMAKER_MOCK_AGENT=true`
@@ -374,7 +374,7 @@ npm run lint
 
 #### Optional - Server
 
-- `PORT` - Server port (default: 3008)
+- `PORT` - Server port (default: 7008)
 - `DATA_DIR` - Data storage directory (default: ./data)
 - `ENABLE_REQUEST_LOGGING` - HTTP request logging (default: true)
 

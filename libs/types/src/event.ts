@@ -28,6 +28,7 @@ export type EventType =
   | 'suggestions:event'
   | 'spec-regeneration:event'
   | 'issue-validation:event'
+  | 'jira-validation:event'
   | 'ideation:stream'
   | 'ideation:session-started'
   | 'ideation:session-ended'

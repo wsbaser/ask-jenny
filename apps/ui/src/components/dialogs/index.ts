@@ -2,6 +2,8 @@ export { BoardBackgroundModal } from './board-background-modal';
 export { DeleteAllArchivedSessionsDialog } from './delete-all-archived-sessions-dialog';
 export { DeleteSessionDialog } from './delete-session-dialog';
 export { FileBrowserDialog } from './file-browser-dialog';
+export { JiraConnectionModal } from './jira-connection-modal';
+export { JiraImportModal } from './jira-import-modal';
 export { NewProjectModal } from './new-project-modal';
 export { SandboxRejectionScreen } from './sandbox-rejection-screen';
 export { SandboxRiskDialog } from './sandbox-risk-dialog';
