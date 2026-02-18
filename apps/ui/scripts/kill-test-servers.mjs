@@ -5,11 +5,14 @@
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { SERVER_PORT as DEFAULT_SERVER_PORT, STATIC_PORT as DEFAULT_STATIC_PORT } from '@automaker/types';
 
 const execAsync = promisify(exec);
 
-const SERVER_PORT = process.env.TEST_SERVER_PORT || 3008;
-const UI_PORT = process.env.TEST_PORT || 3007;
+/** Server port - uses SERVER_PORT constant as default, can be overridden via TEST_SERVER_PORT env var */
+const SERVER_PORT = process.env.TEST_SERVER_PORT || DEFAULT_SERVER_PORT;
+/** UI port - uses STATIC_PORT constant as default, can be overridden via TEST_PORT env var */
+const UI_PORT = process.env.TEST_PORT || DEFAULT_STATIC_PORT;
 const USE_EXTERNAL_SERVER = !!process.env.VITE_SERVER_URL;
 
 async function killProcessOnPort(port) {

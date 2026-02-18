@@ -274,6 +274,37 @@ export const queryKeys = {
     fileDiff: (projectPath: string, filePath: string) =>
       ['git', 'diffs', projectPath, filePath] as const,
   },
+
+  // ============================================
+  // Jira
+  // ============================================
+  jira: {
+    /** Jira connection status */
+    connectionStatus: () => ['jira', 'connectionStatus'] as const,
+    /** Jira projects */
+    projects: () => ['jira', 'projects'] as const,
+    /** Jira issues for a project (with optional JQL filter) */
+    issues: (projectKey: string, jql?: string) =>
+      jql ? ['jira', 'issues', projectKey, jql] as const : ['jira', 'issues', projectKey] as const,
+    /** Single Jira issue */
+    issue: (issueKey: string) => ['jira', 'issue', issueKey] as const,
+    /** Jira issue comments */
+    issueComments: (issueKey: string) => ['jira', 'issue', issueKey, 'comments'] as const,
+    /** Jira validations for a project */
+    validations: (projectPath: string) => ['jira', 'validations', projectPath] as const,
+    /** Single Jira validation */
+    validation: (projectPath: string, issueKey: string) =>
+      ['jira', 'validations', projectPath, issueKey] as const,
+    /** Jira boards for a project */
+    boards: (projectKey: string) => ['jira', 'boards', projectKey] as const,
+    /** Jira sprints for a board */
+    sprints: (boardId: number, state?: string) =>
+      state
+        ? ['jira', 'sprints', boardId, state] as const
+        : ['jira', 'sprints', boardId] as const,
+    /** Jira issues in a sprint */
+    sprintIssues: (sprintId: number) => ['jira', 'sprint', sprintId, 'issues'] as const,
+  },
 } as const;
 
 /**

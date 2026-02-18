@@ -1,7 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import { STATIC_PORT, SERVER_PORT } from '@automaker/types';
 
-const port = process.env.TEST_PORT || 3007;
-const serverPort = process.env.TEST_SERVER_PORT || 3008;
+/** UI port - uses STATIC_PORT constant as default, can be overridden via TEST_PORT env var */
+const port = process.env.TEST_PORT || STATIC_PORT;
+/** API server port - uses SERVER_PORT constant as default, can be overridden via TEST_SERVER_PORT env var */
+const serverPort = process.env.TEST_SERVER_PORT || SERVER_PORT;
 const reuseServer = process.env.TEST_REUSE_SERVER === 'true';
 const useExternalBackend = !!process.env.VITE_SERVER_URL;
 // Always use mock agent for tests (disables rate limiting, uses mock Claude responses)

@@ -21,6 +21,8 @@ export const STALE_TIMES = {
   FEATURES: 60 * 1000, // 1 minute
   /** GitHub data is relatively stable */
   GITHUB: 2 * 60 * 1000, // 2 minutes
+  /** Jira data is relatively stable, similar to GitHub */
+  JIRA: 2 * 60 * 1000, // 2 minutes
   /** Running agents state changes very frequently */
   RUNNING_AGENTS: 5 * 1000, // 5 seconds
   /** Agent output changes during streaming */

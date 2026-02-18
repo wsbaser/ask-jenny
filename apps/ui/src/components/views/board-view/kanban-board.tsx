@@ -10,9 +10,10 @@ import {
 import { DragOverlay } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { KanbanColumn, KanbanCard, EmptyStateCard } from './components';
 import { Feature, useAppStore, formatShortcut } from '@/store/app-store';
-import { Archive, Settings2, CheckSquare, GripVertical, Plus } from 'lucide-react';
+import { Archive, Settings2, CheckSquare, GripVertical, Plus, Link2 } from 'lucide-react';
 import { useResponsiveKanban } from '@/hooks/use-responsive-kanban';
 import { getColumnsWithPipeline, type ColumnId } from './constants';
 import type { PipelineConfig } from '@automaker/types';
@@ -60,6 +61,8 @@ interface KanbanBoardProps {
   onToggleSelectionMode?: (target?: 'backlog' | 'waiting_approval') => void;
   // Empty state action props
   onAiSuggest?: () => void;
+  /** Callback to open Jira connection modal */
+  onConnectJira?: () => void;
   /** Whether currently dragging (hides empty states during drag) */
   isDragging?: boolean;
   /** Whether the board is in read-only mode */
@@ -294,6 +297,7 @@ export function KanbanBoard({
   onToggleFeatureSelection,
   onToggleSelectionMode,
   onAiSuggest,
+  onConnectJira,
   isDragging = false,
   isReadOnly = false,
   className,
@@ -388,6 +392,22 @@ export function KanbanBoard({
                       </div>
                     ) : column.id === 'backlog' ? (
                       <div className="flex items-center gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                              onClick={onConnectJira}
+                              data-testid="connect-jira-button"
+                            >
+                              <Link2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>Connect to Jira</p>
+                          </TooltipContent>
+                        </Tooltip>
                         <Button
                           variant="default"
                           size="sm"

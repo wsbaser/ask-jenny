@@ -6,10 +6,10 @@
  */
 
 /** Port for the static/UI server (Vite dev server) */
-export const STATIC_PORT = 3007;
+export const STATIC_PORT = 7007;
 
 /** Port for the backend API server (Express + WebSocket) */
-export const SERVER_PORT = 3008;
+export const SERVER_PORT = 7008;
 
 /** Array of all reserved Automaker ports */
 export const RESERVED_PORTS = [STATIC_PORT, SERVER_PORT] as const;

@@ -35,6 +35,7 @@ import {
   // System path operations
   systemPathExists,
 } from '@automaker/platform';
+import { SERVER_PORT, STATIC_PORT } from '@automaker/types';
 
 const logger = createLogger('Electron');
 const serverLogger = createLogger('Server');
@@ -57,12 +58,15 @@ let mainWindow: BrowserWindow | null = null;
 let serverProcess: ChildProcess | null = null;
 let staticServer: Server | null = null;
 
-// Default ports (can be overridden via env) - will be dynamically assigned if these are in use
-// When launched via root init.mjs we pass:
-// - PORT (backend)
-// - TEST_PORT (vite dev server / static)
-const DEFAULT_SERVER_PORT = parseInt(process.env.PORT || '3008', 10);
-const DEFAULT_STATIC_PORT = parseInt(process.env.TEST_PORT || '3007', 10);
+/**
+ * Default ports (can be overridden via env) - will be dynamically assigned if these are in use
+ * Uses centralized port constants from @automaker/types for consistency across the codebase.
+ * When launched via root init.mjs we pass:
+ * - PORT (backend)
+ * - TEST_PORT (vite dev server / static)
+ */
+const DEFAULT_SERVER_PORT = parseInt(process.env.PORT || String(SERVER_PORT), 10);
+const DEFAULT_STATIC_PORT = parseInt(process.env.TEST_PORT || String(STATIC_PORT), 10);
 
 // Actual ports in use (set during startup)
 let serverPort = DEFAULT_SERVER_PORT;
@@ -738,7 +742,7 @@ app.whenReady().then(async () => {
     isExternalServerMode = skipEmbeddedServer;
 
     if (skipEmbeddedServer) {
-      // Use the default server port (Docker container runs on 3008)
+      // Use the default server port (Docker container runs on SERVER_PORT)
       serverPort = DEFAULT_SERVER_PORT;
       logger.info('SKIP_EMBEDDED_SERVER=true, using external server at port', serverPort);
 

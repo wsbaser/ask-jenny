@@ -11,7 +11,7 @@ Automaker is an autonomous AI development studio built as an npm workspace monor
 ```bash
 # Development
 npm run dev                 # Interactive launcher (choose web or electron)
-npm run dev:web             # Web browser mode (localhost:3007)
+npm run dev:web             # Web browser mode (localhost:7007)
 npm run dev:electron        # Desktop app mode
 npm run dev:electron:debug  # Desktop with DevTools open
 
@@ -44,8 +44,8 @@ npm run format:check        # Prettier check
 ```
 automaker/
 ├── apps/
-│   ├── ui/           # React + Vite + Electron frontend (port 3007)
-│   └── server/       # Express + WebSocket backend (port 3008)
+│   ├── ui/           # React + Vite + Electron frontend (port 7007)
+│   └── server/       # Express + WebSocket backend (port 7008)
 └── libs/             # Shared packages (@automaker/*)
     ├── types/        # Core TypeScript definitions (no dependencies)
     ├── utils/        # Logging, errors, image processing, context loading
@@ -168,7 +168,7 @@ Use `resolveModelString()` from `@automaker/model-resolver` to convert model ali
 - `ANTHROPIC_API_KEY` - Anthropic API key (or use Claude Code CLI auth)
 - `HOST` - Host to bind server to (default: 0.0.0.0)
 - `HOSTNAME` - Hostname for user-facing URLs (default: localhost)
-- `PORT` - Server port (default: 3008)
+- `PORT` - Server port (default: 7008)
 - `DATA_DIR` - Data storage directory (default: ./data)
 - `ALLOWED_ROOT_DIRECTORY` - Restrict file operations to specific directory
 - `AUTOMAKER_MOCK_AGENT=true` - Enable mock agent mode for CI testing

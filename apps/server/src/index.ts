@@ -18,6 +18,7 @@ import dotenv from 'dotenv';
 import { createEventEmitter, type EventEmitter } from './lib/events.js';
 import { initAllowedPaths } from '@automaker/platform';
 import { createLogger, setLogLevel, LogLevel } from '@automaker/utils';
+import { SERVER_PORT } from '@automaker/types';
 
 const logger = createLogger('Server');
 
@@ -83,11 +84,18 @@ import { createNotificationsRoutes } from './routes/notifications/index.js';
 import { getNotificationService } from './services/notification-service.js';
 import { createEventHistoryRoutes } from './routes/event-history/index.js';
 import { getEventHistoryService } from './services/event-history-service.js';
+import { createJiraRoutes } from './routes/jira/index.js';
+import {
+  passport,
+  configureAtlassianStrategy,
+  getAtlassianConfigFromEnv,
+} from './lib/passport-atlassian.js';
 
 // Load environment variables
 dotenv.config();
 
-const PORT = parseInt(process.env.PORT || '3008', 10);
+/** Server port - uses SERVER_PORT constant as default, can be overridden via PORT env var */
+const PORT = parseInt(process.env.PORT || String(SERVER_PORT), 10);
 const HOST = process.env.HOST || '0.0.0.0';
 const HOSTNAME = process.env.HOSTNAME || 'localhost';
 const DATA_DIR = process.env.DATA_DIR || './data';
@@ -221,6 +229,20 @@ app.use(
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 
+// Initialize Passport.js for OAuth authentication (Jira/Atlassian)
+app.use(passport.initialize());
+
+// Configure Atlassian OAuth2 strategy if credentials are available
+const atlassianConfig = getAtlassianConfigFromEnv();
+if (atlassianConfig) {
+  configureAtlassianStrategy(atlassianConfig);
+  logger.info('✓ Atlassian OAuth2 strategy configured');
+} else {
+  logger.info(
+    'Atlassian OAuth2 not configured (set ATLASSIAN_CLIENT_ID and ATLASSIAN_CLIENT_SECRET to enable Jira integration)'
+  );
+}
+
 // Create shared event emitter for streaming
 const events: EventEmitter = createEventEmitter();
 
@@ -337,6 +359,7 @@ app.use('/api/settings', createSettingsRoutes(settingsService));
 app.use('/api/claude', createClaudeRoutes(claudeUsageService));
 app.use('/api/codex', createCodexRoutes(codexUsageService, codexModelCacheService));
 app.use('/api/github', createGitHubRoutes(events, settingsService));
+app.use('/api/jira', createJiraRoutes(settingsService, featureLoader, events));
 app.use('/api/context', createContextRoutes(settingsService));
 app.use('/api/backlog-plan', createBacklogPlanRoutes(events, settingsService));
 app.use('/api/mcp', createMCPRoutes(mcpTestService));

@@ -38,8 +38,11 @@
     "cors": "2.8.5",
     "dotenv": "17.2.3",
     "express": "5.2.1",
+    "jira.js": "^4.0.1",
     "morgan": "1.10.1",
     "node-pty": "1.1.0-beta41",
+    "passport": "^0.7.0",
+    "passport-atlassian-oauth2": "^2.1.0",
     "ws": "8.18.3"
   },
   "devDependencies": {
@@ -49,6 +52,7 @@
     "@types/express": "5.0.6",
     "@types/morgan": "1.9.10",
     "@types/node": "22.19.3",
+    "@types/passport": "^1.0.17",
     "@types/ws": "8.18.1",
     "@vitest/coverage-v8": "4.0.16",
     "@vitest/ui": "4.0.16",

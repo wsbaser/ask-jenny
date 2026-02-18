@@ -89,3 +89,16 @@ export type { CursorPermissionsData } from './use-cursor-permissions';
 
 // Workspace
 export { useWorkspaceDirectories } from './use-workspace';
+
+// Jira
+export {
+  useJiraConnectionStatus,
+  useJiraProjects,
+  useJiraIssues,
+  useJiraIssue,
+  useJiraIssueComments,
+  useJiraValidations,
+  useJiraBoards,
+  useJiraSprints,
+  useJiraSprintIssues,
+} from './use-jira';

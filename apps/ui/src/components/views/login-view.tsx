@@ -11,7 +11,7 @@
  *   checking_setup → redirecting
  */
 
-import { useReducer, useEffect, useRef } from 'react';
+import { useReducer, useEffect, useRef, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import {
   login,
@@ -24,10 +24,11 @@ import {
 } from '@/lib/http-api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { KeyRound, AlertCircle, RefreshCw, ServerCrash } from 'lucide-react';
+import { KeyRound, AlertCircle, RefreshCw, ServerCrash, ChevronDown, ChevronUp, Terminal, ExternalLink } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/store/auth-store';
 import { useSetupStore } from '@/store/setup-store';
+import { SERVER_PORT } from '@automaker/types';
 
 // =============================================================================
 // State Machine Types
@@ -271,6 +272,110 @@ async function performLogin(
 }
 
 // =============================================================================
+// Troubleshooting Component
+// =============================================================================
+
+/**
+ * Collapsible troubleshooting section shown when server connection fails.
+ * Provides actionable steps for common connection issues with cross-platform support.
+ */
+function TroubleshootingSection(): React.ReactElement {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const serverUrl = getServerUrlSync() || `http://localhost:${SERVER_PORT}`;
+
+  // Detect OS for platform-specific commands
+  const isWindows = navigator.userAgent.includes('Windows');
+  const portCheckCommand = isWindows
+    ? `netstat -ano | findstr :${SERVER_PORT}`
+    : `lsof -i :${SERVER_PORT}`;
+
+  return (
+    <div className="rounded-lg border bg-muted/30 overflow-hidden">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-expanded={isExpanded}
+        aria-controls="troubleshooting-content"
+      >
+        <span className="text-sm font-medium flex items-center gap-2">
+          <Terminal className="h-4 w-4" aria-hidden="true" />
+          Troubleshooting Tips
+        </span>
+        {isExpanded ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        )}
+      </button>
+
+      {isExpanded && (
+        <div
+          id="troubleshooting-content"
+          className="px-4 pb-4 space-y-4 text-sm border-t border-border/50"
+        >
+          {/* Server URL Info */}
+          <div className="pt-4">
+            <p className="text-muted-foreground mb-2">
+              The application is trying to connect to:
+            </p>
+            <code className="block px-3 py-2 bg-background rounded border text-xs font-mono break-all">
+              {serverUrl}
+            </code>
+          </div>
+
+          {/* Common Issues */}
+          <div>
+            <p className="font-medium mb-2">Common issues:</p>
+            <ul className="space-y-2 text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="text-primary">1.</span>
+                <span>
+                  <strong className="text-foreground">Server not running:</strong> Start the server with{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">npm run dev</code>
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">2.</span>
+                <span>
+                  <strong className="text-foreground">Port {SERVER_PORT} in use:</strong> Another process may be using this port.
+                  Check with <code className="px-1 py-0.5 bg-background rounded text-xs">{portCheckCommand}</code>
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">3.</span>
+                <span>
+                  <strong className="text-foreground">Firewall blocking:</strong> Ensure port {SERVER_PORT} is allowed
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-primary">4.</span>
+                <span>
+                  <strong className="text-foreground">Docker networking:</strong> If using Docker, ensure ports are properly mapped
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Health Check Link */}
+          <div className="pt-2">
+            <a
+              href={`${serverUrl}/api/health`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            >
+              Check server health endpoint
+              <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              <span className="sr-only">(opens in new tab)</span>
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
 // Component
 // =============================================================================
 
@@ -349,12 +454,24 @@ export function LoginView() {
   if (state.phase === 'checking_server') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="text-center space-y-4">
-          <Spinner size="xl" className="mx-auto" />
-          <p className="text-sm text-muted-foreground">
-            Connecting to server
-            {state.attempt > 1 ? ` (attempt ${state.attempt}/${MAX_RETRIES})` : '...'}
-          </p>
+        <div
+          className="text-center space-y-4"
+          role="status"
+          aria-live="polite"
+          aria-label={`Connecting to server, attempt ${state.attempt} of ${MAX_RETRIES}`}
+        >
+          <Spinner size="xl" className="mx-auto" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Connecting to server
+              {state.attempt > 1 ? ` (attempt ${state.attempt}/${MAX_RETRIES})` : '...'}
+            </p>
+            {state.attempt > 2 && (
+              <p className="text-xs text-muted-foreground/70">
+                Trying port {SERVER_PORT}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -364,18 +481,42 @@ export function LoginView() {
   if (state.phase === 'server_error') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="w-full max-w-md space-y-6 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-            <ServerCrash className="h-8 w-8 text-destructive" />
+        <div
+          className="w-full max-w-md space-y-6"
+          role="alert"
+          aria-live="assertive"
+          aria-labelledby="server-error-title"
+          aria-describedby="server-error-description"
+        >
+          {/* Error Icon and Message */}
+          <div className="text-center space-y-4">
+            <div
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10"
+              aria-hidden="true"
+            >
+              <ServerCrash className="h-8 w-8 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h1 id="server-error-title" className="text-2xl font-bold tracking-tight">
+                Server Unavailable
+              </h1>
+              <p id="server-error-description" className="text-sm text-muted-foreground">
+                Unable to connect to server on port {SERVER_PORT}. Please ensure the server is running.
+              </p>
+            </div>
+            <Button
+              onClick={handleRetry}
+              variant="outline"
+              className="gap-2"
+              aria-label="Retry connecting to server"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              Retry Connection
+            </Button>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Server Unavailable</h1>
-            <p className="text-sm text-muted-foreground">{state.message}</p>
-          </div>
-          <Button onClick={handleRetry} variant="outline" className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Retry Connection
-          </Button>
+
+          {/* Troubleshooting Section */}
+          <TroubleshootingSection />
         </div>
       </div>
     );
@@ -385,8 +526,8 @@ export function LoginView() {
   if (state.phase === 'checking_setup' || state.phase === 'redirecting') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="text-center space-y-4">
-          <Spinner size="xl" className="mx-auto" />
+        <div className="text-center space-y-4" role="status" aria-live="polite">
+          <Spinner size="xl" className="mx-auto" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">
             {state.phase === 'checking_setup' ? 'Loading settings...' : 'Redirecting...'}
           </p>
@@ -405,7 +546,10 @@ export function LoginView() {
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <div
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10"
+            aria-hidden="true"
+          >
             <KeyRound className="h-8 w-8 text-primary" />
           </div>
           <h1 className="mt-6 text-2xl font-bold tracking-tight">Authentication Required</h1>
@@ -434,8 +578,12 @@ export function LoginView() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+            <div
+              className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              role="alert"
+              aria-live="polite"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}

@@ -87,6 +87,7 @@ import { usePipelineConfig } from '@/hooks/queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import { useAutoModeQueryInvalidation } from '@/hooks/use-query-invalidation';
+import { JiraConnectionModal } from '@/components/dialogs/jira-connection-modal';
 
 // Stable empty array to avoid infinite loop in selector
 const EMPTY_WORKTREES: ReturnType<ReturnType<typeof useAppStore.getState>['getWorktrees']> = [];
@@ -202,6 +203,9 @@ export function BoardView() {
 
   // Pipeline settings dialog state
   const [showPipelineSettings, setShowPipelineSettings] = useState(false);
+
+  // Jira connection dialog state
+  const [showJiraConnectionModal, setShowJiraConnectionModal] = useState(false);
 
   // Follow-up state hook
   const {
@@ -1450,6 +1454,7 @@ export function BoardView() {
               viewMode={viewMode}
               isDragging={activeFeature !== null}
               onAiSuggest={() => setShowPlanDialog(true)}
+              onConnectJira={() => setShowJiraConnectionModal(true)}
               className="transition-opacity duration-200"
             />
           )}
@@ -1611,6 +1616,12 @@ export function BoardView() {
           // Also update Zustand for backward compatibility
           setPipelineConfig(currentProject.path, config);
         }}
+      />
+
+      {/* Jira Connection Modal */}
+      <JiraConnectionModal
+        open={showJiraConnectionModal}
+        onOpenChange={setShowJiraConnectionModal}
       />
 
       {/* Follow-Up Prompt Dialog */}

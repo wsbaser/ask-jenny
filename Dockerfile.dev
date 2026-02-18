@@ -79,13 +79,13 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Environment variables
-ENV PORT=3008
+ENV PORT=7008
 ENV DATA_DIR=/data
 ENV HOME=/home/automaker
 ENV PATH="/home/automaker/.local/bin:${PATH}"
 
 # Expose both dev ports
-EXPOSE 3007 3008
+EXPOSE 7007 7008
 
 # Use entrypoint for permission handling
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
