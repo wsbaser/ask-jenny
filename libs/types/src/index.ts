@@ -329,3 +329,24 @@ export { PR_STATES, validatePRState } from './worktree.js';
 
 // Terminal types
 export type { TerminalInfo } from './terminal.js';
+
+// Jira integration types
+export type {
+  JiraCredentials,
+  JiraConnectionStatus,
+  JiraProject,
+  JiraSprint,
+  JiraStatus,
+  JiraPriority,
+  JiraUser,
+  JiraIssueType,
+  JiraIssue,
+  JiraImportRequest,
+  JiraImportResult,
+  JiraImportResponse,
+  JiraOAuthState,
+  JiraBoard,
+  JiraSprintIssuesRequest,
+  JiraSprintIssuesResponse,
+  JiraProjectConfig,
+} from './jira.js';

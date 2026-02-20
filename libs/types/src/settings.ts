@@ -1061,6 +1061,21 @@ export interface Credentials {
     /** OpenAI API key (for compatibility or alternative providers) */
     openai: string;
   };
+  /** Jira OAuth credentials (stored separately for security) */
+  jira?: {
+    /** Jira Cloud ID for the connected site */
+    cloudId: string;
+    /** OAuth 2.0 access token */
+    accessToken: string;
+    /** OAuth 2.0 refresh token */
+    refreshToken: string;
+    /** Token expiration timestamp (ISO string) */
+    expiresAt: string;
+    /** Connected Jira site URL */
+    siteUrl: string;
+    /** Connected Jira site name */
+    siteName: string;
+  };
 }
 
 /**
