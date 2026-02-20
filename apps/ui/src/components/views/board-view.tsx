@@ -55,6 +55,7 @@ import {
   FollowUpDialog,
   PlanApprovalDialog,
   PullResolveConflictsDialog,
+  JiraImportDialog,
 } from './board-view/dialogs';
 import type { DependencyLinkType } from './board-view/dialogs';
 import { PipelineSettingsDialog } from './board-view/dialogs/pipeline-settings-dialog';
@@ -202,6 +203,9 @@ export function BoardView() {
 
   // Pipeline settings dialog state
   const [showPipelineSettings, setShowPipelineSettings] = useState(false);
+
+  // Jira import dialog state
+  const [showJiraImportDialog, setShowJiraImportDialog] = useState(false);
 
   // Follow-up state hook
   const {
@@ -1450,6 +1454,7 @@ export function BoardView() {
               viewMode={viewMode}
               isDragging={activeFeature !== null}
               onAiSuggest={() => setShowPlanDialog(true)}
+              onJiraImport={() => setShowJiraImportDialog(true)}
               className="transition-opacity duration-200"
             />
           )}
@@ -1496,6 +1501,16 @@ export function BoardView() {
         open={showBoardBackgroundModal}
         onOpenChange={setShowBoardBackgroundModal}
       />
+
+      {/* Jira Import Dialog */}
+      {currentProject && (
+        <JiraImportDialog
+          open={showJiraImportDialog}
+          onOpenChange={setShowJiraImportDialog}
+          projectPath={currentProject.path}
+          categorySuggestions={categorySuggestions}
+        />
+      )}
 
       {/* Completed Features Modal */}
       <CompletedFeaturesModal

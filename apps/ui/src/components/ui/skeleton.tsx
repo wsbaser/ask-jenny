@@ -16,3 +16,5 @@ interface SkeletonPulseProps {
 export function SkeletonPulse({ className }: SkeletonPulseProps) {
   return <div className={cn('animate-pulse bg-muted/50 rounded', className)} />;
 }
+
+export const Skeleton = SkeletonPulse;
