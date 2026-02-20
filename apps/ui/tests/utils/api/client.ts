@@ -300,7 +300,7 @@ export async function authenticateWithApiKey(page: Page, apiKey: string): Promis
     // Ensure we're on a page (needed for cookies to work)
     const currentUrl = page.url();
     if (!currentUrl || currentUrl === 'about:blank') {
-      await page.goto('http://localhost:3007', { waitUntil: 'domcontentloaded' });
+      await page.goto('http://localhost:7007', { waitUntil: 'domcontentloaded' });
     }
 
     // Use Playwright request API (tied to this browser context) to avoid flakiness

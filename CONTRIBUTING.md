@@ -494,7 +494,7 @@ E2E tests verify the entire application works correctly from a user's perspectiv
 
 - **Framework:** [Playwright](https://playwright.dev/)
 - **Location:** `e2e/` directory
-- **Test ports:** UI on port 3007, Server on port 3008
+- **Test ports:** UI on port 7007, Server on port 7008
 
 **Running E2E tests:**
 

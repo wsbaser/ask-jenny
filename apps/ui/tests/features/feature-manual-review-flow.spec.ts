@@ -152,7 +152,7 @@ test.describe('Feature Manual Review Flow', () => {
       priority: 2,
     };
 
-    const API_BASE_URL = process.env.VITE_SERVER_URL || 'http://localhost:3008';
+    const API_BASE_URL = process.env.VITE_SERVER_URL || 'http://localhost:7008';
     const createResponse = await page.request.post(`${API_BASE_URL}/api/features/create`, {
       data: { projectPath, feature },
       headers: { 'Content-Type': 'application/json' },

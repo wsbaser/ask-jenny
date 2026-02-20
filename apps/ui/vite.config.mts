@@ -6,6 +6,7 @@ import { defineConfig } from 'vite';
 import electron from 'vite-plugin-electron/simple';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import { fileURLToPath } from 'url';
+import { STATIC_PORT, SERVER_PORT } from '@automaker/types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -66,11 +67,11 @@ export default defineConfig(({ command }) => {
     },
     server: {
       host: process.env.HOST || '0.0.0.0',
-      port: parseInt(process.env.TEST_PORT || '3007', 10),
+      port: parseInt(process.env.TEST_PORT || String(STATIC_PORT), 10),
       allowedHosts: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:3008',
+          target: `http://localhost:${SERVER_PORT}`,
           changeOrigin: true,
           ws: true,
         },

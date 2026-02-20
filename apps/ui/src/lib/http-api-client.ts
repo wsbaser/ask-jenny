@@ -40,6 +40,7 @@ import type { Message, SessionListItem } from '@/types/electron';
 import type { Feature, ClaudeUsageResponse, CodexUsageResponse } from '@/store/app-store';
 import type { WorktreeAPI, GitAPI, ModelDefinition, ProviderStatus } from '@/types/electron';
 import type { ModelId, ThinkingLevel, ReasoningEffort } from '@automaker/types';
+import { SERVER_PORT } from '@automaker/types';
 import { getGlobalFileBrowser } from '@/contexts/file-browser-context';
 
 const logger = createLogger('HttpClient');
@@ -165,7 +166,7 @@ const getServerUrl = (): string => {
   }
   // Use VITE_HOSTNAME if set, otherwise default to localhost
   const hostname = import.meta.env.VITE_HOSTNAME || 'localhost';
-  return `http://${hostname}:3008`;
+  return `http://${hostname}:${SERVER_PORT}`;
 };
 
 /**

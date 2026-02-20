@@ -2,15 +2,24 @@
  * Centralized constants for test utilities
  * This file contains all shared constants like URLs, timeouts, and selectors
  */
+import { SERVER_PORT, STATIC_PORT } from '@automaker/types';
 
 // ============================================================================
 // API Configuration
 // ============================================================================
 
 /**
- * Base URL for the API server
+ * Base URL for the API server (uses centralized port constant)
  */
-export const API_BASE_URL = 'http://localhost:3008';
+export const API_BASE_URL = `http://localhost:${SERVER_PORT}`;
+
+/**
+ * Base URL for the UI/frontend server (uses centralized port constant)
+ */
+export const UI_BASE_URL = `http://localhost:${STATIC_PORT}`;
+
+// Re-export port constants for test files that need them directly
+export { SERVER_PORT, STATIC_PORT } from '@automaker/types';
 
 /**
  * API endpoints for worktree operations

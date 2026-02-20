@@ -224,14 +224,14 @@ Create custom SELinux policy based on ausearch output. For support, see [GitHub 
 
 ### Port Conflicts
 
-Automaker uses port 3008 for the internal server. If port is already in use:
+Automaker uses port 7008 for the internal server. If port is already in use:
 
-**Find process using port 3008:**
+**Find process using port 7008:**
 
 ```bash
-sudo ss -tlnp | grep 3008
+sudo ss -tlnp | grep 7008
 # or
-lsof -i :3008
+lsof -i :7008
 ```
 
 **Kill conflicting process (if safe):**
@@ -248,8 +248,8 @@ On Fedora with firewalld enabled:
 
 ```bash
 # Allow internal traffic (local development only)
-sudo firewall-cmd --add-port=3008/tcp
-sudo firewall-cmd --permanent --add-port=3008/tcp
+sudo firewall-cmd --add-port=7008/tcp
+sudo firewall-cmd --permanent --add-port=7008/tcp
 ```
 
 ### GPU/Acceleration

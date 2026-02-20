@@ -561,7 +561,9 @@ export function useBoardActions({
 
         toast.error('Failed to start feature', {
           description:
-            error instanceof Error ? error.message : 'Server may be offline. Please try again.',
+            error instanceof Error
+              ? error.message
+              : 'Unable to connect to server. Check that the server is running and try again.',
         });
         return false;
       }
@@ -704,7 +706,9 @@ export function useBoardActions({
 
       toast.error('Failed to send follow-up', {
         description:
-          error instanceof Error ? error.message : 'Server may be offline. Please try again.',
+          error instanceof Error
+            ? error.message
+            : 'Unable to connect to server. Check that the server is running and try again.',
       });
     }
   }, [

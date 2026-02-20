@@ -28,6 +28,7 @@ import { KeyRound, AlertCircle, RefreshCw, ServerCrash } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/store/auth-store';
 import { useSetupStore } from '@/store/setup-store';
+import { SERVER_PORT } from '@automaker/types';
 
 // =============================================================================
 // State Machine Types
@@ -349,8 +350,8 @@ export function LoginView() {
   if (state.phase === 'checking_server') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="text-center space-y-4">
-          <Spinner size="xl" className="mx-auto" />
+        <div className="text-center space-y-4" role="status" aria-live="polite">
+          <Spinner size="xl" className="mx-auto" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">
             Connecting to server
             {state.attempt > 1 ? ` (attempt ${state.attempt}/${MAX_RETRIES})` : '...'}
@@ -362,18 +363,31 @@ export function LoginView() {
 
   // Server unreachable after retries
   if (state.phase === 'server_error') {
+    const serverUrl = getServerUrlSync() || `http://localhost:${SERVER_PORT}`;
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-md space-y-6 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-            <ServerCrash className="h-8 w-8 text-destructive" />
+            <ServerCrash className="h-8 w-8 text-destructive" aria-hidden="true" />
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Server Unavailable</h1>
-            <p className="text-sm text-muted-foreground">{state.message}</p>
+            <p className="text-sm text-muted-foreground" role="alert">{state.message}</p>
           </div>
+
+          {/* Troubleshooting guidance */}
+          <div className="rounded-lg border bg-muted/50 p-4 text-left text-sm">
+            <p className="font-medium mb-2">Troubleshooting steps:</p>
+            <ol className="list-inside list-decimal space-y-1.5 text-muted-foreground">
+              <li>Check that the server is running</li>
+              <li>Verify the server is accessible at: <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{serverUrl}</code></li>
+              <li>Check for firewall or network issues</li>
+              <li>Try restarting the server with <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">npm run dev</code></li>
+            </ol>
+          </div>
+
           <Button onClick={handleRetry} variant="outline" className="gap-2">
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Retry Connection
           </Button>
         </div>
@@ -385,8 +399,8 @@ export function LoginView() {
   if (state.phase === 'checking_setup' || state.phase === 'redirecting') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="text-center space-y-4">
-          <Spinner size="xl" className="mx-auto" />
+        <div className="text-center space-y-4" role="status" aria-live="polite">
+          <Spinner size="xl" className="mx-auto" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">
             {state.phase === 'checking_setup' ? 'Loading settings...' : 'Redirecting...'}
           </p>
@@ -397,7 +411,8 @@ export function LoginView() {
 
   // Login form (awaiting_login or logging_in)
   const isLoggingIn = state.phase === 'logging_in';
-  const apiKey = state.phase === 'awaiting_login' ? state.apiKey : state.apiKey;
+  // Both phases have apiKey in their state type - extract it directly
+  const apiKey = state.apiKey;
   const error = state.phase === 'awaiting_login' ? state.error : null;
 
   return (
@@ -406,7 +421,7 @@ export function LoginView() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <KeyRound className="h-8 w-8 text-primary" />
+            <KeyRound className="h-8 w-8 text-primary" aria-hidden="true" />
           </div>
           <h1 className="mt-6 text-2xl font-bold tracking-tight">Authentication Required</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -415,7 +430,7 @@ export function LoginView() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" aria-label="Login form">
           <div className="space-y-2">
             <label htmlFor="apiKey" className="text-sm font-medium">
               API Key
@@ -430,12 +445,18 @@ export function LoginView() {
               autoFocus
               className="font-mono"
               data-testid="login-api-key-input"
+              aria-describedby={error ? 'login-error' : undefined}
+              aria-invalid={error ? 'true' : undefined}
             />
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+            <div
+              id="login-error"
+              role="alert"
+              className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
@@ -448,7 +469,7 @@ export function LoginView() {
           >
             {isLoggingIn ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner size="sm" className="mr-2" aria-hidden="true" />
                 Authenticating...
               </>
             ) : (

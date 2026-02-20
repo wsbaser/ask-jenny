@@ -32,8 +32,8 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # Port configuration
-DEFAULT_WEB_PORT=3007
-DEFAULT_SERVER_PORT=3008
+DEFAULT_WEB_PORT=7007
+DEFAULT_SERVER_PORT=7008
 PORT_SEARCH_MAX_ATTEMPTS=100
 WEB_PORT=$DEFAULT_WEB_PORT
 SERVER_PORT=$DEFAULT_SERVER_PORT
@@ -110,7 +110,7 @@ USAGE:
   start-automaker.sh [MODE] [OPTIONS]
 
 MODES:
-  web              Launch in web browser (localhost:3007)
+  web              Launch in web browser (localhost:7007)
   electron         Launch as desktop app (Electron)
   docker           Launch in Docker container (dev with live reload)
   docker-electron  Launch Electron with Docker API backend
