@@ -77,3 +77,11 @@ export {
 
 // Cursor Permissions mutations
 export { useApplyCursorProfile, useCopyCursorConfig } from './use-cursor-permissions-mutations';
+
+// Jira mutations
+export {
+  useJiraConnect,
+  useJiraDisconnect,
+  useJiraImport,
+  jiraIssueToImportFormat,
+} from './use-jira-mutations';

@@ -12,7 +12,8 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Button } from '@/components/ui/button';
 import { KanbanColumn, KanbanCard, EmptyStateCard } from './components';
 import { Feature, useAppStore, formatShortcut } from '@/store/app-store';
-import { Archive, Settings2, CheckSquare, GripVertical, Plus } from 'lucide-react';
+import { Archive, Settings2, CheckSquare, GripVertical, Plus, Zap } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useResponsiveKanban } from '@/hooks/use-responsive-kanban';
 import { getColumnsWithPipeline, type ColumnId } from './constants';
 import type { PipelineConfig } from '@automaker/types';
@@ -66,6 +67,8 @@ interface KanbanBoardProps {
   isReadOnly?: boolean;
   /** Additional className for custom styling (e.g., transition classes) */
   className?: string;
+  /** Callback to open Jira import dialog */
+  onJiraImport?: () => void;
 }
 
 const KANBAN_VIRTUALIZATION_THRESHOLD = 40;
@@ -297,6 +300,7 @@ export function KanbanBoard({
   isDragging = false,
   isReadOnly = false,
   className,
+  onJiraImport,
 }: KanbanBoardProps) {
   // Generate columns including pipeline steps
   const columns = useMemo(() => getColumnsWithPipeline(pipelineConfig), [pipelineConfig]);
@@ -398,6 +402,29 @@ export function KanbanBoard({
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </Button>
+                        {onJiraImport && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10 gap-1"
+                                  onClick={onJiraImport}
+                                  data-testid="jira-import-button"
+                                  aria-label="Import from Jira"
+                                >
+                                  <Zap className="w-3.5 h-3.5" />
+                                  <span className="text-xs font-medium hidden sm:inline">Jira</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="flex items-center gap-1.5">
+                                <Zap className="w-3 h-3 text-blue-500" />
+                                <span>Import from Jira</span>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
