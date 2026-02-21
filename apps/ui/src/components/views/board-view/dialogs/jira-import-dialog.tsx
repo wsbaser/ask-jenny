@@ -18,7 +18,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { CategoryAutocomplete } from '@/components/ui/category-autocomplete';
 import {
   Select,
   SelectContent,
@@ -395,14 +395,12 @@ export function JiraImportDialog({
               <Zap className="w-5 h-5 text-blue-500" aria-hidden="true" />
               Import from Jira
             </DialogTitle>
-            <DialogDescription id="jira-dialog-description">
-              {isConnected
-                ? `Connected to ${connectionStatus?.siteName}. Select sprint tasks to import as features.`
-                : 'Connect to Jira to import sprint tasks as features.'}
+            <DialogDescription id="jira-dialog-description" className="sr-only">
+              Import sprint tasks from Jira as features.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto space-y-2 py-4">
+          <div className="flex-1 min-h-0 flex flex-col space-y-2 py-4">
             {/* Loading State */}
             {isLoadingStatus && (
               <div
@@ -490,10 +488,10 @@ export function JiraImportDialog({
             )}
 
             {!isLoadingStatus && isConnected && (
-              <>
+              <div className="flex-1 min-h-0 flex flex-col space-y-2">
                 {/* Connection Info & Controls */}
                 <div
-                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/20"
+                  className="shrink-0 flex items-center justify-between px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/20"
                   role="status"
                   aria-label="Jira connection status"
                 >
@@ -600,7 +598,7 @@ export function JiraImportDialog({
                 {/* Sprint Info */}
                 {sprint && (
                   <div
-                    className="px-3 py-2 rounded-lg bg-primary/5 border border-primary/20"
+                    className="shrink-0 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20"
                     role="region"
                     aria-label="Active sprint information"
                   >
@@ -689,8 +687,8 @@ export function JiraImportDialog({
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="flex-1 min-h-0 flex flex-col space-y-2">
+                    <div className="flex items-center justify-between shrink-0">
                       <Label className="text-sm font-medium">
                         Select Issues to Import
                         <span className="ml-2 text-muted-foreground font-normal">
@@ -723,7 +721,7 @@ export function JiraImportDialog({
                     </div>
                     <div
                       ref={issueListRef}
-                      className="border rounded-lg divide-y max-h-[40vh] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="border rounded-lg divide-y flex-1 min-h-0 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       role="listbox"
                       aria-label="Sprint issues"
                       aria-multiselectable="true"
@@ -747,24 +745,17 @@ export function JiraImportDialog({
 
                 {/* Import Options */}
                 {issues.length > 0 && (
-                  <div className="space-y-4 pt-2 border-t">
-                    <div className="space-y-2">
-                      <Label htmlFor="category-input" className="text-sm font-medium">
-                        Category for Imported Features
-                      </Label>
-                      <Input
-                        id="category-input"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        placeholder="e.g., Jira Import, Sprint Tasks"
-                        list="category-suggestions"
-                        className="h-10"
-                      />
-                      <datalist id="category-suggestions">
-                        {categorySuggestions.map((cat) => (
-                          <option key={cat} value={cat} />
-                        ))}
-                      </datalist>
+                  <div className="shrink-0 space-y-4 pt-2">
+                    <div className="flex items-center gap-3">
+                      <Label className="text-sm font-medium whitespace-nowrap">Category</Label>
+                      <div className="flex-1 min-w-0">
+                        <CategoryAutocomplete
+                          value={category}
+                          onChange={setCategory}
+                          suggestions={categorySuggestions}
+                          placeholder="e.g., Jira Import, Sprint Tasks"
+                        />
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-x-6 gap-y-3">
                       <div className="flex items-center gap-2">
@@ -800,7 +791,7 @@ export function JiraImportDialog({
                 {/* Import Progress */}
                 {importMutation.isPending && importProgress > 0 && (
                   <div
-                    className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/20"
+                    className="shrink-0 space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/20"
                     role="status"
                     aria-label="Import progress"
                     aria-live="polite"
@@ -829,7 +820,7 @@ export function JiraImportDialog({
                     />
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
 
@@ -910,10 +901,10 @@ const IssueRow = memo(function IssueRow({
       aria-label={`${issue.key}: ${issue.summary}${issue.issueType ? `, ${issue.issueType.name}` : ''}${selected ? ', selected' : ''}`}
       data-issue-index={index}
       className={cn(
-        'flex items-start gap-2 px-3 py-2 cursor-pointer transition-all duration-150',
-        'hover:bg-accent/50 active:bg-accent',
+        'flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg',
+        'hover:bg-accent/40 active:bg-accent/60',
         selected && 'bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary',
-        focused && 'ring-2 ring-inset ring-primary bg-primary/5 outline-none'
+        focused && 'ring-2 ring-inset ring-primary/50 bg-accent/30 outline-none'
       )}
       onClick={onToggle}
       onMouseEnter={onFocus}

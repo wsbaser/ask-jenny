@@ -117,7 +117,7 @@ export function Autocomplete({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            'w-full justify-between',
+            'w-full justify-between active:scale-100',
             Icon && 'font-mono text-sm',
             error && 'border-destructive focus-visible:ring-destructive',
             className
