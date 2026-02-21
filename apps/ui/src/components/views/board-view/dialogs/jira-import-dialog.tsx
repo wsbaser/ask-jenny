@@ -40,7 +40,6 @@ import {
   Circle,
   ListTodo,
   Zap,
-  Keyboard,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -119,9 +118,6 @@ export function JiraImportDialog({
 
   // Disconnect confirmation dialog
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
-
-  // Keyboard shortcut visibility
-  const [showKeyboardHints, setShowKeyboardHints] = useState(false);
 
   // Auto-select first board when boards are loaded
   useEffect(() => {
@@ -292,11 +288,6 @@ export function JiraImportDialog({
             handleSelectAll();
           }
           break;
-        case '?':
-          // Toggle keyboard hints
-          e.preventDefault();
-          setShowKeyboardHints((prev) => !prev);
-          break;
       }
     },
     [issues, focusedIssueIndex, handleToggleIssue, handleSelectAll, selectedIssues.size]
@@ -411,7 +402,7 @@ export function JiraImportDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto space-y-4 py-4">
+          <div className="flex-1 overflow-y-auto space-y-2 py-4">
             {/* Loading State */}
             {isLoadingStatus && (
               <div
@@ -502,20 +493,17 @@ export function JiraImportDialog({
               <>
                 {/* Connection Info & Controls */}
                 <div
-                  className="flex items-center justify-between p-4 rounded-lg bg-green-500/5 border border-green-500/20"
+                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/20"
                   role="status"
                   aria-label="Jira connection status"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-green-600" aria-hidden="true" />
+                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-green-600" aria-hidden="true" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        Connected to <strong>{connectionStatus?.siteName}</strong>
-                      </p>
-                      <p className="text-xs text-muted-foreground">Ready to import sprint tasks</p>
-                    </div>
+                    <p className="text-sm font-medium">
+                      Connected to <strong>{connectionStatus?.siteName}</strong>
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <TooltipProvider>
@@ -527,7 +515,7 @@ export function JiraImportDialog({
                             onClick={() => refetchIssues()}
                             disabled={isLoading}
                             aria-label="Refresh sprint issues"
-                            className="h-10 w-10 min-w-[44px] min-h-[44px]"
+                            className="h-8 w-8"
                           >
                             <RefreshCw
                               className={cn('w-4 h-4', isLoading && 'animate-spin')}
@@ -547,7 +535,7 @@ export function JiraImportDialog({
                             onClick={handleDisconnectClick}
                             disabled={disconnectMutation.isPending}
                             aria-label="Disconnect from Jira"
-                            className="h-10 w-10 min-w-[44px] min-h-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
                             <Unplug className="w-4 h-4" aria-hidden="true" />
                           </Button>
@@ -612,13 +600,13 @@ export function JiraImportDialog({
                 {/* Sprint Info */}
                 {sprint && (
                   <div
-                    className="p-4 rounded-lg bg-primary/5 border border-primary/20"
+                    className="px-3 py-2 rounded-lg bg-primary/5 border border-primary/20"
                     role="region"
                     aria-label="Active sprint information"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <ListTodo className="w-5 h-5 text-primary" aria-hidden="true" />
+                        <ListTodo className="w-4 h-4 text-primary" aria-hidden="true" />
                         <div>
                           <span className="font-medium">{sprint.name}</span>
                           <span
@@ -701,7 +689,7 @@ export function JiraImportDialog({
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-medium">
                         Select Issues to Import
@@ -735,7 +723,7 @@ export function JiraImportDialog({
                     </div>
                     <div
                       ref={issueListRef}
-                      className="border rounded-lg divide-y max-h-[300px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="border rounded-lg divide-y max-h-[40vh] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       role="listbox"
                       aria-label="Sprint issues"
                       aria-multiselectable="true"
@@ -754,75 +742,6 @@ export function JiraImportDialog({
                         />
                       ))}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setShowKeyboardHints((prev) => !prev)}
-                        className="text-xs text-muted-foreground flex items-center gap-1.5 hover:text-foreground transition-colors"
-                        aria-expanded={showKeyboardHints}
-                        aria-controls="keyboard-hints"
-                      >
-                        <Keyboard className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span>Keyboard shortcuts</span>
-                        <span className="text-[10px] px-1 py-0.5 rounded bg-muted">?</span>
-                      </button>
-                      {selectedIssues.size > 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          Press{' '}
-                          <kbd className="px-1 py-0.5 rounded bg-muted text-[10px] font-mono">
-                            Esc
-                          </kbd>{' '}
-                          to clear selection
-                        </span>
-                      )}
-                    </div>
-                    {showKeyboardHints && (
-                      <div
-                        id="keyboard-hints"
-                        className="mt-2 p-3 rounded-lg bg-muted/50 border text-xs space-y-1.5"
-                        role="region"
-                        aria-label="Keyboard shortcuts"
-                      >
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                          <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 rounded bg-background border text-[10px] font-mono">
-                              ↑↓
-                            </kbd>
-                            <span className="text-muted-foreground">Navigate issues</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 rounded bg-background border text-[10px] font-mono">
-                              Space
-                            </kbd>
-                            <span className="text-muted-foreground">Toggle selection</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 rounded bg-background border text-[10px] font-mono">
-                              Ctrl+A
-                            </kbd>
-                            <span className="text-muted-foreground">Select all</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 rounded bg-background border text-[10px] font-mono">
-                              Esc
-                            </kbd>
-                            <span className="text-muted-foreground">Clear selection</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 rounded bg-background border text-[10px] font-mono">
-                              Home
-                            </kbd>
-                            <span className="text-muted-foreground">First issue</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <kbd className="px-1.5 py-0.5 rounded bg-background border text-[10px] font-mono">
-                              End
-                            </kbd>
-                            <span className="text-muted-foreground">Last issue</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -991,9 +910,8 @@ const IssueRow = memo(function IssueRow({
       aria-label={`${issue.key}: ${issue.summary}${issue.issueType ? `, ${issue.issueType.name}` : ''}${selected ? ', selected' : ''}`}
       data-issue-index={index}
       className={cn(
-        'flex items-start gap-3 p-4 cursor-pointer transition-all duration-150',
+        'flex items-start gap-2 px-3 py-2 cursor-pointer transition-all duration-150',
         'hover:bg-accent/50 active:bg-accent',
-        'min-h-[56px]', // Ensure minimum touch target
         selected && 'bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary',
         focused && 'ring-2 ring-inset ring-primary bg-primary/5 outline-none'
       )}
@@ -1004,7 +922,7 @@ const IssueRow = memo(function IssueRow({
         checked={selected}
         onCheckedChange={onToggle}
         onClick={(e) => e.stopPropagation()}
-        className="mt-1 h-5 w-5"
+        className="mt-0.5 h-4 w-4"
         tabIndex={-1}
       />
       <div className="flex-1 min-w-0">
@@ -1036,26 +954,26 @@ const IssueRow = memo(function IssueRow({
           {issue.priority && (
             <span className="text-xs text-muted-foreground">{issue.priority.name}</span>
           )}
-        </div>
-        <p className="text-sm font-medium mt-1 line-clamp-2">{issue.summary}</p>
-        {issue.assignee && (
-          <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
-            <span
-              className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium"
-              aria-hidden="true"
-            >
-              {issue.assignee.displayName.charAt(0).toUpperCase()}
+          {issue.assignee && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <span
+                className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium"
+                aria-hidden="true"
+              >
+                {issue.assignee.displayName.charAt(0).toUpperCase()}
+              </span>
+              {issue.assignee.displayName}
             </span>
-            {issue.assignee.displayName}
-          </p>
-        )}
+          )}
+        </div>
+        <p className="text-sm font-medium mt-0.5 line-clamp-2">{issue.summary}</p>
       </div>
       {issue.storyPoints !== undefined && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <span
-                className="text-xs font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary whitespace-nowrap"
+                className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap"
                 aria-label={`${issue.storyPoints} story points`}
               >
                 {issue.storyPoints} SP
