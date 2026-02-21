@@ -391,10 +391,61 @@ export function JiraImportDialog({
           aria-roledescription="Import dialog for Jira sprint tasks"
         >
           <DialogHeader>
-            <DialogTitle id="jira-dialog-title" className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-blue-500" aria-hidden="true" />
-              Import from Jira
-            </DialogTitle>
+            <div className="flex items-center justify-between gap-4 pr-8">
+              <DialogTitle id="jira-dialog-title" className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-blue-500" aria-hidden="true" />
+                Import from Jira
+              </DialogTitle>
+              {!isLoadingStatus && isConnected && (
+                <div
+                  className="flex items-center gap-2"
+                  role="status"
+                  aria-label="Jira connection status"
+                >
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    <span>{connectionStatus?.siteName}</span>
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => refetchIssues()}
+                          disabled={isLoading}
+                          aria-label="Refresh sprint issues"
+                          className="h-7 w-7"
+                        >
+                          <RefreshCw
+                            className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')}
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Refresh issues</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleDisconnectClick}
+                          disabled={disconnectMutation.isPending}
+                          aria-label="Disconnect from Jira"
+                          className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Unplug className="w-3.5 h-3.5" aria-hidden="true" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Disconnect from Jira</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
+            </div>
             <DialogDescription id="jira-dialog-description" className="sr-only">
               Import sprint tasks from Jira as features.
             </DialogDescription>
@@ -489,61 +540,6 @@ export function JiraImportDialog({
 
             {!isLoadingStatus && isConnected && (
               <div className="flex-1 min-h-0 flex flex-col space-y-2">
-                {/* Connection Info & Controls */}
-                <div
-                  className="shrink-0 flex items-center justify-between px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/20"
-                  role="status"
-                  aria-label="Jira connection status"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 text-green-600" aria-hidden="true" />
-                    </div>
-                    <p className="text-sm font-medium">
-                      Connected to <strong>{connectionStatus?.siteName}</strong>
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => refetchIssues()}
-                            disabled={isLoading}
-                            aria-label="Refresh sprint issues"
-                            className="h-8 w-8"
-                          >
-                            <RefreshCw
-                              className={cn('w-4 h-4', isLoading && 'animate-spin')}
-                              aria-hidden="true"
-                            />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Refresh issues</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleDisconnectClick}
-                            disabled={disconnectMutation.isPending}
-                            aria-label="Disconnect from Jira"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Unplug className="w-4 h-4" aria-hidden="true" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Disconnect from Jira</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-
                 {/* Board Selector */}
                 {isLoadingBoards ? (
                   <div className="space-y-2" role="status" aria-label="Loading boards">
@@ -721,7 +717,7 @@ export function JiraImportDialog({
                     </div>
                     <div
                       ref={issueListRef}
-                      className="border rounded-lg divide-y flex-1 min-h-0 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="border rounded-lg divide-y flex-1 min-h-0 overflow-y-auto focus:outline-none"
                       role="listbox"
                       aria-label="Sprint issues"
                       aria-multiselectable="true"
@@ -903,7 +899,7 @@ const IssueRow = memo(function IssueRow({
       className={cn(
         'flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg',
         'hover:bg-accent/40 active:bg-accent/60',
-        selected && 'bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary',
+        selected && 'bg-primary/5 hover:bg-primary/10',
         focused && 'ring-2 ring-inset ring-primary/50 bg-accent/30 outline-none'
       )}
       onClick={onToggle}
