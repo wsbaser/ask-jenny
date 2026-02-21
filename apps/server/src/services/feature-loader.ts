@@ -94,8 +94,9 @@ export class FeatureLoader {
       try {
         const originalPath = typeof imagePath === 'string' ? imagePath : imagePath.path;
 
-        // Skip if already in feature directory (already absolute path in external storage)
-        if (originalPath.includes(`/features/${featureId}/images/`)) {
+        // Skip if already in feature directory (normalize separators for cross-platform support)
+        const normalizedPath = originalPath.replace(/\\/g, '/');
+        if (normalizedPath.includes(`/features/${featureId}/images/`)) {
           updatedPaths.push(imagePath);
           continue;
         }

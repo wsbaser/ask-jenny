@@ -3,10 +3,16 @@
  */
 
 import type { Request, Response } from 'express';
+import * as fs from 'fs/promises';
 import { createLogger } from '@automaker/utils';
 import type { JiraService } from '../../../services/jira-service.js';
 import type { FeatureLoader } from '../../../services/feature-loader.js';
-import type { JiraImportRequest, JiraImportResponse, JiraImportResult } from '@automaker/types';
+import type {
+  JiraImportRequest,
+  JiraImportResponse,
+  JiraImportResult,
+  FeatureImagePath,
+} from '@automaker/types';
 
 const logger = createLogger('JiraImport');
 
@@ -106,10 +112,7 @@ function extractJiraKeyFromFeature(feature: {
 // Handler
 // ============================================================================
 
-export function createImportIssuesHandler(
-  _jiraService: JiraService, // Kept for future use (e.g., fetching issue details server-side)
-  featureLoader: FeatureLoader
-) {
+export function createImportIssuesHandler(jiraService: JiraService, featureLoader: FeatureLoader) {
   return async (req: Request<unknown, unknown, ExtendedImportRequest>, res: Response) => {
     try {
       const {
@@ -165,6 +168,10 @@ export function createImportIssuesHandler(
           continue;
         }
 
+        // Pre-generate feature ID so images can be written directly to the feature directory
+        const featureId = featureLoader.generateFeatureId();
+        let imagePaths: FeatureImagePath[] | undefined;
+
         try {
           // Build feature title
           const title = includeIssueKey ? `${issue.key}: ${issue.summary}` : issue.summary;
@@ -178,8 +185,23 @@ export function createImportIssuesHandler(
           // Map Jira priority to internal priority level
           const priority = mapJiraPriorityToLevel(issue.priority);
 
-          // Create the feature with Jira metadata
+          // Download image attachments from Jira (non-fatal)
+          try {
+            const downloaded = await jiraService.downloadIssueImageAttachments(
+              issue.key,
+              projectPath,
+              featureId
+            );
+            if (downloaded.length > 0) {
+              imagePaths = downloaded;
+            }
+          } catch (imageError) {
+            logger.warn(`Could not download images for ${issue.key}:`, imageError);
+          }
+
+          // Create the feature with Jira metadata and downloaded images
           const feature = await featureLoader.create(projectPath, {
+            id: featureId,
             title,
             description,
             category: defaultCategory,
@@ -189,6 +211,7 @@ export function createImportIssuesHandler(
             jiraUrl: issue.url,
             jiraIssueType: issue.issueType,
             jiraStoryPoints: issue.storyPoints,
+            imagePaths,
           });
 
           results.push({
@@ -199,6 +222,11 @@ export function createImportIssuesHandler(
           successful++;
           existingJiraKeys.add(issue.key);
         } catch (error) {
+          // Clean up pre-written images directory if feature creation failed
+          if (imagePaths && imagePaths.length > 0) {
+            const featureDir = featureLoader.getFeatureDir(projectPath, featureId);
+            await fs.rm(featureDir, { recursive: true, force: true }).catch(() => {});
+          }
           logger.error(`Failed to import issue ${issue.key}:`, error);
           results.push({
             issueKey: issue.key,

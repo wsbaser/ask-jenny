@@ -4,7 +4,10 @@
  * Handles Jira OAuth 2.0 authentication and API operations for sprint task import.
  */
 
+import path from 'path';
+import * as fs from 'fs/promises';
 import { createLogger } from '@automaker/utils';
+import { getFeatureImagesDir } from '@automaker/platform';
 import type {
   JiraConnectionStatus,
   JiraProject,
@@ -13,6 +16,7 @@ import type {
   JiraBoard,
   JiraSprintIssuesResponse,
   Credentials,
+  FeatureImagePath,
 } from '@automaker/types';
 import type { SettingsService } from './settings-service.js';
 
@@ -922,5 +926,92 @@ export class JiraService {
       total,
       hasMore: total > issues.length,
     };
+  }
+
+  /**
+   * Download image attachments for a Jira issue directly to the feature images directory.
+   * @param issueKey - Jira issue key (e.g., PROJ-123)
+   * @param projectPath - Absolute path to the project
+   * @param featureId - Pre-generated feature ID for the target directory
+   * @returns Downloaded image file metadata (FeatureImagePath objects)
+   */
+  async downloadIssueImageAttachments(
+    issueKey: string,
+    projectPath: string,
+    featureId: string
+  ): Promise<FeatureImagePath[]> {
+    const tokenData = await this.getValidAccessToken();
+    if (!tokenData) {
+      throw new Error('Not connected to Jira');
+    }
+
+    const { accessToken, cloudId } = tokenData;
+
+    // Fetch attachment metadata for the issue
+    const issueData = await this.jiraApiRequest<{
+      fields: {
+        attachment?: Array<{
+          id: string;
+          filename: string;
+          mimeType: string;
+          size: number;
+          content: string; // Direct download URL
+        }>;
+      };
+    }>(cloudId, accessToken, `/rest/api/3/issue/${issueKey}?fields=attachment`);
+
+    const attachments = issueData.fields.attachment || [];
+
+    // Filter to supported image types only
+    const IMAGE_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+    const imageAttachments = attachments.filter((a) => IMAGE_MIME_TYPES.has(a.mimeType));
+
+    if (imageAttachments.length === 0) {
+      return [];
+    }
+
+    // Write directly to the feature images directory (skipping temp)
+    const imagesDir = getFeatureImagesDir(projectPath, featureId);
+    await fs.mkdir(imagesDir, { recursive: true });
+
+    const downloadedPaths: FeatureImagePath[] = [];
+
+    for (const attachment of imageAttachments) {
+      try {
+        // The content URL requires OAuth Bearer auth
+        const response = await fetch(attachment.content, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (!response.ok) {
+          logger.warn(
+            `Failed to download attachment ${attachment.filename} for ${issueKey}: HTTP ${response.status}`
+          );
+          continue;
+        }
+
+        const buffer = Buffer.from(await response.arrayBuffer());
+
+        // Use attachment ID in filename for uniqueness, sanitize for safety
+        const ext = path.extname(attachment.filename) || '.png';
+        const baseName = path.basename(attachment.filename, ext).replace(/[^a-zA-Z0-9._\-]/g, '_');
+        const uniqueFilename = `${baseName}-${attachment.id}${ext}`;
+        const filePath = path.join(imagesDir, uniqueFilename);
+
+        await fs.writeFile(filePath, buffer);
+        downloadedPaths.push({
+          id: `img-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+          path: filePath,
+          filename: uniqueFilename,
+          mimeType: attachment.mimeType,
+        });
+
+        logger.info(`Downloaded Jira attachment: ${attachment.filename} for ${issueKey}`);
+      } catch (error) {
+        logger.warn(`Failed to download attachment ${attachment.filename} for ${issueKey}:`, error);
+      }
+    }
+
+    return downloadedPaths;
   }
 }
