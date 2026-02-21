@@ -626,6 +626,9 @@ export class HttpApiClient implements ElectronAPI {
   private eventCallbacks: Map<EventType, Set<EventCallback>> = new Map();
   private reconnectTimer: NodeJS.Timeout | null = null;
   private isConnecting = false;
+  private wsReconnectAttempt = 0;
+  private static readonly WS_MAX_RECONNECT_ATTEMPTS = 5;
+  private static readonly WS_BASE_RECONNECT_DELAY_MS = 1000;
 
   constructor() {
     this.serverUrl = getServerUrl();
@@ -668,7 +671,7 @@ export class HttpApiClient implements ElectronAPI {
       });
 
       if (response.status === 401 || response.status === 403) {
-        handleUnauthorized();
+        logger.warn('WS token fetch returned', response.status);
         return null;
       }
 
@@ -766,6 +769,7 @@ export class HttpApiClient implements ElectronAPI {
       this.ws.onopen = () => {
         logger.info('WebSocket connected');
         this.isConnecting = false;
+        this.wsReconnectAttempt = 0;
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
           this.reconnectTimer = null;
@@ -797,12 +801,27 @@ export class HttpApiClient implements ElectronAPI {
         logger.info('WebSocket disconnected');
         this.isConnecting = false;
         this.ws = null;
-        // Attempt to reconnect after 5 seconds
+
         if (!this.reconnectTimer) {
+          const attempt = this.wsReconnectAttempt;
+
+          if (attempt >= HttpApiClient.WS_MAX_RECONNECT_ATTEMPTS) {
+            // Max retries exceeded — verify if session is truly expired
+            logger.warn(
+              `WebSocket reconnection failed after ${attempt} attempts, verifying session...`
+            );
+            this.verifySessionAndDecide();
+            return;
+          }
+
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+          const delay = HttpApiClient.WS_BASE_RECONNECT_DELAY_MS * Math.pow(2, attempt);
+          logger.info(`WebSocket reconnecting in ${delay}ms (attempt ${attempt + 1})`);
+          this.wsReconnectAttempt++;
           this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = null;
             this.connectWebSocket();
-          }, 5000);
+          }, delay);
         }
       };
 
@@ -813,6 +832,44 @@ export class HttpApiClient implements ElectronAPI {
     } catch (error) {
       logger.error('Failed to create WebSocket:', error);
       this.isConnecting = false;
+    }
+  }
+
+  private async verifySessionAndDecide(): Promise<void> {
+    try {
+      const response = await fetch(`${this.serverUrl}/api/auth/status`, {
+        credentials: 'include',
+        headers: getApiKey() ? { 'X-API-Key': getApiKey()! } : undefined,
+        cache: NO_STORE_CACHE_MODE,
+      });
+      const data = await response.json();
+
+      if (data.authenticated) {
+        // Session still valid — server was probably restarting
+        logger.info('Session still valid, resuming WebSocket reconnection');
+        this.wsReconnectAttempt = 0;
+        this.reconnectTimer = setTimeout(() => {
+          this.reconnectTimer = null;
+          this.connectWebSocket();
+        }, HttpApiClient.WS_BASE_RECONNECT_DELAY_MS);
+      } else {
+        // Session confirmed expired — real logout
+        logger.warn('Session confirmed expired, logging out');
+        handleUnauthorized();
+      }
+    } catch {
+      // Network error — server still unreachable, don't logout
+      // Reset counter and retry with a longer delay
+      logger.warn('Cannot reach server to verify session, will keep retrying');
+      this.wsReconnectAttempt = 0;
+      this.reconnectTimer = setTimeout(
+        () => {
+          this.reconnectTimer = null;
+          this.connectWebSocket();
+        },
+        HttpApiClient.WS_BASE_RECONNECT_DELAY_MS *
+          Math.pow(2, HttpApiClient.WS_MAX_RECONNECT_ATTEMPTS)
+      );
     }
   }
 
