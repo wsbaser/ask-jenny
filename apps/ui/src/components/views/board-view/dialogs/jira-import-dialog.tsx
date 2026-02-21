@@ -242,8 +242,12 @@ export function JiraImportDialog({
     }
   }, [sprintData?.issues, selectedIssues.size]);
 
-  // Keyboard navigation for issue list (WCAG 2.1 compliance)
-  const issues = sprintData?.issues ?? [];
+  // Sort issues by assignee name (unassigned last)
+  const issues = [...(sprintData?.issues ?? [])].sort((a, b) => {
+    const nameA = a.assignee?.displayName ?? '\uffff';
+    const nameB = b.assignee?.displayName ?? '\uffff';
+    return nameA.localeCompare(nameB);
+  });
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
