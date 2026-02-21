@@ -420,8 +420,35 @@ export function JiraImportDialog({
               </div>
             )}
 
+            {/* Not Configured State */}
+            {!isLoadingStatus && !isConnected && connectionStatus?.configured === false && (
+              <div
+                className="flex flex-col items-center justify-center py-8 px-4 space-y-6 bg-amber-500/5 rounded-xl border border-dashed border-amber-500/30"
+                role="region"
+                aria-label="Jira not configured"
+              >
+                <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-amber-500" aria-hidden="true" />
+                </div>
+                <div className="text-center space-y-2 max-w-sm">
+                  <h3 className="font-semibold text-lg">Jira Integration Not Configured</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Set{' '}
+                    <code className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">
+                      JIRA_CLIENT_ID
+                    </code>{' '}
+                    and{' '}
+                    <code className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">
+                      JIRA_CLIENT_SECRET
+                    </code>{' '}
+                    environment variables on the server to enable Jira integration.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Connection Status / Connect Button */}
-            {!isLoadingStatus && !isConnected && (
+            {!isLoadingStatus && !isConnected && connectionStatus?.configured !== false && (
               <div
                 className="flex flex-col items-center justify-center py-8 px-4 space-y-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30"
                 role="region"

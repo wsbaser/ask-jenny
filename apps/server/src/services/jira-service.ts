@@ -26,7 +26,7 @@ const logger = createLogger('JiraService');
 const JIRA_CLIENT_ID = process.env.JIRA_CLIENT_ID || '';
 const JIRA_CLIENT_SECRET = process.env.JIRA_CLIENT_SECRET || '';
 const JIRA_REDIRECT_URI =
-  process.env.JIRA_REDIRECT_URI || 'http://localhost:3008/api/jira/callback';
+  process.env.JIRA_REDIRECT_URI || `http://localhost:${process.env.PORT || 7008}/api/jira/callback`;
 
 // Jira API endpoints
 const JIRA_AUTH_URL = 'https://auth.atlassian.com/authorize';
@@ -389,7 +389,7 @@ export class JiraService {
       throw new Error(`Jira API error (${response.status}): ${errorText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   /**
@@ -425,27 +425,29 @@ export class JiraService {
       throw new Error(`Jira Agile API error (${response.status}): ${errorText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   /**
    * Get Jira connection status
    */
   async getConnectionStatus(): Promise<JiraConnectionStatus> {
+    const configured = this.isConfigured();
     const credentials = await this.settingsService.getCredentials();
 
     if (!credentials.jira) {
-      return { connected: false };
+      return { configured, connected: false };
     }
 
     // Try to validate the token by making a simple API call
     try {
       const tokenData = await this.getValidAccessToken();
       if (!tokenData) {
-        return { connected: false };
+        return { configured, connected: false };
       }
 
       return {
+        configured,
         connected: true,
         siteUrl: credentials.jira.siteUrl,
         siteName: credentials.jira.siteName,
@@ -453,6 +455,7 @@ export class JiraService {
     } catch (error) {
       logger.error('Failed to validate Jira connection:', error);
       return {
+        configured,
         connected: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -524,13 +527,14 @@ export class JiraService {
       id: board.id,
       name: board.name,
       type: board.type,
-      project: board.location
-        ? {
-            id: board.location.projectId?.toString(),
-            key: board.location.projectKey,
-            name: board.location.projectName,
-          }
-        : undefined,
+      project:
+        board.location?.projectId && board.location.projectKey && board.location.projectName
+          ? {
+              id: board.location.projectId.toString(),
+              key: board.location.projectKey,
+              name: board.location.projectName,
+            }
+          : undefined,
     }));
   }
 

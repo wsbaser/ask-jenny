@@ -26,6 +26,8 @@ export interface JiraCredentials {
  * Jira connection status returned to the frontend
  */
 export interface JiraConnectionStatus {
+  /** Whether Jira OAuth is configured on the server (JIRA_CLIENT_ID/SECRET are set) */
+  configured: boolean;
   /** Whether Jira is connected */
   connected: boolean;
   /** Connected site URL (if connected) */

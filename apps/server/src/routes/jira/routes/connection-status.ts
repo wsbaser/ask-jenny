@@ -12,6 +12,7 @@ export function createConnectionStatusHandler(jiraService: JiraService) {
       res.json(status);
     } catch (error) {
       res.status(500).json({
+        configured: jiraService.isConfigured(),
         connected: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       });

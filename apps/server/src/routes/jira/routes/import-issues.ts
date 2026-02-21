@@ -137,7 +137,7 @@ export function createImportIssuesHandler(
       }
 
       // Build set of existing Jira keys for duplicate detection
-      const existingFeatures = await featureLoader.loadFeatures(projectPath);
+      const existingFeatures = await featureLoader.getAll(projectPath);
       const existingJiraKeys = new Set<string>();
 
       for (const feature of existingFeatures) {

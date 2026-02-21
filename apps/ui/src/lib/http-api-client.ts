@@ -977,6 +977,23 @@ export class HttpApiClient implements ElectronAPI {
     return response.json();
   }
 
+  /**
+   * Raw fetch with server URL and auth headers.
+   * Returns the raw Response for callers that need full control.
+   */
+  async fetch(endpoint: string, init?: RequestInit): Promise<Response> {
+    await waitForApiKeyInit();
+    const headers = {
+      ...this.getHeaders(),
+      ...Object.fromEntries(new Headers(init?.headers).entries()),
+    };
+    return fetch(`${this.serverUrl}${endpoint}`, {
+      ...init,
+      headers,
+      credentials: 'include',
+    });
+  }
+
   // Basic operations
   async ping(): Promise<string> {
     const result = await this.get<{ status: string }>('/api/health');
