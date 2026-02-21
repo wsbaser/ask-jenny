@@ -81,7 +81,7 @@ export function JiraImportDialog({
 
   // Board and sprint data
   const { data: boardsData, isLoading: isLoadingBoards } = useJiraBoards({
-    enabled: connectionStatus?.connected ?? false,
+    enabled: open && (connectionStatus?.connected ?? false),
   });
   const [selectedBoardId, setSelectedBoardId] = useState<number | undefined>();
 

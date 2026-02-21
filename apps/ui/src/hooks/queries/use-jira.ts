@@ -36,7 +36,7 @@ export function useJiraConnectionStatus() {
     queryFn: async () => {
       const response = await httpClient.fetch('/api/jira/status');
       if (!response.ok) {
-        throw new Error(`Failed to fetch Jira status: ${response.status}`);
+        throw new Error(`Jira status request error: ${response.status}`);
       }
       return response.json();
     },
@@ -56,12 +56,13 @@ export function useJiraBoards(options?: { enabled?: boolean }) {
     queryFn: async () => {
       const response = await httpClient.fetch('/api/jira/boards');
       if (!response.ok) {
-        throw new Error(`Failed to fetch boards: ${response.status}`);
+        throw new Error(`Jira boards request error: ${response.status}`);
       }
       return response.json();
     },
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
   });
 }
 
@@ -89,7 +90,7 @@ export function useJiraSprints(
       const params = options?.state ? `?state=${options.state}` : '';
       const response = await httpClient.fetch(`/api/jira/boards/${boardId}/sprints${params}`);
       if (!response.ok) {
-        throw new Error(`Failed to fetch sprints: ${response.status}`);
+        throw new Error(`Jira sprints request error: ${response.status}`);
       }
       return response.json();
     },
@@ -123,7 +124,7 @@ export function useJiraSprintIssues(
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to fetch sprint issues: ${response.status}`);
+        throw new Error(errorData.error || `Jira sprint issues request error: ${response.status}`);
       }
       return response.json();
     },

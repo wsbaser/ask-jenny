@@ -8,8 +8,31 @@ import type { JiraService } from '../../../services/jira-service.js';
 
 const logger = createLogger('JiraCallback');
 
+/**
+ * Build the UI base URL for redirects.
+ * In dev mode the UI runs on a different port (default 7007) than the server (7008).
+ * We derive the UI origin from the Referer header when available, otherwise fall back
+ * to the request origin (server URL) which works in production where UI and API
+ * are served from the same origin.
+ */
+function getUiBaseUrl(req: Request): string {
+  const referer = req.headers.referer;
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      return url.origin;
+    } catch {
+      // ignore invalid referer
+    }
+  }
+  // Fallback: use the request's own origin
+  return `${req.protocol}://${req.get('host')}`;
+}
+
 export function createCallbackHandler(jiraService: JiraService) {
   return async (req: Request, res: Response) => {
+    const uiBase = getUiBaseUrl(req);
+
     try {
       const { code, state, error, error_description } = req.query;
 
@@ -17,23 +40,23 @@ export function createCallbackHandler(jiraService: JiraService) {
       if (error) {
         logger.error('OAuth error:', error, error_description);
         return res.redirect(
-          `/?jiraError=${encodeURIComponent(String(error_description || error))}`
+          `${uiBase}/?jiraError=${encodeURIComponent(String(error_description || error))}`
         );
       }
 
       if (!code || typeof code !== 'string') {
-        return res.redirect('/?jiraError=missing_code');
+        return res.redirect(`${uiBase}/?jiraError=missing_code`);
       }
 
       if (!state || typeof state !== 'string') {
-        return res.redirect('/?jiraError=missing_state');
+        return res.redirect(`${uiBase}/?jiraError=missing_state`);
       }
 
       // Validate state
       const stateValidation = jiraService.validateState(state);
       if (!stateValidation.valid) {
         logger.error('Invalid OAuth state');
-        return res.redirect('/?jiraError=invalid_state');
+        return res.redirect(`${uiBase}/?jiraError=invalid_state`);
       }
 
       // Exchange code for tokens
@@ -43,7 +66,7 @@ export function createCallbackHandler(jiraService: JiraService) {
       const resources = await jiraService.getAccessibleResources(tokens.accessToken);
 
       if (resources.length === 0) {
-        return res.redirect('/?jiraError=no_accessible_sites');
+        return res.redirect(`${uiBase}/?jiraError=no_accessible_sites`);
       }
 
       // Use the first accessible site (most common case)
@@ -60,15 +83,15 @@ export function createCallbackHandler(jiraService: JiraService) {
         site.name
       );
 
-      // Redirect back to the app
-      const returnUrl = stateValidation.returnUrl || '/';
+      // Redirect back to the app (returnUrl is already a full URL from the UI)
+      const returnUrl = stateValidation.returnUrl || uiBase;
       const separator = returnUrl.includes('?') ? '&' : '?';
       res.redirect(`${returnUrl}${separator}jiraConnected=true`);
     } catch (error) {
       logger.error('OAuth callback error:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error during OAuth callback';
-      res.redirect(`/?jiraError=${encodeURIComponent(errorMessage)}`);
+      res.redirect(`${uiBase}/?jiraError=${encodeURIComponent(errorMessage)}`);
     }
   };
 }

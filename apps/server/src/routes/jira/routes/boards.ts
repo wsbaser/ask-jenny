@@ -3,7 +3,10 @@
  */
 
 import type { Request, Response } from 'express';
+import { createLogger } from '@automaker/utils';
 import type { JiraService } from '../../../services/jira-service.js';
+
+const logger = createLogger('JiraBoards');
 
 export function createBoardsHandler(jiraService: JiraService) {
   return async (_req: Request, res: Response) => {
@@ -11,6 +14,7 @@ export function createBoardsHandler(jiraService: JiraService) {
       const boards = await jiraService.getBoards();
       res.json({ boards });
     } catch (error) {
+      logger.error('Failed to fetch boards:', error);
       if (error instanceof Error && error.message.includes('Not connected')) {
         return res.status(401).json({ error: 'Not connected to Jira' });
       }

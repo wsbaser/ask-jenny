@@ -22,11 +22,19 @@ const logger = createLogger('JiraService');
 // Configuration Constants
 // ============================================================================
 
-// Jira OAuth 2.0 configuration from environment variables
-const JIRA_CLIENT_ID = process.env.JIRA_CLIENT_ID || '';
-const JIRA_CLIENT_SECRET = process.env.JIRA_CLIENT_SECRET || '';
-const JIRA_REDIRECT_URI =
-  process.env.JIRA_REDIRECT_URI || `http://localhost:${process.env.PORT || 7008}/api/jira/callback`;
+// Jira OAuth 2.0 configuration - read lazily to allow dotenv to load first
+function getJiraClientId(): string {
+  return process.env.JIRA_CLIENT_ID || '';
+}
+function getJiraClientSecret(): string {
+  return process.env.JIRA_CLIENT_SECRET || '';
+}
+function getJiraRedirectUri(): string {
+  return (
+    process.env.JIRA_REDIRECT_URI ||
+    `http://localhost:${process.env.PORT || 7008}/api/jira/callback`
+  );
+}
 
 // Jira API endpoints
 const JIRA_AUTH_URL = 'https://auth.atlassian.com/authorize';
@@ -160,7 +168,7 @@ export class JiraService {
    * Check if Jira OAuth is configured (client ID and secret are set)
    */
   isConfigured(): boolean {
-    return !!(JIRA_CLIENT_ID && JIRA_CLIENT_SECRET);
+    return !!(getJiraClientId() && getJiraClientSecret());
   }
 
   /**
@@ -176,10 +184,10 @@ export class JiraService {
 
     const params = new URLSearchParams({
       audience: 'api.atlassian.com',
-      client_id: JIRA_CLIENT_ID,
+      client_id: getJiraClientId(),
       scope:
-        'read:jira-work read:sprint:jira-software read:board-scope:jira-software offline_access',
-      redirect_uri: JIRA_REDIRECT_URI,
+        'read:jira-work read:sprint:jira-software read:board-scope:jira-software read:project:jira offline_access',
+      redirect_uri: getJiraRedirectUri(),
       state,
       response_type: 'code',
       prompt: 'consent',
@@ -228,10 +236,10 @@ export class JiraService {
       },
       body: JSON.stringify({
         grant_type: 'authorization_code',
-        client_id: JIRA_CLIENT_ID,
-        client_secret: JIRA_CLIENT_SECRET,
+        client_id: getJiraClientId(),
+        client_secret: getJiraClientSecret(),
         code,
-        redirect_uri: JIRA_REDIRECT_URI,
+        redirect_uri: getJiraRedirectUri(),
       }),
     });
 
@@ -266,8 +274,8 @@ export class JiraService {
       },
       body: JSON.stringify({
         grant_type: 'refresh_token',
-        client_id: JIRA_CLIENT_ID,
-        client_secret: JIRA_CLIENT_SECRET,
+        client_id: getJiraClientId(),
+        client_secret: getJiraClientSecret(),
         refresh_token: refreshToken,
       }),
     });

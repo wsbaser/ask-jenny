@@ -20,7 +20,7 @@ export function createConnectHandler(jiraService: JiraService) {
         });
       }
 
-      const { returnUrl } = req.body;
+      const { returnUrl } = req.body || {};
       const { url, state } = jiraService.getAuthorizationUrl(returnUrl);
 
       res.json({

@@ -95,21 +95,13 @@ const notifyServerOffline = (): void => {
 
 /**
  * Check if an error is a connection error (server offline/unreachable).
- * These are typically TypeError with 'Failed to fetch' or similar network errors.
+ * Browser fetch() throws TypeError on network failures (e.g., "Failed to fetch").
+ * Only TypeError instances are treated as connection errors to avoid false positives
+ * from regular Error objects whose messages happen to contain similar substrings.
  */
 export const isConnectionError = (error: unknown): boolean => {
   if (error instanceof TypeError) {
     const message = error.message.toLowerCase();
-    return (
-      message.includes('failed to fetch') ||
-      message.includes('network') ||
-      message.includes('econnrefused') ||
-      message.includes('connection refused')
-    );
-  }
-  // Check for error objects with message property
-  if (error && typeof error === 'object' && 'message' in error) {
-    const message = String((error as { message: unknown }).message).toLowerCase();
     return (
       message.includes('failed to fetch') ||
       message.includes('network') ||
