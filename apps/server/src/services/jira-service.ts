@@ -539,7 +539,7 @@ export class JiraService {
     const response = await this.jiraAgileApiRequest<{ values: JiraBoardResponse[] }>(
       cloudId,
       accessToken,
-      `/board?type=scrum&maxResults=${MAX_BOARDS_PER_REQUEST}`
+      `/board?maxResults=${MAX_BOARDS_PER_REQUEST}`
     );
 
     return response.values.map((board) => ({
@@ -558,7 +558,9 @@ export class JiraService {
   }
 
   /**
-   * Get sprints for a board
+   * Get sprints for a board.
+   * Falls back to JQL-based discovery when the Agile API returns 401/403
+   * (common with "simple"/team-managed boards that don't support granular OAuth scopes).
    */
   async getSprints(boardId: number, state?: 'active' | 'future' | 'closed'): Promise<JiraSprint[]> {
     const tokenData = await this.getValidAccessToken();
@@ -568,21 +570,139 @@ export class JiraService {
 
     const { accessToken, cloudId } = tokenData;
 
-    const stateParam = state ? `&state=${state}` : '';
-    const response = await this.jiraAgileApiRequest<{ values: JiraSprintResponse[] }>(
-      cloudId,
-      accessToken,
-      `/board/${boardId}/sprint?maxResults=${MAX_SPRINTS_PER_REQUEST}${stateParam}`
-    );
+    // Try the Agile API first
+    try {
+      const stateParam = state ? `&state=${state}` : '';
+      const response = await this.jiraAgileApiRequest<{ values: JiraSprintResponse[] }>(
+        cloudId,
+        accessToken,
+        `/board/${boardId}/sprint?maxResults=${MAX_SPRINTS_PER_REQUEST}${stateParam}`
+      );
 
-    return response.values.map((sprint) => ({
-      id: sprint.id,
-      name: sprint.name,
-      state: sprint.state,
-      startDate: sprint.startDate,
-      endDate: sprint.endDate,
-      boardId,
-    }));
+      return response.values.map((sprint) => ({
+        id: sprint.id,
+        name: sprint.name,
+        state: sprint.state,
+        startDate: sprint.startDate,
+        endDate: sprint.endDate,
+        boardId,
+      }));
+    } catch (error) {
+      // Fall back to JQL for 401/403 errors (scope mismatch on simple/team-managed boards)
+      const errorMsg = error instanceof Error ? error.message : '';
+      if (!errorMsg.includes('(401)') && !errorMsg.includes('(403)')) {
+        throw error;
+      }
+      logger.warn(
+        `Agile API sprint fetch failed for board ${boardId}, falling back to JQL: ${errorMsg}`
+      );
+    }
+
+    return this.getSprintsViaJql(boardId, state, cloudId, accessToken);
+  }
+
+  /**
+   * Discover sprints via JQL search (REST API v3 fallback).
+   * Uses `sprint in openSprints()` or `sprint in closedSprints()` to find sprint info
+   * from issue fields, which only requires the `read:jira-work` scope.
+   */
+  private async getSprintsViaJql(
+    boardId: number,
+    state: 'active' | 'future' | 'closed' | undefined,
+    cloudId: string,
+    accessToken: string
+  ): Promise<JiraSprint[]> {
+    // Find the project key for this board
+    const boards = await this.getBoards();
+    const board = boards.find((b) => b.id === boardId);
+    const projectKey = board?.project?.key;
+    if (!projectKey) {
+      logger.warn(`Cannot determine project key for board ${boardId}, returning empty sprints`);
+      return [];
+    }
+
+    // Build JQL to find issues with sprint info
+    let sprintJql: string;
+    if (state === 'active') {
+      sprintJql = `sprint in openSprints() AND project = "${projectKey}"`;
+    } else if (state === 'closed') {
+      sprintJql = `sprint in closedSprints() AND project = "${projectKey}"`;
+    } else if (state === 'future') {
+      sprintJql = `sprint in futureSprints() AND project = "${projectKey}"`;
+    } else {
+      // All sprints: open + closed + future
+      sprintJql = `sprint is not EMPTY AND project = "${projectKey}"`;
+    }
+
+    const response = await this.jiraApiRequest<{
+      issues: Array<{
+        fields: {
+          sprint?: {
+            id: number;
+            name: string;
+            state: string;
+            startDate?: string;
+            endDate?: string;
+          };
+          closedSprints?: Array<{
+            id: number;
+            name: string;
+            state: string;
+            startDate?: string;
+            endDate?: string;
+          }>;
+        };
+      }>;
+    }>(cloudId, accessToken, '/rest/api/3/search/jql', {
+      method: 'POST',
+      body: JSON.stringify({
+        jql: sprintJql,
+        maxResults: MAX_SPRINTS_PER_REQUEST,
+        fields: ['sprint', 'closedSprints'],
+      }),
+    });
+
+    // Extract unique sprints from issue fields
+    const sprintMap = new Map<number, JiraSprint>();
+
+    for (const issue of response.issues) {
+      const { sprint: activeSprint, closedSprints } = issue.fields;
+
+      if (activeSprint && !sprintMap.has(activeSprint.id)) {
+        sprintMap.set(activeSprint.id, {
+          id: activeSprint.id,
+          name: activeSprint.name,
+          state: activeSprint.state as 'active' | 'future' | 'closed',
+          startDate: activeSprint.startDate,
+          endDate: activeSprint.endDate,
+          boardId,
+        });
+      }
+
+      if (closedSprints) {
+        for (const cs of closedSprints) {
+          if (!sprintMap.has(cs.id)) {
+            sprintMap.set(cs.id, {
+              id: cs.id,
+              name: cs.name,
+              state: cs.state as 'active' | 'future' | 'closed',
+              startDate: cs.startDate,
+              endDate: cs.endDate,
+              boardId,
+            });
+          }
+        }
+      }
+    }
+
+    const sprints = Array.from(sprintMap.values());
+
+    // Filter by state if requested (the JQL already filters, but sprint field may include extras)
+    if (state) {
+      return sprints.filter((s) => s.state === state);
+    }
+
+    return sprints;
   }
 
   /**
@@ -594,7 +714,9 @@ export class JiraService {
   }
 
   /**
-   * Get issues in a sprint
+   * Get issues in a sprint.
+   * Falls back to REST API v3 JQL search when the Agile API returns 401/403
+   * (common with "simple"/team-managed boards).
    */
   async getSprintIssues(
     sprintId: number,
@@ -618,10 +740,46 @@ export class JiraService {
       jql += ' AND statusCategory = "In Progress"';
     }
 
-    const response = await this.jiraAgileApiRequest<{ issues: JiraIssueResponse[]; total: number }>(
+    const fields = `summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated,${STORY_POINTS_FIELD_ID}`;
+
+    // Try the Agile API first
+    try {
+      const response = await this.jiraAgileApiRequest<{
+        issues: JiraIssueResponse[];
+        total: number;
+      }>(
+        cloudId,
+        accessToken,
+        `/sprint/${sprintId}/issue?maxResults=${maxResults}&jql=${encodeURIComponent(jql)}&fields=${fields}`
+      );
+
+      const issues: JiraIssue[] = response.issues.map((issue) =>
+        this.mapIssueResponseToJiraIssue(issue, siteUrl)
+      );
+
+      return { issues, total: response.total };
+    } catch (error) {
+      // Fall back to REST API v3 for 401/403 errors (scope mismatch on simple/team-managed boards)
+      const errorMsg = error instanceof Error ? error.message : '';
+      if (!errorMsg.includes('(401)') && !errorMsg.includes('(403)')) {
+        throw error;
+      }
+      logger.warn(`Agile API sprint issues fetch failed, falling back to JQL search: ${errorMsg}`);
+    }
+
+    // Fallback: use REST API v3 search/jql with JQL (only needs read:jira-work scope)
+    const response = await this.jiraApiRequest<{ issues: JiraIssueResponse[]; total: number }>(
       cloudId,
       accessToken,
-      `/sprint/${sprintId}/issue?maxResults=${maxResults}&jql=${encodeURIComponent(jql)}&fields=summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated,${STORY_POINTS_FIELD_ID}`
+      '/rest/api/3/search/jql',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          jql,
+          maxResults,
+          fields: fields.split(','),
+        }),
+      }
     );
 
     const issues: JiraIssue[] = response.issues.map((issue) =>
@@ -722,14 +880,15 @@ export class JiraService {
   }): Promise<JiraSprintIssuesResponse> {
     let { boardId, sprintId, statusFilter = 'todo', maxResults = DEFAULT_MAX_ISSUES } = options;
 
-    // If no board specified, get the first scrum board
+    // If no board specified, auto-select: prefer scrum boards (have sprints), fall back to any
     if (!boardId) {
       const boards = await this.getBoards();
       const scrumBoard = boards.find((b) => b.type === 'scrum');
-      if (!scrumBoard) {
-        throw new Error('No Scrum board found in connected Jira site');
+      const selectedBoard = scrumBoard || boards[0];
+      if (!selectedBoard) {
+        throw new Error('No board found in connected Jira site');
       }
-      boardId = scrumBoard.id;
+      boardId = selectedBoard.id;
     }
 
     // If no sprint specified, get the active sprint
