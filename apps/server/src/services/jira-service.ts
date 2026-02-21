@@ -454,6 +454,15 @@ export class JiraService {
         return { configured, connected: false };
       }
 
+      // Verify the token is actually valid using an endpoint covered by our scopes.
+      // We use /rest/api/3/project/search (read:project:jira scope) instead of
+      // /rest/api/3/myself which requires the read:me scope we don't request.
+      await this.jiraApiRequest(
+        tokenData.cloudId,
+        tokenData.accessToken,
+        '/rest/api/3/project/search?maxResults=1'
+      );
+
       return {
         configured,
         connected: true,
@@ -462,6 +471,8 @@ export class JiraService {
       };
     } catch (error) {
       logger.error('Failed to validate Jira connection:', error);
+      // Auto-disconnect on validation failure so UI reflects actual state
+      await this.disconnectJira().catch(() => {});
       return {
         configured,
         connected: false,

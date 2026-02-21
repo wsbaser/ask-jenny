@@ -21,7 +21,9 @@ export function createConnectHandler(jiraService: JiraService) {
       }
 
       const { returnUrl } = req.body || {};
-      const { url, state } = jiraService.getAuthorizationUrl(returnUrl);
+      // Derive from Origin header if returnUrl not provided (Origin is always set on cross-origin POSTs)
+      const effectiveReturnUrl = returnUrl || req.headers.origin || undefined;
+      const { url, state } = jiraService.getAuthorizationUrl(effectiveReturnUrl);
 
       res.json({
         authorizationUrl: url,

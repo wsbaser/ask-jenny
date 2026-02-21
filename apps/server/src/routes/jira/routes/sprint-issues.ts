@@ -9,7 +9,7 @@ import type { JiraSprintIssuesRequest } from '@automaker/types';
 export function createSprintIssuesHandler(jiraService: JiraService) {
   return async (req: Request<unknown, unknown, JiraSprintIssuesRequest>, res: Response) => {
     try {
-      const { boardId, sprintId, statusFilter, maxResults } = req.body;
+      const { boardId, sprintId, statusFilter, maxResults } = req.body ?? {};
 
       const result = await jiraService.getSprintIssuesForProject({
         boardId,

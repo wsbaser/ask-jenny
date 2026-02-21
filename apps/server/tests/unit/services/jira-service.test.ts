@@ -285,6 +285,12 @@ describe('JiraService', () => {
         },
       });
 
+      // Mock the /myself API validation call
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ accountId: 'user-123', displayName: 'Test User' }),
+      });
+
       const status = await jiraService.getConnectionStatus();
 
       expect(status.connected).toBe(true);

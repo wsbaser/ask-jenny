@@ -80,7 +80,12 @@ export function JiraImportDialog({
   const disconnectMutation = useJiraDisconnect();
 
   // Board and sprint data
-  const { data: boardsData, isLoading: isLoadingBoards } = useJiraBoards({
+  const {
+    data: boardsData,
+    isLoading: isLoadingBoards,
+    isError: isBoardsError,
+    refetch: refetchBoards,
+  } = useJiraBoards({
     enabled: open && (connectionStatus?.connected ?? false),
   });
   const [selectedBoardId, setSelectedBoardId] = useState<number | undefined>();
@@ -554,6 +559,23 @@ export function JiraImportDialog({
                   <div className="space-y-2" role="status" aria-label="Loading boards">
                     <Skeleton className="h-4 w-16" />
                     <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : isBoardsError ? (
+                  <div
+                    className="flex flex-col items-center justify-center py-8 space-y-3 bg-destructive/5 rounded-lg border border-destructive/20"
+                    role="alert"
+                  >
+                    <AlertCircle className="w-10 h-10 text-destructive" aria-hidden="true" />
+                    <div className="text-center">
+                      <p className="font-medium text-destructive">Failed to load boards</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        There was a problem fetching Jira boards. Your session may have expired.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => refetchBoards()}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Try Again
+                    </Button>
                   </div>
                 ) : boardsData?.boards && boardsData.boards.length > 1 ? (
                   <div className="space-y-2">

@@ -16,17 +16,23 @@ const logger = createLogger('JiraCallback');
  * are served from the same origin.
  */
 function getUiBaseUrl(req: Request): string {
+  // 1. Try Referer header
   const referer = req.headers.referer;
   if (referer) {
     try {
-      const url = new URL(referer);
-      return url.origin;
+      return new URL(referer).origin;
     } catch {
       // ignore invalid referer
     }
   }
-  // Fallback: use the request's own origin
-  return `${req.protocol}://${req.get('host')}`;
+  // 2. Try CORS_ORIGIN env var (first entry)
+  const corsOrigin = process.env.CORS_ORIGIN?.split(',')[0]?.trim();
+  if (corsOrigin) return corsOrigin;
+  // 3. Fallback: server origin with port - 1 (UI port convention)
+  const host = req.get('host') || 'localhost:7008';
+  const [hostname, portStr] = host.split(':');
+  const serverPort = parseInt(portStr || '7008', 10);
+  return `${req.protocol}://${hostname}:${serverPort - 1}`;
 }
 
 export function createCallbackHandler(jiraService: JiraService) {

@@ -56,7 +56,8 @@ export function useJiraBoards(options?: { enabled?: boolean }) {
     queryFn: async () => {
       const response = await httpClient.fetch('/api/jira/boards');
       if (!response.ok) {
-        throw new Error(`Jira boards request error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Jira boards request error: ${response.status}`);
       }
       return response.json();
     },

@@ -292,9 +292,10 @@ describe('JiraService Edge Cases', () => {
       });
     });
 
-    it('should report not connected after clearCredentials', async () => {
-      // Initially connected
-      vi.mocked(mockSettingsService.getCredentials).mockResolvedValueOnce({
+    it('should report not connected after disconnectJira', async () => {
+      // Initially connected - use mockResolvedValue so both getConnectionStatus
+      // and getValidAccessToken calls get jira credentials
+      vi.mocked(mockSettingsService.getCredentials).mockResolvedValue({
         version: 1,
         apiKeys: {},
         jira: {
@@ -307,16 +308,22 @@ describe('JiraService Edge Cases', () => {
         },
       });
 
+      // Mock the /myself API validation call
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ accountId: 'user-123', displayName: 'Test User' }),
+      });
+
       let status = await jiraService.getConnectionStatus();
       expect(status.connected).toBe(true);
 
-      // After clearing
-      vi.mocked(mockSettingsService.getCredentials).mockResolvedValueOnce({
+      // After disconnecting
+      vi.mocked(mockSettingsService.getCredentials).mockResolvedValue({
         version: 1,
         apiKeys: {},
       });
 
-      await jiraService.clearCredentials();
+      await jiraService.disconnectJira();
       status = await jiraService.getConnectionStatus();
       expect(status.connected).toBe(false);
     });

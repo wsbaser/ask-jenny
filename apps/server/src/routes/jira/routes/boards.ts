@@ -18,6 +18,12 @@ export function createBoardsHandler(jiraService: JiraService) {
       if (error instanceof Error && error.message.includes('Not connected')) {
         return res.status(401).json({ error: 'Not connected to Jira' });
       }
+      if (
+        error instanceof Error &&
+        (error.message.includes('API error (401)') || error.message.includes('API error (403)'))
+      ) {
+        return res.status(401).json({ error: 'Jira authentication expired. Please reconnect.' });
+      }
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Failed to fetch boards',
       });
