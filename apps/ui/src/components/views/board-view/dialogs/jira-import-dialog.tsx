@@ -1005,9 +1005,16 @@ const IssueRow = memo(function IssueRow({
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+          <a
+            href={issue.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded hover:text-primary hover:bg-primary/10 transition-colors"
+            title={`Open ${issue.key} in Jira`}
+          >
             {issue.key}
-          </span>
+          </a>
           {issue.issueType && (
             <span
               className={cn(
