@@ -120,7 +120,6 @@ export function useJiraSprintIssues(
     queryFn: async () => {
       const response = await httpClient.fetch('/api/jira/sprint-issues', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestOptions),
       });
       if (!response.ok) {

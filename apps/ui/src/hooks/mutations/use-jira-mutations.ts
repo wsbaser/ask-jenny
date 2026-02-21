@@ -21,7 +21,6 @@ export function useJiraConnect() {
     mutationFn: async ({ returnUrl }) => {
       const response = await httpClient.fetch('/api/jira/connect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnUrl }),
       });
       if (!response.ok) {
@@ -97,7 +96,6 @@ export function useJiraImport() {
     mutationFn: async ({ projectPath, issues, defaultCategory, includeIssueKey, includeUrl }) => {
       const response = await httpClient.fetch('/api/jira/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectPath,
           issueIds: issues.map((i) => i.key),
