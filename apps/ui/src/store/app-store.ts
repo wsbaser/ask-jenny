@@ -733,9 +733,6 @@ export interface AppState {
   // MCP Servers
   mcpServers: MCPServerConfig[]; // List of configured MCP servers for agent use
 
-  // Editor Configuration
-  defaultEditorCommand: string | null; // Default editor for "Open In" action
-
   // Terminal Configuration
   defaultTerminalId: string | null; // Default external terminal for "Open In Terminal" action (null = integrated)
 
@@ -1212,9 +1209,6 @@ export interface AppActions {
   setAutoLoadClaudeMd: (enabled: boolean) => Promise<void>;
   setSkipSandboxWarning: (skip: boolean) => Promise<void>;
 
-  // Editor Configuration actions
-  setDefaultEditorCommand: (command: string | null) => void;
-
   // Terminal Configuration actions
   setDefaultTerminalId: (terminalId: string | null) => void;
 
@@ -1491,7 +1485,6 @@ const initialState: AppState = {
   autoLoadClaudeMd: false, // Default to disabled (user must opt-in)
   skipSandboxWarning: false, // Default to disabled (show sandbox warning dialog)
   mcpServers: [], // No MCP servers configured by default
-  defaultEditorCommand: null, // Auto-detect: Cursor > VS Code > first available
   defaultTerminalId: null, // Integrated terminal by default
   enableSkills: true, // Skills enabled by default
   skillsSources: ['user', 'project'] as Array<'user' | 'project'>, // Load from both sources by default
@@ -2702,8 +2695,6 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
     }
   },
 
-  // Editor Configuration actions
-  setDefaultEditorCommand: (command) => set({ defaultEditorCommand: command }),
   // Terminal Configuration actions
   setDefaultTerminalId: (terminalId) => set({ defaultTerminalId: terminalId }),
   // Prompt Customization actions

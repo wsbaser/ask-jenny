@@ -278,8 +278,7 @@ export type {
 // Port configuration
 export { STATIC_PORT, SERVER_PORT, RESERVED_PORTS } from './ports.js';
 
-// Editor types
-export type { EditorInfo } from './editor.js';
+// Editor types removed - simplified to VS Code only
 
 // Ideation types
 export type {

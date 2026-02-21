@@ -50,8 +50,6 @@ export const queryKeys = {
       ['worktrees', projectPath, featureId, 'diffs'] as const,
     /** Init script for a project */
     initScript: (projectPath: string) => ['worktrees', projectPath, 'init-script'] as const,
-    /** Available editors */
-    editors: () => ['worktrees', 'editors'] as const,
   },
 
   // ============================================

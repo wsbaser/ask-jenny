@@ -66,10 +66,9 @@ export function useWorktreeActions() {
   );
 
   const handleOpenInEditor = useCallback(
-    async (worktree: WorktreeInfo, editorCommand?: string) => {
+    async (worktree: WorktreeInfo) => {
       openInEditorMutation.mutate({
         worktreePath: worktree.path,
-        editorCommand,
       });
     },
     [openInEditorMutation]

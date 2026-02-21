@@ -23,12 +23,7 @@ import { createPullHandler } from './routes/pull.js';
 import { createCheckoutBranchHandler } from './routes/checkout-branch.js';
 import { createListBranchesHandler } from './routes/list-branches.js';
 import { createSwitchBranchHandler } from './routes/switch-branch.js';
-import {
-  createOpenInEditorHandler,
-  createGetDefaultEditorHandler,
-  createGetAvailableEditorsHandler,
-  createRefreshEditorsHandler,
-} from './routes/open-in-editor.js';
+import { createOpenInEditorHandler } from './routes/open-in-editor.js';
 import {
   createOpenInTerminalHandler,
   createGetAvailableTerminalsHandler,
@@ -111,9 +106,6 @@ export function createWorktreeRoutes(
     validatePathParams('worktreePath'),
     createOpenInTerminalHandler()
   );
-  router.get('/default-editor', createGetDefaultEditorHandler());
-  router.get('/available-editors', createGetAvailableEditorsHandler());
-  router.post('/refresh-editors', createRefreshEditorsHandler());
 
   // External terminal routes
   router.get('/available-terminals', createGetAvailableTerminalsHandler());

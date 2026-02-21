@@ -166,17 +166,8 @@ export {
 // Port configuration
 export { STATIC_PORT, SERVER_PORT, RESERVED_PORTS } from './config/ports.js';
 
-// Editor detection and launching (cross-platform)
-export {
-  commandExists,
-  clearEditorCache,
-  detectAllEditors,
-  detectDefaultEditor,
-  findEditorByCommand,
-  openInEditor,
-  openInFileManager,
-  openInTerminal,
-} from './editor.js';
+// Editor and terminal launching (cross-platform)
+export { commandExists, openInVSCode, openInTerminal } from './editor.js';
 
 // External terminal detection and launching
 export {

@@ -988,50 +988,12 @@ export interface WorktreeAPI {
     code?: 'NOT_GIT_REPO' | 'NO_COMMITS';
   }>;
 
-  // Open a worktree directory in the editor
-  openInEditor: (
-    worktreePath: string,
-    editorCommand?: string
-  ) => Promise<{
+  // Open a worktree directory in VS Code
+  openInEditor: (worktreePath: string) => Promise<{
     success: boolean;
     result?: {
       message: string;
       editorName?: string;
-    };
-    error?: string;
-  }>;
-
-  // Get the default code editor name
-  getDefaultEditor: () => Promise<{
-    success: boolean;
-    result?: {
-      editorName: string;
-      editorCommand: string;
-    };
-    error?: string;
-  }>;
-
-  // Get all available code editors
-  getAvailableEditors: () => Promise<{
-    success: boolean;
-    result?: {
-      editors: Array<{
-        name: string;
-        command: string;
-      }>;
-    };
-    error?: string;
-  }>;
-
-  // Refresh editor cache and re-detect available editors
-  refreshEditors: () => Promise<{
-    success: boolean;
-    result?: {
-      editors: Array<{
-        name: string;
-        command: string;
-      }>;
-      message: string;
     };
     error?: string;
   }>;

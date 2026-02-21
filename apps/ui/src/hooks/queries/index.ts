@@ -36,7 +36,6 @@ export {
   useWorktreeDiffs,
   useWorktreeBranches,
   useWorktreeInitScript,
-  useAvailableEditors,
 } from './use-worktrees';
 
 // Settings

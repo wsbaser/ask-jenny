@@ -10,6 +10,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
+import { VSCodeIcon } from '@/components/icons/editor-icons';
 import {
   Trash2,
   MoreHorizontal,
@@ -38,12 +39,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { WorktreeInfo, DevServerInfo, PRInfo, GitRepoStatus } from '../types';
 import { TooltipWrapper } from './tooltip-wrapper';
-import { useAvailableEditors, useEffectiveDefaultEditor } from '../hooks/use-available-editors';
 import {
   useAvailableTerminals,
   useEffectiveDefaultTerminal,
 } from '../hooks/use-available-terminals';
-import { getEditorIcon } from '@/components/icons/editor-icons';
 import { getTerminalIcon } from '@/components/icons/terminal-icons';
 import { useAppStore } from '@/store/app-store';
 
@@ -67,7 +66,7 @@ interface WorktreeActionsDropdownProps {
   onPull: (worktree: WorktreeInfo) => void;
   onPush: (worktree: WorktreeInfo) => void;
   onPushNewBranch: (worktree: WorktreeInfo) => void;
-  onOpenInEditor: (worktree: WorktreeInfo, editorCommand?: string) => void;
+  onOpenInEditor: (worktree: WorktreeInfo) => void;
   onOpenInIntegratedTerminal: (worktree: WorktreeInfo, mode?: 'tab' | 'split') => void;
   onOpenInExternalTerminal: (worktree: WorktreeInfo, terminalId?: string) => void;
   onViewChanges: (worktree: WorktreeInfo) => void;
@@ -124,20 +123,6 @@ export function WorktreeActionsDropdown({
   onMerge,
   hasInitScript,
 }: WorktreeActionsDropdownProps) {
-  // Get available editors for the "Open In" submenu
-  const { editors } = useAvailableEditors();
-
-  // Use shared hook for effective default editor
-  const effectiveDefaultEditor = useEffectiveDefaultEditor(editors);
-
-  // Get other editors (excluding the default) for the submenu
-  const otherEditors = editors.filter((e) => e.command !== effectiveDefaultEditor?.command);
-
-  // Get icon component for the effective editor (avoid IIFE in JSX)
-  const DefaultEditorIcon = effectiveDefaultEditor
-    ? getEditorIcon(effectiveDefaultEditor.command)
-    : null;
-
   // Get available terminals for the "Open In Terminal" submenu
   const { terminals, hasExternalTerminals } = useAvailableTerminals();
 
@@ -311,54 +296,26 @@ export function WorktreeActionsDropdown({
           </DropdownMenuItem>
         </TooltipWrapper>
         <DropdownMenuSeparator />
-        {/* Open in editor - split button: click main area for default, chevron for other options */}
-        {effectiveDefaultEditor && (
-          <DropdownMenuSub>
-            <div className="flex items-center">
-              {/* Main clickable area - opens in default editor */}
-              <DropdownMenuItem
-                onClick={() => onOpenInEditor(worktree, effectiveDefaultEditor.command)}
-                className="text-xs flex-1 pr-0 rounded-r-none"
-              >
-                {DefaultEditorIcon && <DefaultEditorIcon className="w-3.5 h-3.5 mr-2" />}
-                Open in {effectiveDefaultEditor.name}
-              </DropdownMenuItem>
-              {/* Chevron trigger for submenu with other editors and Copy Path */}
-              <DropdownMenuSubTrigger className="text-xs px-1 rounded-l-none border-l border-border/30 h-8" />
-            </div>
-            <DropdownMenuSubContent>
-              {/* Other editors */}
-              {otherEditors.map((editor) => {
-                const EditorIcon = getEditorIcon(editor.command);
-                return (
-                  <DropdownMenuItem
-                    key={editor.command}
-                    onClick={() => onOpenInEditor(worktree, editor.command)}
-                    className="text-xs"
-                  >
-                    <EditorIcon className="w-3.5 h-3.5 mr-2" />
-                    {editor.name}
-                  </DropdownMenuItem>
-                );
-              })}
-              {otherEditors.length > 0 && <DropdownMenuSeparator />}
-              <DropdownMenuItem
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(worktree.path);
-                    toast.success('Path copied to clipboard');
-                  } catch {
-                    toast.error('Failed to copy path to clipboard');
-                  }
-                }}
-                className="text-xs"
-              >
-                <Copy className="w-3.5 h-3.5 mr-2" />
-                Copy Path
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        )}
+        {/* Open in VS Code */}
+        <DropdownMenuItem onClick={() => onOpenInEditor(worktree)} className="text-xs">
+          <VSCodeIcon className="w-3.5 h-3.5 mr-2" />
+          Open in VS Code
+        </DropdownMenuItem>
+        {/* Copy Path */}
+        <DropdownMenuItem
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(worktree.path);
+              toast.success('Path copied to clipboard');
+            } catch {
+              toast.error('Failed to copy path to clipboard');
+            }
+          }}
+          className="text-xs"
+        >
+          <Copy className="w-3.5 h-3.5 mr-2" />
+          Copy Path
+        </DropdownMenuItem>
         {/* Open in terminal - always show with integrated + external options */}
         <DropdownMenuSub>
           <div className="flex items-center">

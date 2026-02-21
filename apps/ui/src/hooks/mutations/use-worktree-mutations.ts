@@ -367,15 +367,9 @@ export function useGenerateCommitMessage() {
  */
 export function useOpenInEditor() {
   return useMutation({
-    mutationFn: async ({
-      worktreePath,
-      editorCommand,
-    }: {
-      worktreePath: string;
-      editorCommand?: string;
-    }) => {
+    mutationFn: async ({ worktreePath }: { worktreePath: string }) => {
       const api = getElectronAPI();
-      const result = await api.worktree.openInEditor(worktreePath, editorCommand);
+      const result = await api.worktree.openInEditor(worktreePath);
       if (!result.success) {
         throw new Error(result.error || 'Failed to open in editor');
       }

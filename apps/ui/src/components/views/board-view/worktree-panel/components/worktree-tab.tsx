@@ -42,7 +42,7 @@ interface WorktreeTabProps {
   onPull: (worktree: WorktreeInfo) => void;
   onPush: (worktree: WorktreeInfo) => void;
   onPushNewBranch: (worktree: WorktreeInfo) => void;
-  onOpenInEditor: (worktree: WorktreeInfo, editorCommand?: string) => void;
+  onOpenInEditor: (worktree: WorktreeInfo) => void;
   onOpenInIntegratedTerminal: (worktree: WorktreeInfo, mode?: 'tab' | 'split') => void;
   onOpenInExternalTerminal: (worktree: WorktreeInfo, terminalId?: string) => void;
   onViewChanges: (worktree: WorktreeInfo) => void;

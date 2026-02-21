@@ -250,25 +250,3 @@ export function useWorktreeInitScript(projectPath: string | undefined) {
     refetchOnReconnect: WORKTREE_REFETCH_ON_RECONNECT,
   });
 }
-
-/**
- * Fetch available editors
- *
- * @returns Query result with available editors
- */
-export function useAvailableEditors() {
-  return useQuery({
-    queryKey: queryKeys.worktrees.editors(),
-    queryFn: async () => {
-      const api = getElectronAPI();
-      const result = await api.worktree.getAvailableEditors();
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch editors');
-      }
-      return result.editors ?? [];
-    },
-    staleTime: STALE_TIMES.CLI_STATUS,
-    refetchOnWindowFocus: WORKTREE_REFETCH_ON_FOCUS,
-    refetchOnReconnect: WORKTREE_REFETCH_ON_RECONNECT,
-  });
-}
