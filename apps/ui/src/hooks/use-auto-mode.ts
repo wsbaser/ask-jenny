@@ -9,7 +9,8 @@ import type { WorktreeInfo } from '@/components/views/board-view/worktree-panel/
 
 const logger = createLogger('AutoMode');
 
-const AUTO_MODE_SESSION_KEY = 'automaker:autoModeRunningByWorktreeKey';
+const AUTO_MODE_SESSION_KEY = 'ask-jenny:autoModeRunningByWorktreeKey';
+const LEGACY_AUTO_MODE_SESSION_KEY = 'automaker:autoModeRunningByWorktreeKey';
 
 /**
  * Generate a worktree key for session storage
@@ -23,7 +24,16 @@ function getWorktreeSessionKey(projectPath: string, branchName: string | null): 
 function readAutoModeSession(): Record<string, boolean> {
   try {
     if (typeof window === 'undefined') return {};
-    const raw = window.sessionStorage?.getItem(AUTO_MODE_SESSION_KEY);
+    // Try new key first, then fall back to legacy key for backwards compatibility
+    let raw = window.sessionStorage?.getItem(AUTO_MODE_SESSION_KEY);
+    if (!raw) {
+      raw = window.sessionStorage?.getItem(LEGACY_AUTO_MODE_SESSION_KEY);
+      // Migrate legacy data to new key if found
+      if (raw) {
+        window.sessionStorage?.setItem(AUTO_MODE_SESSION_KEY, raw);
+        window.sessionStorage?.removeItem(LEGACY_AUTO_MODE_SESSION_KEY);
+      }
+    }
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object') return {};

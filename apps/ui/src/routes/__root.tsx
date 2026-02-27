@@ -361,7 +361,7 @@ function RootLayoutContent() {
   // Works for ALL modes (unified flow)
   useEffect(() => {
     const handleLoggedOut = () => {
-      logger.warn('automaker:logged-out event received!');
+      logger.warn('ask-jenny:logged-out event received!');
       useAuthStore.getState().setAuthState({ isAuthenticated: false, authChecked: true });
 
       if (location.pathname !== '/logged-out') {
@@ -370,8 +370,11 @@ function RootLayoutContent() {
       }
     };
 
+    // Listen to both new and legacy event names for backwards compatibility
+    window.addEventListener('ask-jenny:logged-out', handleLoggedOut);
     window.addEventListener('automaker:logged-out', handleLoggedOut);
     return () => {
+      window.removeEventListener('ask-jenny:logged-out', handleLoggedOut);
       window.removeEventListener('automaker:logged-out', handleLoggedOut);
     };
   }, [location.pathname, navigate]);
@@ -381,7 +384,7 @@ function RootLayoutContent() {
   // Redirects to login page which will detect server is offline and show error UI.
   useEffect(() => {
     const handleServerOffline = () => {
-      logger.warn('automaker:server-offline event received!');
+      logger.warn('ask-jenny:server-offline event received!');
       useAuthStore.getState().setAuthState({ isAuthenticated: false, authChecked: true });
 
       // Navigate to login - the login page will detect server is offline and show appropriate UI
@@ -390,8 +393,11 @@ function RootLayoutContent() {
       }
     };
 
+    // Listen to both new and legacy event names for backwards compatibility
+    window.addEventListener('ask-jenny:server-offline', handleServerOffline);
     window.addEventListener('automaker:server-offline', handleServerOffline);
     return () => {
+      window.removeEventListener('ask-jenny:server-offline', handleServerOffline);
       window.removeEventListener('automaker:server-offline', handleServerOffline);
     };
   }, [location.pathname, navigate]);

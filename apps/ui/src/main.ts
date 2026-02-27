@@ -660,14 +660,14 @@ function createWindow(): void {
 
 // App lifecycle
 app.whenReady().then(async () => {
-  // In production, use Automaker dir in appData for app isolation
+  // In production, use Ask Jenny dir in appData for app isolation
   // In development, use project root for shared data between Electron and web mode
   let userDataPathToUse: string;
 
   if (app.isPackaged) {
-    // Production: Ensure userData path is consistent so files land in Automaker dir
+    // Production: Ensure userData path is consistent so files land in Ask Jenny dir
     try {
-      const desiredUserDataPath = path.join(app.getPath('appData'), 'Automaker');
+      const desiredUserDataPath = path.join(app.getPath('appData'), 'Ask Jenny');
       if (app.getPath('userData') !== desiredUserDataPath) {
         app.setPath('userData', desiredUserDataPath);
         logger.info('[PRODUCTION] userData path set to:', desiredUserDataPath);
@@ -679,7 +679,7 @@ app.whenReady().then(async () => {
     }
   } else {
     // Development: Explicitly set userData to project root for shared data between Electron and web
-    // This OVERRIDES Electron's default userData path (~/.config/Automaker)
+    // This OVERRIDES Electron's default userData path (~/.config/Ask Jenny)
     // __dirname is apps/ui/dist-electron, so go up to get project root
     const projectRoot = path.join(__dirname, '../../..');
     userDataPathToUse = path.join(projectRoot, 'data');
@@ -786,7 +786,7 @@ app.whenReady().then(async () => {
     const errorMessage = (error as Error).message;
     const isNodeError = errorMessage.includes('Node.js');
     dialog.showErrorBox(
-      'Automaker Failed to Start',
+      'Ask Jenny Failed to Start',
       `The application failed to start.\n\n${errorMessage}\n\n${
         isNodeError
           ? 'Please install Node.js from https://nodejs.org or via a package manager (Homebrew, nvm, fnm).'

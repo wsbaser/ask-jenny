@@ -207,7 +207,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 256 256"
           role="img"
-          aria-label="Automaker Logo"
+          aria-label="Ask Jenny Logo"
           className="relative z-10"
           style={{
             width: 120,

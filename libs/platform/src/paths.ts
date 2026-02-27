@@ -1,8 +1,8 @@
 /**
- * Automaker Paths - Utilities for managing automaker data storage
+ * Ask Jenny Paths - Utilities for managing ask-jenny data storage
  *
  * Provides functions to construct paths for:
- * - Project-level data stored in {projectPath}/.automaker/
+ * - Project-level data stored in {projectPath}/.ask-jenny/
  * - Global user data stored in app userData directory
  *
  * All returned paths are absolute and ready to use with fs module.
@@ -13,16 +13,23 @@ import * as secureFs from './secure-fs.js';
 import path from 'path';
 
 /**
- * Get the automaker data directory root for a project
+ * Get the ask-jenny data directory root for a project
  *
- * All project-specific automaker data is stored under {projectPath}/.automaker/
- * This directory is created when needed via ensureAutomakerDir().
+ * All project-specific ask-jenny data is stored under {projectPath}/.ask-jenny/
+ * This directory is created when needed via ensureAskJennyDir().
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker
+ * @returns Absolute path to {projectPath}/.ask-jenny
+ */
+export function getAskJennyDir(projectPath: string): string {
+  return path.join(projectPath, '.ask-jenny');
+}
+
+/**
+ * @deprecated Use getAskJennyDir instead
  */
 export function getAutomakerDir(projectPath: string): string {
-  return path.join(projectPath, '.automaker');
+  return getAskJennyDir(projectPath);
 }
 
 /**
@@ -31,10 +38,10 @@ export function getAutomakerDir(projectPath: string): string {
  * Contains subdirectories for each feature, keyed by featureId.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/features
+ * @returns Absolute path to {projectPath}/.ask-jenny/features
  */
 export function getFeaturesDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'features');
+  return path.join(getAskJennyDir(projectPath), 'features');
 }
 
 /**
@@ -44,7 +51,7 @@ export function getFeaturesDir(projectPath: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param featureId - Feature identifier
- * @returns Absolute path to {projectPath}/.automaker/features/{featureId}
+ * @returns Absolute path to {projectPath}/.ask-jenny/features/{featureId}
  */
 export function getFeatureDir(projectPath: string, featureId: string): string {
   return path.join(getFeaturesDir(projectPath), featureId);
@@ -57,7 +64,7 @@ export function getFeatureDir(projectPath: string, featureId: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param featureId - Feature identifier
- * @returns Absolute path to {projectPath}/.automaker/features/{featureId}/images
+ * @returns Absolute path to {projectPath}/.ask-jenny/features/{featureId}/images
  */
 export function getFeatureImagesDir(projectPath: string, featureId: string): string {
   return path.join(getFeatureDir(projectPath, featureId), 'images');
@@ -69,10 +76,10 @@ export function getFeatureImagesDir(projectPath: string, featureId: string): str
  * Contains board-related data like background images and customization files.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/board
+ * @returns Absolute path to {projectPath}/.ask-jenny/board
  */
 export function getBoardDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'board');
+  return path.join(getAskJennyDir(projectPath), 'board');
 }
 
 /**
@@ -81,10 +88,10 @@ export function getBoardDir(projectPath: string): string {
  * Stores project-level images like background images or shared assets.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/images
+ * @returns Absolute path to {projectPath}/.ask-jenny/images
  */
 export function getImagesDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'images');
+  return path.join(getAskJennyDir(projectPath), 'images');
 }
 
 /**
@@ -93,10 +100,10 @@ export function getImagesDir(projectPath: string): string {
  * Stores user-uploaded context files for reference during generation.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/context
+ * @returns Absolute path to {projectPath}/.ask-jenny/context
  */
 export function getContextDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'context');
+  return path.join(getAskJennyDir(projectPath), 'context');
 }
 
 /**
@@ -105,10 +112,10 @@ export function getContextDir(projectPath: string): string {
  * Stores information about git worktrees associated with the project.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/worktrees
+ * @returns Absolute path to {projectPath}/.ask-jenny/worktrees
  */
 export function getWorktreesDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'worktrees');
+  return path.join(getAskJennyDir(projectPath), 'worktrees');
 }
 
 /**
@@ -117,10 +124,10 @@ export function getWorktreesDir(projectPath: string): string {
  * Stores GitHub issue validation results, organized by issue number.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/validations
+ * @returns Absolute path to {projectPath}/.ask-jenny/validations
  */
 export function getValidationsDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'validations');
+  return path.join(getAskJennyDir(projectPath), 'validations');
 }
 
 /**
@@ -130,7 +137,7 @@ export function getValidationsDir(projectPath: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param issueNumber - GitHub issue number
- * @returns Absolute path to {projectPath}/.automaker/validations/{issueNumber}
+ * @returns Absolute path to {projectPath}/.ask-jenny/validations/{issueNumber}
  */
 export function getValidationDir(projectPath: string, issueNumber: number): string {
   return path.join(getValidationsDir(projectPath), String(issueNumber));
@@ -143,7 +150,7 @@ export function getValidationDir(projectPath: string, issueNumber: number): stri
  *
  * @param projectPath - Absolute path to project directory
  * @param issueNumber - GitHub issue number
- * @returns Absolute path to {projectPath}/.automaker/validations/{issueNumber}/validation.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/validations/{issueNumber}/validation.json
  */
 export function getValidationPath(projectPath: string, issueNumber: number): string {
   return path.join(getValidationDir(projectPath, issueNumber), 'validation.json');
@@ -155,10 +162,10 @@ export function getValidationPath(projectPath: string, issueNumber: number): str
  * Stores the application specification document used for generation.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/app_spec.txt
+ * @returns Absolute path to {projectPath}/.ask-jenny/app_spec.txt
  */
 export function getAppSpecPath(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'app_spec.txt');
+  return path.join(getAskJennyDir(projectPath), 'app_spec.txt');
 }
 
 /**
@@ -167,10 +174,10 @@ export function getAppSpecPath(projectPath: string): string {
  * Stores project-level notifications for feature status changes and operation completions.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/notifications.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/notifications.json
  */
 export function getNotificationsPath(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'notifications.json');
+  return path.join(getAskJennyDir(projectPath), 'notifications.json');
 }
 
 /**
@@ -179,10 +186,10 @@ export function getNotificationsPath(projectPath: string): string {
  * Stores JSON metadata about active git branches and worktrees.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/active-branches.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/active-branches.json
  */
 export function getBranchTrackingPath(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'active-branches.json');
+  return path.join(getAskJennyDir(projectPath), 'active-branches.json');
 }
 
 /**
@@ -192,25 +199,32 @@ export function getBranchTrackingPath(projectPath: string): string {
  * Tracks which features were running and auto-loop configuration.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/execution-state.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/execution-state.json
  */
 export function getExecutionStatePath(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'execution-state.json');
+  return path.join(getAskJennyDir(projectPath), 'execution-state.json');
 }
 
 /**
- * Create the automaker directory structure for a project if it doesn't exist
+ * Create the ask-jenny directory structure for a project if it doesn't exist
  *
- * Creates {projectPath}/.automaker with all subdirectories recursively.
+ * Creates {projectPath}/.ask-jenny with all subdirectories recursively.
  * Safe to call multiple times - uses recursive: true.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Promise resolving to the created automaker directory path
+ * @returns Promise resolving to the created ask-jenny directory path
+ */
+export async function ensureAskJennyDir(projectPath: string): Promise<string> {
+  const askJennyDir = getAskJennyDir(projectPath);
+  await secureFs.mkdir(askJennyDir, { recursive: true });
+  return askJennyDir;
+}
+
+/**
+ * @deprecated Use ensureAskJennyDir instead
  */
 export async function ensureAutomakerDir(projectPath: string): Promise<string> {
-  const automakerDir = getAutomakerDir(projectPath);
-  await secureFs.mkdir(automakerDir, { recursive: true });
-  return automakerDir;
+  return ensureAskJennyDir(projectPath);
 }
 
 // ============================================================================
@@ -223,10 +237,10 @@ export async function ensureAutomakerDir(projectPath: string): Promise<string> {
  * Contains ideas, sessions, and drafts for brainstorming.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/ideation
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation
  */
 export function getIdeationDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'ideation');
+  return path.join(getAskJennyDir(projectPath), 'ideation');
 }
 
 /**
@@ -235,7 +249,7 @@ export function getIdeationDir(projectPath: string): string {
  * Contains subdirectories for each idea, keyed by ideaId.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/ideation/ideas
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/ideas
  */
 export function getIdeasDir(projectPath: string): string {
   return path.join(getIdeationDir(projectPath), 'ideas');
@@ -248,7 +262,7 @@ export function getIdeasDir(projectPath: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param ideaId - Idea identifier
- * @returns Absolute path to {projectPath}/.automaker/ideation/ideas/{ideaId}
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/ideas/{ideaId}
  */
 export function getIdeaDir(projectPath: string, ideaId: string): string {
   return path.join(getIdeasDir(projectPath), ideaId);
@@ -261,7 +275,7 @@ export function getIdeaDir(projectPath: string, ideaId: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param ideaId - Idea identifier
- * @returns Absolute path to {projectPath}/.automaker/ideation/ideas/{ideaId}/idea.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/ideas/{ideaId}/idea.json
  */
 export function getIdeaPath(projectPath: string, ideaId: string): string {
   return path.join(getIdeaDir(projectPath, ideaId), 'idea.json');
@@ -274,7 +288,7 @@ export function getIdeaPath(projectPath: string, ideaId: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param ideaId - Idea identifier
- * @returns Absolute path to {projectPath}/.automaker/ideation/ideas/{ideaId}/attachments
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/ideas/{ideaId}/attachments
  */
 export function getIdeaAttachmentsDir(projectPath: string, ideaId: string): string {
   return path.join(getIdeaDir(projectPath, ideaId), 'attachments');
@@ -286,7 +300,7 @@ export function getIdeaAttachmentsDir(projectPath: string, ideaId: string): stri
  * Contains conversation history for ideation sessions.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/ideation/sessions
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/sessions
  */
 export function getIdeationSessionsDir(projectPath: string): string {
   return path.join(getIdeationDir(projectPath), 'sessions');
@@ -299,7 +313,7 @@ export function getIdeationSessionsDir(projectPath: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param sessionId - Session identifier
- * @returns Absolute path to {projectPath}/.automaker/ideation/sessions/{sessionId}.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/sessions/{sessionId}.json
  */
 export function getIdeationSessionPath(projectPath: string, sessionId: string): string {
   return path.join(getIdeationSessionsDir(projectPath), `${sessionId}.json`);
@@ -311,7 +325,7 @@ export function getIdeationSessionPath(projectPath: string, sessionId: string): 
  * Stores unsaved conversation drafts.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/ideation/drafts
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/drafts
  */
 export function getIdeationDraftsDir(projectPath: string): string {
   return path.join(getIdeationDir(projectPath), 'drafts');
@@ -323,7 +337,7 @@ export function getIdeationDraftsDir(projectPath: string): string {
  * Stores the cached project analysis result.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/ideation/analysis.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/ideation/analysis.json
  */
 export function getIdeationAnalysisPath(projectPath: string): string {
   return path.join(getIdeationDir(projectPath), 'analysis.json');
@@ -332,7 +346,7 @@ export function getIdeationAnalysisPath(projectPath: string): string {
 /**
  * Create the ideation directory structure for a project if it doesn't exist
  *
- * Creates {projectPath}/.automaker/ideation with all subdirectories.
+ * Creates {projectPath}/.ask-jenny/ideation with all subdirectories.
  * Safe to call multiple times - uses recursive: true.
  *
  * @param projectPath - Absolute path to project directory
@@ -357,10 +371,10 @@ export async function ensureIdeationDir(projectPath: string): Promise<string> {
  * Contains stored event records for debugging and replay.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/events
+ * @returns Absolute path to {projectPath}/.ask-jenny/events
  */
 export function getEventHistoryDir(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'events');
+  return path.join(getAskJennyDir(projectPath), 'events');
 }
 
 /**
@@ -369,7 +383,7 @@ export function getEventHistoryDir(projectPath: string): string {
  * Stores an index of all events for quick listing without scanning directory.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/events/index.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/events/index.json
  */
 export function getEventHistoryIndexPath(projectPath: string): string {
   return path.join(getEventHistoryDir(projectPath), 'index.json');
@@ -380,7 +394,7 @@ export function getEventHistoryIndexPath(projectPath: string): string {
  *
  * @param projectPath - Absolute path to project directory
  * @param eventId - Event identifier
- * @returns Absolute path to {projectPath}/.automaker/events/{eventId}.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/events/{eventId}.json
  */
 export function getEventPath(projectPath: string, eventId: string): string {
   return path.join(getEventHistoryDir(projectPath), `${eventId}.json`);
@@ -409,9 +423,9 @@ export async function ensureEventHistoryDir(projectPath: string): Promise<string
  * Located in the platform-specific userData directory.
  *
  * Default locations:
- * - macOS: ~/Library/Application Support/automaker
- * - Windows: %APPDATA%\automaker
- * - Linux: ~/.config/automaker
+ * - macOS: ~/Library/Application Support/ask-jenny
+ * - Windows: %APPDATA%\ask-jenny
+ * - Linux: ~/.config/ask-jenny
  *
  * @param dataDir - User data directory (from app.getPath('userData'))
  * @returns Absolute path to {dataDir}/settings.json
@@ -437,13 +451,13 @@ export function getCredentialsPath(dataDir: string): string {
  * Get the project settings file path
  *
  * Stores project-specific settings that override global settings.
- * Located within the project's .automaker directory.
+ * Located within the project's .ask-jenny directory.
  *
  * @param projectPath - Absolute path to project directory
- * @returns Absolute path to {projectPath}/.automaker/settings.json
+ * @returns Absolute path to {projectPath}/.ask-jenny/settings.json
  */
 export function getProjectSettingsPath(projectPath: string): string {
-  return path.join(getAutomakerDir(projectPath), 'settings.json');
+  return path.join(getAskJennyDir(projectPath), 'settings.json');
 }
 
 /**

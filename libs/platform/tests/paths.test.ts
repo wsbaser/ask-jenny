@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import {
+  getAskJennyDir,
   getAutomakerDir,
   getFeaturesDir,
   getFeatureDir,
@@ -13,6 +14,7 @@ import {
   getWorktreesDir,
   getAppSpecPath,
   getBranchTrackingPath,
+  ensureAskJennyDir,
   ensureAutomakerDir,
   getGlobalSettingsPath,
   getCredentialsPath,
@@ -42,62 +44,73 @@ describe('paths.ts', () => {
     }
   });
 
-  describe('Project-level path construction', () => {
-    it('should return automaker directory path', () => {
+  describe('Project-level path construction (new ask-jenny naming)', () => {
+    it('should return ask-jenny directory path with getAskJennyDir', () => {
+      const result = getAskJennyDir(projectPath);
+      expect(result).toBe(path.join(projectPath, '.ask-jenny'));
+    });
+
+    it('should return ask-jenny directory path with deprecated getAutomakerDir alias', () => {
       const result = getAutomakerDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny'));
     });
 
-    it('should return features directory path', () => {
+    it('getAutomakerDir should be identical to getAskJennyDir (backwards compatibility)', () => {
+      const askJennyResult = getAskJennyDir(projectPath);
+      const automakerResult = getAutomakerDir(projectPath);
+      expect(askJennyResult).toBe(automakerResult);
+    });
+
+    it('should return features directory path under .ask-jenny', () => {
       const result = getFeaturesDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'features'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'features'));
     });
 
-    it('should return feature directory path', () => {
+    it('should return feature directory path under .ask-jenny', () => {
       const featureId = 'auth-feature';
       const result = getFeatureDir(projectPath, featureId);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'features', featureId));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'features', featureId));
     });
 
-    it('should return feature images directory path', () => {
+    it('should return feature images directory path under .ask-jenny', () => {
       const featureId = 'auth-feature';
       const result = getFeatureImagesDir(projectPath, featureId);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'features', featureId, 'images'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'features', featureId, 'images'));
     });
 
-    it('should return board directory path', () => {
+    it('should return board directory path under .ask-jenny', () => {
       const result = getBoardDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'board'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'board'));
     });
 
-    it('should return images directory path', () => {
+    it('should return images directory path under .ask-jenny', () => {
       const result = getImagesDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'images'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'images'));
     });
 
-    it('should return context directory path', () => {
+    it('should return context directory path under .ask-jenny', () => {
       const result = getContextDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'context'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'context'));
     });
 
-    it('should return worktrees directory path', () => {
+    it('should return worktrees directory path under .ask-jenny', () => {
       const result = getWorktreesDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'worktrees'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'worktrees'));
     });
 
-    it('should return app spec file path', () => {
+    it('should return app spec file path under .ask-jenny', () => {
       const result = getAppSpecPath(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'app_spec.txt'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'app_spec.txt'));
     });
 
-    it('should return branch tracking file path', () => {
+    it('should return branch tracking file path under .ask-jenny', () => {
       const result = getBranchTrackingPath(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'active-branches.json'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'active-branches.json'));
     });
 
-    it('should return project settings file path', () => {
+    it('should return project settings file path under .ask-jenny', () => {
       const result = getProjectSettingsPath(projectPath);
-      expect(result).toBe(path.join(projectPath, '.automaker', 'settings.json'));
+      expect(result).toBe(path.join(projectPath, '.ask-jenny', 'settings.json'));
     });
   });
 
@@ -114,21 +127,43 @@ describe('paths.ts', () => {
   });
 
   describe('Directory creation', () => {
-    it('should create automaker directory', async () => {
+    it('should create ask-jenny directory with ensureAskJennyDir', async () => {
+      const askJennyDir = await ensureAskJennyDir(projectPath);
+
+      expect(askJennyDir).toBe(path.join(projectPath, '.ask-jenny'));
+
+      const stats = await fs.stat(askJennyDir);
+      expect(stats.isDirectory()).toBe(true);
+    });
+
+    it('should create ask-jenny directory with deprecated ensureAutomakerDir alias', async () => {
       const automakerDir = await ensureAutomakerDir(projectPath);
 
-      expect(automakerDir).toBe(path.join(projectPath, '.automaker'));
+      expect(automakerDir).toBe(path.join(projectPath, '.ask-jenny'));
 
       const stats = await fs.stat(automakerDir);
       expect(stats.isDirectory()).toBe(true);
     });
 
-    it('should be idempotent when creating automaker directory', async () => {
+    it('ensureAutomakerDir should be identical to ensureAskJennyDir (backwards compatibility)', async () => {
+      const askJennyResult = await ensureAskJennyDir(projectPath);
+
+      // Need a fresh directory for the second test
+      const secondProjectPath = path.join(tempDir, 'test-project-2');
+      await fs.mkdir(secondProjectPath, { recursive: true });
+      const automakerResult = await ensureAutomakerDir(secondProjectPath);
+
+      // Both should create .ask-jenny directories
+      expect(askJennyResult).toBe(path.join(projectPath, '.ask-jenny'));
+      expect(automakerResult).toBe(path.join(secondProjectPath, '.ask-jenny'));
+    });
+
+    it('should be idempotent when creating ask-jenny directory', async () => {
       // Create directory first time
-      const firstResult = await ensureAutomakerDir(projectPath);
+      const firstResult = await ensureAskJennyDir(projectPath);
 
       // Create directory second time
-      const secondResult = await ensureAutomakerDir(projectPath);
+      const secondResult = await ensureAskJennyDir(projectPath);
 
       expect(firstResult).toBe(secondResult);
 
@@ -162,9 +197,9 @@ describe('paths.ts', () => {
       const deepProjectPath = path.join(tempDir, 'nested', 'deep', 'project');
       await fs.mkdir(deepProjectPath, { recursive: true });
 
-      const automakerDir = await ensureAutomakerDir(deepProjectPath);
+      const askJennyDir = await ensureAskJennyDir(deepProjectPath);
 
-      const stats = await fs.stat(automakerDir);
+      const stats = await fs.stat(askJennyDir);
       expect(stats.isDirectory()).toBe(true);
     });
   });
@@ -178,8 +213,8 @@ describe('paths.ts', () => {
 
     it('should handle paths with spaces', () => {
       const pathWithSpaces = path.join(tempDir, 'path with spaces');
-      const result = getAutomakerDir(pathWithSpaces);
-      expect(result).toBe(path.join(pathWithSpaces, '.automaker'));
+      const result = getAskJennyDir(pathWithSpaces);
+      expect(result).toBe(path.join(pathWithSpaces, '.ask-jenny'));
     });
   });
 
@@ -191,8 +226,8 @@ describe('paths.ts', () => {
       expect(featureDir.startsWith(featuresDir)).toBe(true);
     });
 
-    it('should have all project paths under automaker dir', () => {
-      const automakerDir = getAutomakerDir(projectPath);
+    it('should have all project paths under ask-jenny dir', () => {
+      const askJennyDir = getAskJennyDir(projectPath);
       const paths = [
         getFeaturesDir(projectPath),
         getBoardDir(projectPath),
@@ -205,7 +240,7 @@ describe('paths.ts', () => {
       ];
 
       paths.forEach((p) => {
-        expect(p.startsWith(automakerDir)).toBe(true);
+        expect(p.startsWith(askJennyDir)).toBe(true);
       });
     });
   });

@@ -1,13 +1,13 @@
 {
-  "name": "@automaker/ui",
+  "name": "@ask-jenny/ui",
   "version": "0.13.0",
   "description": "An autonomous AI development studio that helps you build software faster using AI-powered agents",
-  "homepage": "https://github.com/AutoMaker-Org/automaker",
+  "homepage": "https://github.com/AskJenny-Org/ask-jenny",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AutoMaker-Org/automaker.git"
+    "url": "https://github.com/AskJenny-Org/ask-jenny.git"
   },
-  "author": "AutoMaker Team",
+  "author": "Ask Jenny Team",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "engines": {
@@ -39,9 +39,9 @@
     "dev:electron:wsl:gpu": "cross-env MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA vite"
   },
   "dependencies": {
-    "@automaker/dependency-resolver": "1.0.0",
-    "@automaker/spec-parser": "1.0.0",
-    "@automaker/types": "1.0.0",
+    "@ask-jenny/dependency-resolver": "1.0.0",
+    "@ask-jenny/spec-parser": "1.0.0",
+    "@ask-jenny/types": "1.0.0",
     "@codemirror/lang-xml": "6.1.0",
     "@codemirror/language": "^6.12.1",
     "@codemirror/legacy-modes": "^6.5.2",
@@ -143,8 +143,8 @@
     "vite-plugin-electron-renderer": "0.14.6"
   },
   "build": {
-    "appId": "com.automaker.app",
-    "productName": "Automaker",
+    "appId": "com.askjenny.app",
+    "productName": "Ask Jenny",
     "artifactName": "${productName}-${version}-${arch}.${ext}",
     "npmRebuild": false,
     "publish": null,
@@ -234,7 +234,7 @@
       "category": "Development",
       "icon": "public/logo_larger.png",
       "maintainer": "webdevcody@gmail.com",
-      "executableName": "automaker",
+      "executableName": "ask-jenny",
       "description": "An autonomous AI development studio that helps you build software faster using AI-powered agents",
       "synopsis": "AI-powered autonomous development studio"
     },
@@ -250,7 +250,7 @@
         "libuuid"
       ],
       "compression": "xz",
-      "vendor": "AutoMaker Team"
+      "vendor": "Ask Jenny Team"
     },
     "nsis": {
       "oneClick": false,

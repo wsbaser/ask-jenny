@@ -12,10 +12,14 @@ import './styles/font-imports';
 
 const logger = createLogger('App');
 
+const SPLASH_SESSION_KEY = 'ask-jenny-splash-shown';
+const LEGACY_SPLASH_KEY = 'automaker-splash-shown';
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(() => {
     // Only show splash once per session
-    if (sessionStorage.getItem('automaker-splash-shown')) {
+    // Check both new and legacy keys for backwards compatibility
+    if (sessionStorage.getItem(SPLASH_SESSION_KEY) || sessionStorage.getItem(LEGACY_SPLASH_KEY)) {
       return false;
     }
     return true;
@@ -54,7 +58,7 @@ export default function App() {
   useProviderAuthInit();
 
   const handleSplashComplete = useCallback(() => {
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem(SPLASH_SESSION_KEY, 'true');
     setShowSplash(false);
   }, []);
 

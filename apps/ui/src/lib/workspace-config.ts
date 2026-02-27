@@ -27,8 +27,8 @@ function joinPath(...parts: string[]): string {
 }
 
 /**
- * Gets the default Documents/Automaker directory path
- * @returns Promise resolving to Documents/Automaker path, or null if unavailable
+ * Gets the default Documents/Ask Jenny directory path
+ * @returns Promise resolving to Documents/Ask Jenny path, or null if unavailable
  */
 async function getDefaultDocumentsPath(): Promise<string | null> {
   try {
@@ -37,7 +37,7 @@ async function getDefaultDocumentsPath(): Promise<string | null> {
     // Note: The HTTP client's getPath returns incorrect Unix-style paths for 'documents'
     if (typeof window !== 'undefined' && (window as any).electronAPI?.getPath) {
       const documentsPath = await (window as any).electronAPI.getPath('documents');
-      return joinPath(documentsPath, 'Automaker');
+      return joinPath(documentsPath, 'Ask Jenny');
     }
 
     // In web mode (no Electron), we can't access the user's Documents folder
@@ -54,7 +54,7 @@ async function getDefaultDocumentsPath(): Promise<string | null> {
  * Priority order:
  * 1. ALLOWED_ROOT_DIRECTORY (if configured)
  * 2. Last used directory from localStorage (if ALLOWED_ROOT_DIRECTORY is not set)
- * 3. Documents/Automaker (if ALLOWED_ROOT_DIRECTORY is not set)
+ * 3. Documents/Ask Jenny (if ALLOWED_ROOT_DIRECTORY is not set)
  * 4. DATA_DIR (if ALLOWED_ROOT_DIRECTORY is not set and Documents unavailable)
  * 5. null (no default)
  *
@@ -73,7 +73,7 @@ export async function getDefaultWorkspaceDirectory(): Promise<string | null> {
 
       // If ALLOWED_ROOT_DIRECTORY is not set, use priority:
       // 1. Last used directory (from store, synced via API)
-      // 2. Documents/Automaker
+      // 2. Documents/Ask Jenny
       // 3. DATA_DIR as fallback
       const lastUsedDir = useAppStore.getState().lastProjectDir;
 
@@ -81,7 +81,7 @@ export async function getDefaultWorkspaceDirectory(): Promise<string | null> {
         return lastUsedDir;
       }
 
-      // Try to get Documents/Automaker
+      // Try to get Documents/Ask Jenny
       const documentsPath = await getDefaultDocumentsPath();
       logger.info('Default documentsPath resolved to:', documentsPath);
       if (documentsPath) {
