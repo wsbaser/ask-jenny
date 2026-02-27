@@ -1,6 +1,6 @@
 /**
- * @automaker/types
- * Shared type definitions for AutoMaker
+ * @ask-jenny/types
+ * Shared type definitions for Ask Jenny
  */
 
 // Provider types

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Automaker TUI Launcher - Interactive menu for launching Automaker in different modes
+# Ask Jenny TUI Launcher - Interactive menu for launching Ask Jenny in different modes
 # Supports: Web Browser, Desktop (Electron), Docker Dev, Electron + Docker API
 # Platforms: Linux, macOS, Windows (Git Bash, WSL, MSYS2, Cygwin)
 # Features: Terminal responsiveness, history, pre-flight checks, port management
@@ -10,9 +10,9 @@ set -e
 # CONFIGURATION & CONSTANTS
 # ============================================================================
 export $(grep -v '^#' .env | xargs)
-APP_NAME="Automaker"
+APP_NAME="Ask Jenny"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HISTORY_FILE="${HOME}/.automaker_launcher_history"
+HISTORY_FILE="${HOME}/.ask_jenny_launcher_history"
 MIN_TERM_WIDTH=70
 MIN_TERM_HEIGHT=20
 MENU_BOX_WIDTH=66
@@ -104,10 +104,10 @@ PRODUCTION_MODE=false
 
 show_help() {
     cat << 'EOF'
-Automaker TUI Launcher - Interactive development environment starter
+Ask Jenny TUI Launcher - Interactive development environment starter
 
 USAGE:
-  start-automaker.sh [MODE] [OPTIONS]
+  start-ask-jenny.sh [MODE] [OPTIONS]
 
 MODES:
   web              Launch in web browser (localhost:7007)
@@ -124,13 +124,13 @@ OPTIONS:
   --production     Run in production mode (builds first, faster React)
 
 EXAMPLES:
-  start-automaker.sh              # Interactive menu (development)
-  start-automaker.sh --production # Interactive menu (production)
-  start-automaker.sh web          # Launch web mode directly (dev)
-  start-automaker.sh web --production  # Launch web mode (production)
-  start-automaker.sh electron     # Launch desktop app directly
-  start-automaker.sh docker       # Launch Docker dev container
-  start-automaker.sh --version    # Show version
+  start-ask-jenny.sh              # Interactive menu (development)
+  start-ask-jenny.sh --production # Interactive menu (production)
+  start-ask-jenny.sh web          # Launch web mode directly (dev)
+  start-ask-jenny.sh web --production  # Launch web mode (production)
+  start-ask-jenny.sh electron     # Launch desktop app directly
+  start-ask-jenny.sh docker       # Launch Docker dev container
+  start-ask-jenny.sh --version    # Show version
 
 KEYBOARD SHORTCUTS (in menu):
   Up/Down arrows   Navigate between options
@@ -139,7 +139,7 @@ KEYBOARD SHORTCUTS (in menu):
   Q                Exit
 
 HISTORY:
-  Your last selected mode is remembered in: ~/.automaker_launcher_history
+  Your last selected mode is remembered in: ~/.ask_jenny_launcher_history
   Use --no-history to disable this feature
 
 PLATFORMS:
@@ -149,7 +149,7 @@ EOF
 }
 
 show_version() {
-    echo "Automaker Launcher $VERSION"
+    echo "Ask Jenny Launcher $VERSION"
     echo "Node.js: $(node -v 2>/dev/null || echo 'not installed')"
     echo "Bash: ${BASH_VERSION%.*}"
 }
@@ -264,11 +264,11 @@ check_running_electron() {
     local electron_pids=""
 
     if [ "$IS_WINDOWS" = true ]; then
-        # Windows: look for electron.exe or Automaker.exe
-        electron_pids=$(tasklist 2>/dev/null | grep -iE "electron|automaker" | awk '{print $2}' | tr '\n' ' ' || true)
+        # Windows: look for electron.exe or AskJenny.exe
+        electron_pids=$(tasklist 2>/dev/null | grep -iE "electron|askjenny|ask-jenny" | awk '{print $2}' | tr '\n' ' ' || true)
     else
-        # Unix: look for electron or Automaker processes
-        electron_pids=$(pgrep -f "electron.*automaker|Automaker" 2>/dev/null | tr '\n' ' ' || true)
+        # Unix: look for electron or Ask Jenny processes
+        electron_pids=$(pgrep -f "electron.*ask-jenny|AskJenny" 2>/dev/null | tr '\n' ' ' || true)
     fi
 
     if [ -n "$electron_pids" ] && [ "$electron_pids" != " " ]; then
@@ -298,10 +298,10 @@ check_running_electron() {
                     center_print "Killing Electron processes..." "$C_YELLOW"
                     if [ "$IS_WINDOWS" = true ]; then
                         taskkill //F //IM "electron.exe" 2>/dev/null || true
-                        taskkill //F //IM "Automaker.exe" 2>/dev/null || true
+                        taskkill //F //IM "AskJenny.exe" 2>/dev/null || true
                     else
-                        pkill -f "electron.*automaker" 2>/dev/null || true
-                        pkill -f "Automaker" 2>/dev/null || true
+                        pkill -f "electron.*ask-jenny" 2>/dev/null || true
+                        pkill -f "AskJenny" 2>/dev/null || true
                     fi
                     sleep 1
                     center_print "✓ Electron stopped" "$C_GREEN"
@@ -334,11 +334,11 @@ check_running_containers() {
     local compose_file="$1"
     local running_containers=""
 
-    # Get list of running automaker containers
+    # Get list of running ask-jenny containers
     if [ "$DOCKER_CMD" = "sg docker -c" ]; then
-        running_containers=$(sg docker -c "docker ps --filter 'name=automaker-dev' --format '{{{{Names}}}}'" 2>/dev/null | tr '\n' ' ' || true)
+        running_containers=$(sg docker -c "docker ps --filter 'name=ask-jenny-dev' --format '{{{{Names}}}}'" 2>/dev/null | tr '\n' ' ' || true)
     else
-        running_containers=$($DOCKER_CMD ps --filter "name=automaker-dev" --format "{{.Names}}" 2>/dev/null | tr '\n' ' ' || true)
+        running_containers=$($DOCKER_CMD ps --filter "name=ask-jenny-dev" --format "{{.Names}}" 2>/dev/null | tr '\n' ' ' || true)
     fi
 
     if [ -n "$running_containers" ] && [ "$running_containers" != " " ]; then
@@ -369,10 +369,10 @@ check_running_containers() {
                     center_print "Stopping existing containers..." "$C_YELLOW"
                     if [ "$DOCKER_CMD" = "sg docker -c" ]; then
                         sg docker -c "docker compose -f '$compose_file' down" 2>/dev/null || true
-                        sg docker -c "docker ps --filter 'name=automaker-dev' -q" 2>/dev/null | xargs -r sg docker -c "docker stop" 2>/dev/null || true
+                        sg docker -c "docker ps --filter 'name=ask-jenny-dev' -q" 2>/dev/null | xargs -r sg docker -c "docker stop" 2>/dev/null || true
                     else
                         $DOCKER_CMD compose -f "$compose_file" down 2>/dev/null || true
-                        $DOCKER_CMD ps --filter "name=automaker-dev" -q 2>/dev/null | xargs -r $DOCKER_CMD stop 2>/dev/null || true
+                        $DOCKER_CMD ps --filter "name=ask-jenny-dev" -q 2>/dev/null | xargs -r $DOCKER_CMD stop 2>/dev/null || true
                     fi
                     center_print "✓ Containers stopped" "$C_GREEN"
                     echo ""
@@ -645,10 +645,10 @@ show_header() {
     local top_pad=$(( TERM_LINES / 6 ))
     for ((i=0; i<top_pad; i++)); do echo ""; done
 
-    # Automaker ASCII art logo
-    local l1="  █▀▀█ █  █ ▀▀█▀▀ █▀▀█ █▀▄▀█ █▀▀█ █ █ █▀▀ █▀▀█  "
-    local l2="  █▄▄█ █  █   █   █  █ █ ▀ █ █▄▄█ █▀▄ █▀▀ █▄▄▀  "
-    local l3="  ▀  ▀  ▀▀▀   ▀   ▀▀▀▀ ▀   ▀ ▀  ▀ ▀ ▀ ▀▀▀ ▀ ▀▀  "
+    # Ask Jenny ASCII art logo
+    local l1="   █▀▀█ █▀▀ █ █   ░░░ ░░░ █▀▀ █▀▀▄ █▀▀▄ █  █  "
+    local l2="   █▄▄█ ▀▀█ █▀▄   ░░░ ░░░ █▀▀ █  █ █  █ █▄▄█  "
+    local l3="   ▀  ▀ ▀▀▀ ▀ ▀   █▄█ █▀▀ ▀▀▀ ▀  ▀ ▀  ▀ ▄▄▄█  "
 
     local pad_left=$(( (TERM_COLS - LOGO_WIDTH) / 2 ))
     local pad=$(printf "%${pad_left}s" "")
@@ -926,7 +926,7 @@ launch_sequence() {
     spinner "Starting $mode_name..."
 
     echo ""
-    local msg="Automaker is ready!"
+    local msg="Ask Jenny is ready!"
     local pad=$(( (TERM_COLS - ${#msg}) / 2 ))
     printf "%${pad}s${C_GREEN}${BOLD}%s${RESET}\n" "" "$msg"
 

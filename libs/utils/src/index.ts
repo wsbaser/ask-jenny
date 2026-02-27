@@ -1,6 +1,6 @@
 /**
- * @automaker/utils
- * Shared utility functions for AutoMaker
+ * @ask-jenny/utils
+ * Shared utility functions for Ask Jenny
  */
 
 // Error handling

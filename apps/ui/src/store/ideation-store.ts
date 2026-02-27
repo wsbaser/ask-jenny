@@ -312,7 +312,7 @@ export const useIdeationStore = create<IdeationState & IdeationActions>()(
         }),
     }),
     {
-      name: 'automaker-ideation-store',
+      name: 'ask-jenny-ideation-store',
       version: 4,
       partialize: (state) => ({
         // Only persist these fields

@@ -1,5 +1,5 @@
-# Automaker Docker Compose
-# Runs Automaker in complete isolation from your host filesystem.
+# Ask Jenny Docker Compose
+# Runs Ask Jenny in complete isolation from your host filesystem.
 # The container cannot access any files on your laptop - only Docker-managed volumes.
 #
 # Usage:
@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui
-    container_name: automaker-ui
+    container_name: ask-jenny-ui
     restart: unless-stopped
     ports:
       - '7007:80'
@@ -33,7 +33,7 @@ services:
         # Override with: UID=$(id -u) GID=$(id -g) docker-compose build
         UID: ${UID:-1001}
         GID: ${GID:-1001}
-    container_name: automaker-server
+    container_name: ask-jenny-server
     restart: unless-stopped
     ports:
       - '7008:7008'
@@ -53,7 +53,7 @@ services:
       - CURSOR_AUTH_TOKEN=${CURSOR_AUTH_TOKEN:-}
 
       # Optional - authentication, one will generate if left blank
-      - AUTOMAKER_API_KEY=${AUTOMAKER_API_KEY:-}
+      - ASK_JENNY_API_KEY=${ASK_JENNY_API_KEY:-}
 
       # Optional - restrict to specific directory within container only
       # Projects and files can only be created/accessed within this directory
@@ -73,25 +73,25 @@ services:
     volumes:
       # ONLY named volumes - these are isolated from your host filesystem
       # This volume persists data between restarts but is container-managed
-      - automaker-data:/data
+      - ask-jenny-data:/data
 
       # Persist Claude CLI OAuth session keys across container restarts
       # This allows 'claude login' authentication to persist between restarts
-      - automaker-claude-config:/home/automaker/.claude
+      - ask-jenny-claude-config:/home/askjenny/.claude
 
       # Persist Cursor CLI configuration and authentication across container restarts
       # This allows 'cursor-agent login' authentication to persist between restarts
-      - automaker-cursor-config:/home/automaker/.cursor
+      - ask-jenny-cursor-config:/home/askjenny/.cursor
 
       # Persist OpenCode CLI configuration and authentication across container restarts
       # This allows 'opencode auth login' authentication to persist between restarts
-      - automaker-opencode-data:/home/automaker/.local/share/opencode
+      - ask-jenny-opencode-data:/home/askjenny/.local/share/opencode
 
       # Persist OpenCode user configuration across container restarts
-      - automaker-opencode-config:/home/automaker/.config/opencode
+      - ask-jenny-opencode-config:/home/askjenny/.config/opencode
 
       # Persist OpenCode cache directory (contains version file and other cache data)
-      - automaker-opencode-cache:/home/automaker/.cache/opencode
+      - ask-jenny-opencode-cache:/home/askjenny/.cache/opencode
 
       # NO host directory mounts - container cannot access your laptop files
       # If you need to work on a project, create it INSIDE the container
@@ -103,31 +103,31 @@ services:
     # Security: No host filesystem mounts
 
 volumes:
-  automaker-data:
-    name: automaker-data
+  ask-jenny-data:
+    name: ask-jenny-data
     # Named volume - completely isolated from host filesystem
 
-  automaker-claude-config:
-    name: automaker-claude-config
+  ask-jenny-claude-config:
+    name: ask-jenny-claude-config
     # Named volume for Claude CLI OAuth session keys and configuration
     # Persists authentication across container restarts
 
-  automaker-cursor-config:
-    name: automaker-cursor-config
+  ask-jenny-cursor-config:
+    name: ask-jenny-cursor-config
     # Named volume for Cursor CLI configuration and authentication
     # Persists cursor-agent login authentication across container restarts
 
-  automaker-opencode-data:
-    name: automaker-opencode-data
+  ask-jenny-opencode-data:
+    name: ask-jenny-opencode-data
     # Named volume for OpenCode CLI data and authentication (~/.local/share/opencode)
     # Persists opencode auth login authentication across container restarts
 
-  automaker-opencode-config:
-    name: automaker-opencode-config
+  ask-jenny-opencode-config:
+    name: ask-jenny-opencode-config
     # Named volume for OpenCode user configuration (~/.config/opencode)
     # Persists user configuration across container restarts
 
-  automaker-opencode-cache:
-    name: automaker-opencode-cache
+  ask-jenny-opencode-cache:
+    name: ask-jenny-opencode-cache
     # Named volume for OpenCode cache directory (~/.cache/opencode)
     # Contains version file and other cached data

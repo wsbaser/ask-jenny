@@ -1,8 +1,8 @@
 {
-  "name": "@automaker/git-utils",
+  "name": "@ask-jenny/git-utils",
   "version": "1.0.0",
   "type": "module",
-  "description": "Git operations utilities for AutoMaker",
+  "description": "Git operations utilities for Ask Jenny",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -12,18 +12,18 @@
     "test:watch": "vitest"
   },
   "keywords": [
-    "automaker",
+    "ask-jenny",
     "git",
     "utils"
   ],
-  "author": "AutoMaker Team",
+  "author": "Ask Jenny Team",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
   },
   "dependencies": {
-    "@automaker/types": "1.0.0",
-    "@automaker/utils": "1.0.0"
+    "@ask-jenny/types": "1.0.0",
+    "@ask-jenny/utils": "1.0.0"
   },
   "devDependencies": {
     "@types/node": "22.19.3",

@@ -120,31 +120,68 @@ export type ThemeMode =
   | 'feather';
 
 // LocalStorage keys for persistence (fallback when server settings aren't available)
-export const THEME_STORAGE_KEY = 'automaker:theme';
-export const FONT_SANS_STORAGE_KEY = 'automaker:font-sans';
-export const FONT_MONO_STORAGE_KEY = 'automaker:font-mono';
+export const THEME_STORAGE_KEY = 'ask-jenny:theme';
+export const FONT_SANS_STORAGE_KEY = 'ask-jenny:font-sans';
+export const FONT_MONO_STORAGE_KEY = 'ask-jenny:font-mono';
+
+// Legacy keys for backwards compatibility migration
+const LEGACY_THEME_KEY = 'automaker:theme';
+const LEGACY_FONT_SANS_KEY = 'automaker:font-sans';
+const LEGACY_FONT_MONO_KEY = 'automaker:font-mono';
 
 // Maximum number of output lines to keep in init script state (prevents unbounded memory growth)
 export const MAX_INIT_OUTPUT_LINES = 500;
 
+// Valid theme values for runtime validation
+const VALID_THEMES: readonly ThemeMode[] = [
+  'system', 'dark', 'retro', 'dracula', 'nord', 'monokai', 'tokyonight',
+  'solarized', 'gruvbox', 'catppuccin', 'onedark', 'synthwave', 'red',
+  'sunset', 'gray', 'forest', 'ocean', 'ember', 'ayu-dark', 'ayu-mirage',
+  'matcha', 'light', 'cream', 'solarizedlight', 'github', 'paper', 'rose',
+  'mint', 'lavender', 'sand', 'sky', 'peach', 'snow', 'sepia', 'gruvboxlight',
+  'nordlight', 'blossom', 'ayu-light', 'onelight', 'bluloco', 'feather'
+] as const;
+
+/**
+ * Type guard to validate if a string is a valid ThemeMode
+ */
+function isValidTheme(value: string): value is ThemeMode {
+  return VALID_THEMES.includes(value as ThemeMode);
+}
+
 /**
  * Get the theme from localStorage as a fallback
  * Used before server settings are loaded (e.g., on login/setup pages)
+ * Supports migration from legacy 'automaker:' keys to new 'ask-jenny:' keys
  */
 export function getStoredTheme(): ThemeMode | null {
+  // First try the new key
   const stored = getItem(THEME_STORAGE_KEY);
-  if (stored) return stored as ThemeMode;
+  if (stored && isValidTheme(stored)) {
+    return stored;
+  }
+
+  // Try legacy key and migrate if found
+  const legacyStored = getItem(LEGACY_THEME_KEY);
+  if (legacyStored && isValidTheme(legacyStored)) {
+    // Migrate to new key
+    setItem(THEME_STORAGE_KEY, legacyStored);
+    return legacyStored;
+  }
 
   // Backwards compatibility: older versions stored theme inside the Zustand persist blob.
   // We intentionally keep reading it as a fallback so users don't get a "default theme flash"
   // on login/logged-out pages if THEME_STORAGE_KEY hasn't been written yet.
   try {
-    const legacy = getItem('automaker-storage');
-    if (!legacy) return null;
-    const parsed = JSON.parse(legacy) as { state?: { theme?: unknown } } | { theme?: unknown };
+    // Try both new and legacy storage keys
+    const newStorage = getItem('ask-jenny-storage');
+    const legacyStorage = getItem('automaker-storage');
+    const storageData = newStorage || legacyStorage;
+    if (!storageData) return null;
+    const parsed = JSON.parse(storageData) as { state?: { theme?: unknown } } | { theme?: unknown };
     const theme = (parsed as any)?.state?.theme ?? (parsed as any)?.theme;
-    if (typeof theme === 'string' && theme.length > 0) {
-      return theme as ThemeMode;
+    if (typeof theme === 'string' && isValidTheme(theme)) {
+      return theme;
     }
   } catch {
     // Ignore legacy parse errors
@@ -189,13 +226,36 @@ function saveThemeToStorage(theme: ThemeMode): void {
 /**
  * Get fonts from localStorage as a fallback
  * Used before server settings are loaded (e.g., on login/setup pages)
+ * Supports migration from legacy 'automaker:' keys to new 'ask-jenny:' keys
  */
 export function getStoredFontSans(): string | null {
-  return getItem(FONT_SANS_STORAGE_KEY);
+  // First try the new key
+  const stored = getItem(FONT_SANS_STORAGE_KEY);
+  if (stored) return stored;
+
+  // Try legacy key and migrate if found
+  const legacyStored = getItem(LEGACY_FONT_SANS_KEY);
+  if (legacyStored) {
+    setItem(FONT_SANS_STORAGE_KEY, legacyStored);
+    return legacyStored;
+  }
+
+  return null;
 }
 
 export function getStoredFontMono(): string | null {
-  return getItem(FONT_MONO_STORAGE_KEY);
+  // First try the new key
+  const stored = getItem(FONT_MONO_STORAGE_KEY);
+  if (stored) return stored;
+
+  // Try legacy key and migrate if found
+  const legacyStored = getItem(LEGACY_FONT_MONO_KEY);
+  if (legacyStored) {
+    setItem(FONT_MONO_STORAGE_KEY, legacyStored);
+    return legacyStored;
+  }
+
+  return null;
 }
 
 /**
@@ -2178,7 +2238,7 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
           id: 'welcome',
           role: 'assistant',
           content:
-            "Hello! I'm the Automaker Agent. I can help you build software autonomously. What would you like to create today?",
+            "Hello! I'm the Ask Jenny Agent. I can help you build software autonomously. What would you like to create today?",
           timestamp: now,
         },
       ],
