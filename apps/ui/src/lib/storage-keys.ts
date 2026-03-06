@@ -62,6 +62,6 @@ export const LEGACY_EVENT_NAMES = {
   SERVER_OFFLINE: 'automaker:server-offline',
 } as const;
 
-export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
-export type SessionKey = typeof SESSION_KEYS[keyof typeof SESSION_KEYS];
-export type EventName = typeof EVENT_NAMES[keyof typeof EVENT_NAMES];
+export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
+export type SessionKey = (typeof SESSION_KEYS)[keyof typeof SESSION_KEYS];
+export type EventName = (typeof EVENT_NAMES)[keyof typeof EVENT_NAMES];
