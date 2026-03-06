@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import {
   getElectronAPI,
   GitHubIssue,
@@ -9,7 +9,7 @@ import {
   IssueValidationEvent,
   StoredValidation,
 } from '@/lib/electron';
-import type { LinkedPRInfo, PhaseModelEntry, ModelId } from '@automaker/types';
+import type { LinkedPRInfo, PhaseModelEntry, ModelId } from '@ask-jenny/types';
 import { useAppStore } from '@/store/app-store';
 import { toast } from 'sonner';
 import { isValidationStale } from '../utils';

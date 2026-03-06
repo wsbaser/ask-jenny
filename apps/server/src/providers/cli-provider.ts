@@ -34,9 +34,9 @@ import {
   windowsToWslPath,
   type SubprocessOptions,
   type WslCliResult,
-} from '@automaker/platform';
-import { calculateReasoningTimeout } from '@automaker/types';
-import { createLogger, isAbortError } from '@automaker/utils';
+} from '@ask-jenny/platform';
+import { calculateReasoningTimeout } from '@ask-jenny/types';
+import { createLogger, isAbortError } from '@ask-jenny/utils';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -113,7 +113,7 @@ const cliLogger = createLogger('CliProvider');
  * CLI tools have longer startup and processing times compared to direct API calls,
  * so we use a higher base timeout (120s) than the default provider timeout (30s).
  * This is multiplied by reasoning effort multipliers when applicable.
- * @see calculateReasoningTimeout from @automaker/types
+ * @see calculateReasoningTimeout from @ask-jenny/types
  */
 const CLI_BASE_TIMEOUT_MS = 120000;
 

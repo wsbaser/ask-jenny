@@ -3,7 +3,7 @@
  * Transforms vague or unclear requests into clear, actionable task descriptions.
  */
 
-import type { EnhancementExample } from '@automaker/types';
+import type { EnhancementExample } from '@ask-jenny/types';
 
 /**
  * System prompt for the "improve" enhancement mode.

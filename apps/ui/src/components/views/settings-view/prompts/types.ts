@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { PromptCustomization, CustomPrompt } from '@automaker/types';
+import type { PromptCustomization, CustomPrompt } from '@ask-jenny/types';
 
 /** Props for the PromptField component */
 export interface PromptFieldProps {

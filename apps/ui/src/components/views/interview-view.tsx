@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { useAppStore, Feature } from '@/store/app-store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -342,7 +342,7 @@ export function InterviewView() {
       }
 
       // Write app_spec.txt with generated content
-      await api.writeFile(`${fullProjectPath}/.automaker/app_spec.txt`, generatedSpec);
+      await api.writeFile(`${fullProjectPath}/.ask-jenny/app_spec.txt`, generatedSpec);
 
       // Create initial feature in the features folder
       const initialFeature: Feature = {

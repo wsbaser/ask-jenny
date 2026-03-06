@@ -7,7 +7,7 @@
 
 import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
 import { BaseProvider } from './base-provider.js';
-import { classifyError, getUserFriendlyErrorMessage, createLogger } from '@automaker/utils';
+import { classifyError, getUserFriendlyErrorMessage, createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('ClaudeProvider');
 import {
@@ -16,7 +16,7 @@ import {
   type ClaudeApiProfile,
   type ClaudeCompatibleProvider,
   type Credentials,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 /**
  * ProviderConfig - Union type for provider configuration

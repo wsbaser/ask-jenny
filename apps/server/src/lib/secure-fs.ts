@@ -1,9 +1,9 @@
 /**
- * Re-export secure file system utilities from @automaker/platform
+ * Re-export secure file system utilities from @ask-jenny/platform
  * This file exists for backward compatibility with existing imports
  */
 
-import { secureFs } from '@automaker/platform';
+import { secureFs } from '@ask-jenny/platform';
 
 export const {
   // Async methods

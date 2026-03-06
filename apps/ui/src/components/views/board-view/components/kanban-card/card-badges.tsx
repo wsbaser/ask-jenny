@@ -4,7 +4,7 @@ import { Feature, useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertCircle, Lock, Hand, Sparkles } from 'lucide-react';
-import { getBlockingDependencies } from '@automaker/dependency-resolver';
+import { getBlockingDependencies } from '@ask-jenny/dependency-resolver';
 import { useShallow } from 'zustand/react/shallow';
 
 /** Uniform badge style for all card badges */

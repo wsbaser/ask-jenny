@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ListChecks } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import type { SpecOutput } from '@automaker/spec-parser';
+import type { SpecOutput } from '@ask-jenny/spec-parser';
 
 type Feature = SpecOutput['implemented_features'][number];
 

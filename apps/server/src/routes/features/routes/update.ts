@@ -4,9 +4,9 @@
 
 import type { Request, Response } from 'express';
 import { FeatureLoader } from '../../../services/feature-loader.js';
-import type { Feature, FeatureStatus } from '@automaker/types';
+import type { Feature, FeatureStatus } from '@ask-jenny/types';
 import { getErrorMessage, logError } from '../common.js';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('features/update');
 

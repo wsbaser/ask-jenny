@@ -38,19 +38,19 @@ test.describe('Agent Chat Session', () => {
       JSON.stringify({ name: projectName, version: '1.0.0' }, null, 2)
     );
 
-    const automakerDir = path.join(projectPath, '.automaker');
-    fs.mkdirSync(automakerDir, { recursive: true });
-    fs.mkdirSync(path.join(automakerDir, 'features'), { recursive: true });
-    fs.mkdirSync(path.join(automakerDir, 'context'), { recursive: true });
-    fs.mkdirSync(path.join(automakerDir, 'sessions'), { recursive: true });
+    const askJennyDir = path.join(projectPath, '.ask-jenny');
+    fs.mkdirSync(askJennyDir, { recursive: true });
+    fs.mkdirSync(path.join(askJennyDir, 'features'), { recursive: true });
+    fs.mkdirSync(path.join(askJennyDir, 'context'), { recursive: true });
+    fs.mkdirSync(path.join(askJennyDir, 'sessions'), { recursive: true });
 
     fs.writeFileSync(
-      path.join(automakerDir, 'categories.json'),
+      path.join(askJennyDir, 'categories.json'),
       JSON.stringify({ categories: [] }, null, 2)
     );
 
     fs.writeFileSync(
-      path.join(automakerDir, 'app_spec.txt'),
+      path.join(askJennyDir, 'app_spec.txt'),
       `# ${projectName}\n\nA test project for e2e testing.`
     );
   });

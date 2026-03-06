@@ -3,9 +3,9 @@
  */
 
 import type { Request, Response } from 'express';
-import type { ThinkingLevel } from '@automaker/types';
+import type { ThinkingLevel } from '@ask-jenny/types';
 import { AgentService } from '../../../services/agent-service.js';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import { getErrorMessage, logError } from '../common.js';
 const logger = createLogger('Agent');
 

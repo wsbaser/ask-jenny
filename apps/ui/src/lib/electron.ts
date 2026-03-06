@@ -27,8 +27,8 @@ import type {
   CreateIdeaInput,
   UpdateIdeaInput,
   ConvertToFeatureOptions,
-} from '@automaker/types';
-import { DEFAULT_MAX_CONCURRENCY } from '@automaker/types';
+} from '@ask-jenny/types';
+import { DEFAULT_MAX_CONCURRENCY } from '@ask-jenny/types';
 import { getJSON, setJSON, removeItem } from './storage';
 
 // Re-export issue validation types for use in components
@@ -570,7 +570,7 @@ import type {
   StoredEventSummary,
   EventHistoryFilter,
   EventReplayResult,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 export interface NotificationsAPI {
   list: (projectPath: string) => Promise<{
@@ -969,9 +969,9 @@ const mockFeatures = [
 
 // Local storage keys
 const STORAGE_KEYS = {
-  PROJECTS: 'automaker_projects',
-  CURRENT_PROJECT: 'automaker_current_project',
-  TRASHED_PROJECTS: 'automaker_trashed_projects',
+  PROJECTS: 'ask-jenny_projects',
+  CURRENT_PROJECT: 'ask-jenny_current_project',
+  TRASHED_PROJECTS: 'ask-jenny_trashed_projects',
 } as const;
 
 // Mock file system using localStorage
@@ -1103,7 +1103,7 @@ const getMockElectronAPI = (): ElectronAPI => {
         return { success: true, content: mockFileSystem[filePath] };
       }
       // Return mock data based on file type
-      // Note: Features are now stored in .automaker/features/{id}/feature.json
+      // Note: Features are now stored in .ask-jenny/features/{id}/feature.json
       if (filePath.endsWith('categories.json')) {
         // Return empty array for categories when file doesn't exist yet
         return { success: true, content: '[]' };
@@ -1116,7 +1116,7 @@ const getMockElectronAPI = (): ElectronAPI => {
         };
       }
       // For any file in mock features directory, check mock file system
-      if (filePath.includes('.automaker/features/')) {
+      if (filePath.includes('.ask-jenny/features/')) {
         if (mockFileSystem[filePath] !== undefined) {
           return { success: true, content: mockFileSystem[filePath] };
         }
@@ -1141,7 +1141,7 @@ const getMockElectronAPI = (): ElectronAPI => {
       // Return mock directory structure based on path
       if (dirPath) {
         // Check if this is the context directory - return files from mock file system
-        if (dirPath.includes('.automaker/context')) {
+        if (dirPath.includes('.ask-jenny/context')) {
           const contextFiles = Object.keys(mockFileSystem)
             .filter((path) => path.startsWith(dirPath) && path !== dirPath)
             .map((path) => {
@@ -1160,7 +1160,7 @@ const getMockElectronAPI = (): ElectronAPI => {
           !dirPath.includes('/src') &&
           !dirPath.includes('/tests') &&
           !dirPath.includes('/public') &&
-          !dirPath.includes('.automaker')
+          !dirPath.includes('.ask-jenny')
         ) {
           return {
             success: true,
@@ -1168,7 +1168,7 @@ const getMockElectronAPI = (): ElectronAPI => {
               { name: 'src', isDirectory: true, isFile: false },
               { name: 'tests', isDirectory: true, isFile: false },
               { name: 'public', isDirectory: true, isFile: false },
-              { name: '.automaker', isDirectory: true, isFile: false },
+              { name: '.ask-jenny', isDirectory: true, isFile: false },
               { name: 'package.json', isDirectory: false, isFile: true },
               { name: 'tsconfig.json', isDirectory: false, isFile: true },
               { name: 'app_spec.txt', isDirectory: false, isFile: true },
@@ -1254,8 +1254,8 @@ const getMockElectronAPI = (): ElectronAPI => {
       if (mockFileSystem[filePath] !== undefined) {
         return true;
       }
-      // Note: Features are now stored in .automaker/features/{id}/feature.json
-      if (filePath.endsWith('app_spec.txt') && !filePath.includes('.automaker')) {
+      // Note: Features are now stored in .ask-jenny/features/{id}/feature.json
+      if (filePath.endsWith('app_spec.txt') && !filePath.includes('.ask-jenny')) {
         return true;
       }
       return false;
@@ -1300,8 +1300,8 @@ const getMockElectronAPI = (): ElectronAPI => {
       const timestamp = Date.now();
       const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
       const tempFilePath = projectPath
-        ? `${projectPath}/.automaker/images/${timestamp}_${safeName}`
-        : `/tmp/automaker-images/${timestamp}_${safeName}`;
+        ? `${projectPath}/.ask-jenny/images/${timestamp}_${safeName}`
+        : `/tmp/ask-jenny-images/${timestamp}_${safeName}`;
 
       // Store the image data in mock file system for testing
       mockFileSystem[tempFilePath] = data;
@@ -1957,7 +1957,7 @@ function createMockWorktreeAPI(): WorktreeAPI {
         success: true,
         exists: false,
         content: '',
-        path: `${projectPath}/.automaker/worktree-init.sh`,
+        path: `${projectPath}/.ask-jenny/worktree-init.sh`,
       };
     },
 
@@ -1965,7 +1965,7 @@ function createMockWorktreeAPI(): WorktreeAPI {
       console.log('[Mock] Setting init script:', { projectPath, content });
       return {
         success: true,
-        path: `${projectPath}/.automaker/worktree-init.sh`,
+        path: `${projectPath}/.ask-jenny/worktree-init.sh`,
       };
     },
 
@@ -2161,7 +2161,7 @@ function createMockAutoModeAPI(): AutoModeAPI {
       // Mock implementation - simulate that context exists for some features
       // Now checks for agent-output.md in the feature's folder
       const exists =
-        mockFileSystem[`${projectPath}/.automaker/features/${featureId}/agent-output.md`] !==
+        mockFileSystem[`${projectPath}/.ask-jenny/features/${featureId}/agent-output.md`] !==
         undefined;
       return { success: true, exists };
     },
@@ -2226,11 +2226,11 @@ function createMockAutoModeAPI(): AutoModeAPI {
         return { success: false, message: 'Analysis aborted' };
 
       // Write mock app_spec.txt
-      mockFileSystem[`${projectPath}/.automaker/app_spec.txt`] = `<project_specification>
+      mockFileSystem[`${projectPath}/.ask-jenny/app_spec.txt`] = `<project_specification>
   <project_name>Demo Project</project_name>
 
   <overview>
-    A demo project analyzed by the Automaker AI agent.
+    A demo project analyzed by the Ask Jenny AI agent.
   </overview>
 
   <technology_stack>
@@ -2252,7 +2252,7 @@ function createMockAutoModeAPI(): AutoModeAPI {
   </implemented_features>
 </project_specification>`;
 
-      // Note: Features are now stored in .automaker/features/{id}/feature.json
+      // Note: Features are now stored in .ask-jenny/features/{id}/feature.json
 
       emitAutoModeEvent({
         type: 'auto_mode_phase',
@@ -2485,7 +2485,7 @@ async function simulateAutoModeLoop(projectPath: string, featureId: string) {
 
   // Delete context file when feature is verified (matches real auto-mode-service behavior)
   // Now uses features/{id}/agent-output.md path
-  const contextFilePath = `${projectPath}/.automaker/features/${featureId}/agent-output.md`;
+  const contextFilePath = `${projectPath}/.ask-jenny/features/${featureId}/agent-output.md`;
   delete mockFileSystem[contextFilePath];
 
   // Clean up this feature from running set
@@ -2894,7 +2894,7 @@ async function simulateSpecCreation(
   if (!mockSpecRegenerationRunning) return;
 
   // Write mock app_spec.txt
-  mockFileSystem[`${projectPath}/.automaker/app_spec.txt`] = `<project_specification>
+  mockFileSystem[`${projectPath}/.ask-jenny/app_spec.txt`] = `<project_specification>
   <project_name>Demo Project</project_name>
 
   <overview>
@@ -2919,7 +2919,7 @@ async function simulateSpecCreation(
   </implementation_roadmap>
 </project_specification>`;
 
-  // Note: Features are now stored in .automaker/features/{id}/feature.json
+  // Note: Features are now stored in .ask-jenny/features/{id}/feature.json
   // The generateFeatures parameter is kept for API compatibility but features
   // should be created through the features API
 
@@ -2965,7 +2965,7 @@ async function simulateSpecRegeneration(
   if (!mockSpecRegenerationRunning) return;
 
   // Write regenerated spec
-  mockFileSystem[`${projectPath}/.automaker/app_spec.txt`] = `<project_specification>
+  mockFileSystem[`${projectPath}/.ask-jenny/app_spec.txt`] = `<project_specification>
   <project_name>Regenerated Project</project_name>
 
   <overview>
@@ -3083,7 +3083,7 @@ function createMockFeaturesAPI(): FeaturesAPI {
       }
 
       // Try to read from mock file system
-      const featuresDir = `${projectPath}/.automaker/features`;
+      const featuresDir = `${projectPath}/.ask-jenny/features`;
       const features: Feature[] = [];
 
       // Simulate reading feature folders
@@ -3113,7 +3113,7 @@ function createMockFeaturesAPI(): FeaturesAPI {
 
     get: async (projectPath: string, featureId: string) => {
       console.log('[Mock] Getting feature:', { projectPath, featureId });
-      const featurePath = `${projectPath}/.automaker/features/${featureId}/feature.json`;
+      const featurePath = `${projectPath}/.ask-jenny/features/${featureId}/feature.json`;
       const content = mockFileSystem[featurePath];
       if (content) {
         return { success: true, feature: JSON.parse(content) };
@@ -3126,7 +3126,7 @@ function createMockFeaturesAPI(): FeaturesAPI {
         projectPath,
         featureId: feature.id,
       });
-      const featurePath = `${projectPath}/.automaker/features/${feature.id}/feature.json`;
+      const featurePath = `${projectPath}/.ask-jenny/features/${feature.id}/feature.json`;
       mockFileSystem[featurePath] = JSON.stringify(feature, null, 2);
       return { success: true, feature };
     },
@@ -3137,7 +3137,7 @@ function createMockFeaturesAPI(): FeaturesAPI {
         featureId,
         updates,
       });
-      const featurePath = `${projectPath}/.automaker/features/${featureId}/feature.json`;
+      const featurePath = `${projectPath}/.ask-jenny/features/${featureId}/feature.json`;
       const existing = mockFileSystem[featurePath];
       if (!existing) {
         return { success: false, error: 'Feature not found' };
@@ -3149,17 +3149,17 @@ function createMockFeaturesAPI(): FeaturesAPI {
 
     delete: async (projectPath: string, featureId: string) => {
       console.log('[Mock] Deleting feature:', { projectPath, featureId });
-      const featurePath = `${projectPath}/.automaker/features/${featureId}/feature.json`;
+      const featurePath = `${projectPath}/.ask-jenny/features/${featureId}/feature.json`;
       delete mockFileSystem[featurePath];
       // Also delete agent-output.md if it exists
-      const agentOutputPath = `${projectPath}/.automaker/features/${featureId}/agent-output.md`;
+      const agentOutputPath = `${projectPath}/.ask-jenny/features/${featureId}/agent-output.md`;
       delete mockFileSystem[agentOutputPath];
       return { success: true };
     },
 
     getAgentOutput: async (projectPath: string, featureId: string) => {
       console.log('[Mock] Getting agent output:', { projectPath, featureId });
-      const agentOutputPath = `${projectPath}/.automaker/features/${featureId}/agent-output.md`;
+      const agentOutputPath = `${projectPath}/.ask-jenny/features/${featureId}/agent-output.md`;
       const content = mockFileSystem[agentOutputPath];
       return { success: true, content: content || null };
     },
@@ -3339,7 +3339,7 @@ export interface Project {
   fontFamilyMono?: string; // Per-project code/mono font override
   isFavorite?: boolean; // Pin project to top of dashboard
   icon?: string; // Lucide icon name for project identification
-  customIconPath?: string; // Path to custom uploaded icon image in .automaker/images/
+  customIconPath?: string; // Path to custom uploaded icon image in .ask-jenny/images/
   /**
    * Override the active Claude API profile for this project.
    * - undefined: Use global setting (activeClaudeApiProfileId)
@@ -3353,7 +3353,7 @@ export interface Project {
    * Keys are phase names (e.g., 'enhancementModel'), values are PhaseModelEntry.
    * If a phase is not present, the global setting is used.
    */
-  phaseModelOverrides?: Partial<import('@automaker/types').PhaseModelConfig>;
+  phaseModelOverrides?: Partial<import('@ask-jenny/types').PhaseModelConfig>;
 }
 
 export interface TrashedProject extends Project {

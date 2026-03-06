@@ -23,8 +23,8 @@ import type {
   PhaseModelEntry,
   ClaudeCompatibleProvider,
   ClaudeModelAlias,
-} from '@automaker/types';
-import { DEFAULT_PHASE_MODELS } from '@automaker/types';
+} from '@ask-jenny/types';
+import { DEFAULT_PHASE_MODELS } from '@ask-jenny/types';
 
 interface BulkReplaceDialogProps {
   open: boolean;

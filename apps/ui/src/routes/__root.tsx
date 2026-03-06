@@ -2,7 +2,7 @@ import { createRootRoute, Outlet, useLocation, useNavigate } from '@tanstack/rea
 import { useEffect, useState, useCallback, useDeferredValue, useRef } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ProjectSwitcher } from '@/components/layout/project-switcher';
 import {

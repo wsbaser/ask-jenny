@@ -47,12 +47,12 @@ export default defineConfig({
                     ...process.env,
                     PORT: String(serverPort),
                     // Enable mock agent in CI to avoid real API calls
-                    AUTOMAKER_MOCK_AGENT: mockAgent ? 'true' : 'false',
+                    ASK_JENNY_MOCK_AGENT: mockAgent ? 'true' : 'false',
                     // Set a test API key for web mode authentication
-                    AUTOMAKER_API_KEY:
-                      process.env.AUTOMAKER_API_KEY || 'test-api-key-for-e2e-tests',
+                    ASK_JENNY_API_KEY:
+                      process.env.ASK_JENNY_API_KEY || 'test-api-key-for-e2e-tests',
                     // Hide the API key banner to reduce log noise
-                    AUTOMAKER_HIDE_API_KEY: 'true',
+                    ASK_JENNY_HIDE_API_KEY: 'true',
                     // Explicitly unset ALLOWED_ROOT_DIRECTORY to allow all paths for testing
                     // (prevents inheriting /projects from Docker or other environments)
                     ALLOWED_ROOT_DIRECTORY: '',

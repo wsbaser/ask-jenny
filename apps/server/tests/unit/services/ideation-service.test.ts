@@ -4,15 +4,15 @@ import type { EventEmitter } from '@/lib/events.js';
 import type { SettingsService } from '@/services/settings-service.js';
 import type { FeatureLoader } from '@/services/feature-loader.js';
 import * as secureFs from '@/lib/secure-fs.js';
-import * as platform from '@automaker/platform';
-import * as utils from '@automaker/utils';
+import * as platform from '@ask-jenny/platform';
+import * as utils from '@ask-jenny/utils';
 import type {
   CreateIdeaInput,
   UpdateIdeaInput,
   Idea,
   IdeationSession,
   StartSessionOptions,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import { ProviderFactory } from '@/providers/provider-factory.js';
 
 // Create a shared mock logger instance for assertions using vi.hoisted
@@ -25,9 +25,9 @@ const mockLogger = vi.hoisted(() => ({
 
 // Mock dependencies
 vi.mock('@/lib/secure-fs.js');
-vi.mock('@automaker/platform');
-vi.mock('@automaker/utils', async () => {
-  const actual = await vi.importActual<typeof import('@automaker/utils')>('@automaker/utils');
+vi.mock('@ask-jenny/platform');
+vi.mock('@ask-jenny/utils', async () => {
+  const actual = await vi.importActual<typeof import('@ask-jenny/utils')>('@ask-jenny/utils');
   return {
     ...actual,
     createLogger: vi.fn(() => mockLogger),
@@ -76,20 +76,20 @@ describe('IdeationService', () => {
     // Mock platform functions
     vi.mocked(platform.ensureIdeationDir).mockResolvedValue(undefined);
     vi.mocked(platform.getIdeaDir).mockReturnValue(
-      '/test/project/.automaker/ideation/ideas/idea-123'
+      '/test/project/.ask-jenny/ideation/ideas/idea-123'
     );
     vi.mocked(platform.getIdeaPath).mockReturnValue(
-      '/test/project/.automaker/ideation/ideas/idea-123/idea.json'
+      '/test/project/.ask-jenny/ideation/ideas/idea-123/idea.json'
     );
-    vi.mocked(platform.getIdeasDir).mockReturnValue('/test/project/.automaker/ideation/ideas');
+    vi.mocked(platform.getIdeasDir).mockReturnValue('/test/project/.ask-jenny/ideation/ideas');
     vi.mocked(platform.getIdeationSessionPath).mockReturnValue(
-      '/test/project/.automaker/ideation/sessions/session-123.json'
+      '/test/project/.ask-jenny/ideation/sessions/session-123.json'
     );
     vi.mocked(platform.getIdeationSessionsDir).mockReturnValue(
-      '/test/project/.automaker/ideation/sessions'
+      '/test/project/.ask-jenny/ideation/sessions'
     );
     vi.mocked(platform.getIdeationAnalysisPath).mockReturnValue(
-      '/test/project/.automaker/ideation/analysis.json'
+      '/test/project/.ask-jenny/ideation/analysis.json'
     );
 
     // Mock utils (already mocked above, but reset return values)

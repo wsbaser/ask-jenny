@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 import electron from 'vite-plugin-electron/simple';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import { fileURLToPath } from 'url';
-import { STATIC_PORT, SERVER_PORT } from '@automaker/types';
+import { STATIC_PORT, SERVER_PORT } from '@ask-jenny/types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -96,7 +96,7 @@ export default defineConfig(({ command }) => {
       },
     },
     optimizeDeps: {
-      exclude: ['@automaker/platform'],
+      exclude: ['@ask-jenny/platform'],
     },
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),

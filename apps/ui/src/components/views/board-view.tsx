@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import {
   DndContext,
   PointerSensor,
@@ -30,10 +30,10 @@ import { useAppStore, Feature } from '@/store/app-store';
 import { getElectronAPI } from '@/lib/electron';
 import { getHttpApiClient } from '@/lib/http-api-client';
 import type { AutoModeEvent } from '@/types/electron';
-import type { ModelAlias, CursorModelId, BacklogPlanResult } from '@automaker/types';
+import type { ModelAlias, CursorModelId, BacklogPlanResult } from '@ask-jenny/types';
 import { pathsEqual } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getBlockingDependencies } from '@automaker/dependency-resolver';
+import { getBlockingDependencies } from '@ask-jenny/dependency-resolver';
 import { BoardBackgroundModal } from '@/components/dialogs/board-background-modal';
 import { Spinner } from '@/components/ui/spinner';
 import { useShallow } from 'zustand/react/shallow';

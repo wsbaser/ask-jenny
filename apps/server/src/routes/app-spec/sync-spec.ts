@@ -2,18 +2,18 @@
  * Sync spec with current codebase and feature state
  *
  * Updates the spec file based on:
- * - Completed Automaker features
+ * - Completed Ask Jenny features
  * - Code analysis for tech stack and implementations
  * - Roadmap phase status updates
  */
 
 import * as secureFs from '../../lib/secure-fs.js';
 import type { EventEmitter } from '../../lib/events.js';
-import { createLogger } from '@automaker/utils';
-import { DEFAULT_PHASE_MODELS } from '@automaker/types';
-import { resolvePhaseModel } from '@automaker/model-resolver';
+import { createLogger } from '@ask-jenny/utils';
+import { DEFAULT_PHASE_MODELS } from '@ask-jenny/types';
+import { resolvePhaseModel } from '@ask-jenny/model-resolver';
 import { streamingQuery } from '../../providers/simple-query-service.js';
-import { getAppSpecPath } from '@automaker/platform';
+import { getAppSpecPath } from '@ask-jenny/platform';
 import type { SettingsService } from '../../services/settings-service.js';
 import {
   getAutoLoadClaudeMdSetting,
@@ -101,14 +101,14 @@ export async function syncSpec(
   logger.info(`Current spec has ${currentTechStack.length} technologies`);
   logger.info(`Current spec has ${currentRoadmapPhases.length} roadmap phases`);
 
-  // Load completed Automaker features
+  // Load completed Ask Jenny features
   const featureLoader = new FeatureLoader();
   const allFeatures = await featureLoader.getAll(projectPath);
   const completedFeatures = allFeatures.filter(
     (f) => f.status === 'completed' || f.status === 'verified'
   );
 
-  logger.info(`Found ${completedFeatures.length} completed/verified features in Automaker`);
+  logger.info(`Found ${completedFeatures.length} completed/verified features in Ask Jenny`);
 
   events.emit('spec-regeneration:event', {
     type: 'spec_regeneration_progress',
@@ -116,7 +116,7 @@ export async function syncSpec(
     projectPath,
   });
 
-  // Build new implemented features list from completed Automaker features
+  // Build new implemented features list from completed Ask Jenny features
   const newImplementedFeatures: ImplementedFeature[] = [];
   const existingNames = new Set(currentImplementedFeatures.map((f) => f.name.toLowerCase()));
 

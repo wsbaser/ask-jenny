@@ -8,7 +8,7 @@ import {
   PlanningMode,
   useAppStore,
 } from '@/store/app-store';
-import type { ReasoningEffort } from '@automaker/types';
+import type { ReasoningEffort } from '@ask-jenny/types';
 import { FeatureImagePath as DescriptionImagePath } from '@/components/ui/description-image-dropzone';
 import { getElectronAPI } from '@/lib/electron';
 import { isConnectionError, handleServerOffline } from '@/lib/http-api-client';
@@ -16,8 +16,8 @@ import { toast } from 'sonner';
 import { useAutoMode } from '@/hooks/use-auto-mode';
 import { useVerifyFeature, useResumeFeature } from '@/hooks/mutations';
 import { truncateDescription } from '@/lib/utils';
-import { getBlockingDependencies } from '@automaker/dependency-resolver';
-import { createLogger } from '@automaker/utils/logger';
+import { getBlockingDependencies } from '@ask-jenny/dependency-resolver';
+import { createLogger } from '@ask-jenny/utils/logger';
 
 const logger = createLogger('BoardActions');
 

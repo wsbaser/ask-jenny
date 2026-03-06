@@ -6,14 +6,14 @@
  */
 
 import type { EventEmitter } from '../../lib/events.js';
-import type { Feature, BacklogPlanResult, BacklogChange, DependencyUpdate } from '@automaker/types';
+import type { Feature, BacklogPlanResult, BacklogChange, DependencyUpdate } from '@ask-jenny/types';
 import {
   DEFAULT_PHASE_MODELS,
   isCursorModel,
   stripProviderPrefix,
   type ThinkingLevel,
-} from '@automaker/types';
-import { resolvePhaseModel } from '@automaker/model-resolver';
+} from '@ask-jenny/types';
+import { resolvePhaseModel } from '@ask-jenny/model-resolver';
 import { FeatureLoader } from '../../services/feature-loader.js';
 import { ProviderFactory } from '../../providers/provider-factory.js';
 import { extractJsonWithArray } from '../../lib/json-extractor.js';
@@ -124,8 +124,8 @@ export async function generateBacklogPlan(
     // Get the model to use from settings or provided override with provider info
     let effectiveModel = model;
     let thinkingLevel: ThinkingLevel | undefined;
-    let claudeCompatibleProvider: import('@automaker/types').ClaudeCompatibleProvider | undefined;
-    let credentials: import('@automaker/types').Credentials | undefined;
+    let claudeCompatibleProvider: import('@ask-jenny/types').ClaudeCompatibleProvider | undefined;
+    let credentials: import('@ask-jenny/types').Credentials | undefined;
 
     if (effectiveModel) {
       // Use explicit override - just get credentials

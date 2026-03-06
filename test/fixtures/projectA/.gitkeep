@@ -1,2 +1,2 @@
 # This file ensures the test fixture directory is tracked by git.
-# The .automaker directory is created at test runtime.
+# The .ask-jenny directory is created at test runtime.

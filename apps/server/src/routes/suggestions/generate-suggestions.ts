@@ -6,13 +6,13 @@
  */
 
 import type { EventEmitter } from '../../lib/events.js';
-import { createLogger } from '@automaker/utils';
-import { DEFAULT_PHASE_MODELS, isCursorModel, type ThinkingLevel } from '@automaker/types';
-import { resolvePhaseModel } from '@automaker/model-resolver';
+import { createLogger } from '@ask-jenny/utils';
+import { DEFAULT_PHASE_MODELS, isCursorModel, type ThinkingLevel } from '@ask-jenny/types';
+import { resolvePhaseModel } from '@ask-jenny/model-resolver';
 import { extractJsonWithArray } from '../../lib/json-extractor.js';
 import { streamingQuery } from '../../providers/simple-query-service.js';
 import { FeatureLoader } from '../../services/feature-loader.js';
-import { getAppSpecPath } from '@automaker/platform';
+import { getAppSpecPath } from '@ask-jenny/platform';
 import * as secureFs from '../../lib/secure-fs.js';
 import type { SettingsService } from '../../services/settings-service.js';
 import {
@@ -176,8 +176,8 @@ ${prompts.suggestions.baseTemplate}`;
   // Use override if provided, otherwise fall back to settings
   let model: string;
   let thinkingLevel: ThinkingLevel | undefined;
-  let provider: import('@automaker/types').ClaudeCompatibleProvider | undefined;
-  let credentials: import('@automaker/types').Credentials | undefined;
+  let provider: import('@ask-jenny/types').ClaudeCompatibleProvider | undefined;
+  let credentials: import('@ask-jenny/types').Credentials | undefined;
 
   if (modelOverride) {
     // Use explicit override - resolve the model string

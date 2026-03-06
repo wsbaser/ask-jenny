@@ -6,8 +6,8 @@
  */
 
 // Import and re-export spec types from shared package
-export type { SpecOutput } from '@automaker/types';
-export { specOutputSchema } from '@automaker/types';
+export type { SpecOutput } from '@ask-jenny/types';
+export { specOutputSchema } from '@ask-jenny/types';
 
 /**
  * Escape special XML characters
@@ -28,7 +28,7 @@ export function escapeXml(str: string | undefined | null): string {
 /**
  * Convert structured spec output to XML format
  */
-export function specToXml(spec: import('@automaker/types').SpecOutput): string {
+export function specToXml(spec: import('@ask-jenny/types').SpecOutput): string {
   const indent = '  ';
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>

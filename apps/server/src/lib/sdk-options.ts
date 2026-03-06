@@ -17,8 +17,8 @@
 
 import type { Options } from '@anthropic-ai/claude-agent-sdk';
 import path from 'path';
-import { resolveModelString } from '@automaker/model-resolver';
-import { createLogger } from '@automaker/utils';
+import { resolveModelString } from '@ask-jenny/model-resolver';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('SdkOptions');
 import {
@@ -27,8 +27,8 @@ import {
   type McpServerConfig,
   type ThinkingLevel,
   getThinkingTokenBudget,
-} from '@automaker/types';
-import { isPathAllowed, PathNotAllowedError, getAllowedRootDirectory } from '@automaker/platform';
+} from '@ask-jenny/types';
+import { isPathAllowed, PathNotAllowedError, getAllowedRootDirectory } from '@ask-jenny/platform';
 
 /**
  * Result of sandbox compatibility check
@@ -176,11 +176,11 @@ export const MAX_TURNS = {
  * Model presets for different use cases
  *
  * These can be overridden via environment variables:
- * - AUTOMAKER_MODEL_SPEC: Model for spec generation
- * - AUTOMAKER_MODEL_FEATURES: Model for feature generation
- * - AUTOMAKER_MODEL_SUGGESTIONS: Model for suggestions
- * - AUTOMAKER_MODEL_CHAT: Model for chat
- * - AUTOMAKER_MODEL_DEFAULT: Fallback model for all operations
+ * - ASK_JENNY_MODEL_SPEC: Model for spec generation
+ * - ASK_JENNY_MODEL_FEATURES: Model for feature generation
+ * - ASK_JENNY_MODEL_SUGGESTIONS: Model for suggestions
+ * - ASK_JENNY_MODEL_CHAT: Model for chat
+ * - ASK_JENNY_MODEL_DEFAULT: Fallback model for all operations
  */
 export function getModelForUseCase(
   useCase: 'spec' | 'features' | 'suggestions' | 'chat' | 'auto' | 'default',
@@ -193,12 +193,12 @@ export function getModelForUseCase(
 
   // Check environment variable override for this use case
   const envVarMap: Record<string, string | undefined> = {
-    spec: process.env.AUTOMAKER_MODEL_SPEC,
-    features: process.env.AUTOMAKER_MODEL_FEATURES,
-    suggestions: process.env.AUTOMAKER_MODEL_SUGGESTIONS,
-    chat: process.env.AUTOMAKER_MODEL_CHAT,
-    auto: process.env.AUTOMAKER_MODEL_AUTO,
-    default: process.env.AUTOMAKER_MODEL_DEFAULT,
+    spec: process.env.ASK_JENNY_MODEL_SPEC,
+    features: process.env.ASK_JENNY_MODEL_FEATURES,
+    suggestions: process.env.ASK_JENNY_MODEL_SUGGESTIONS,
+    chat: process.env.ASK_JENNY_MODEL_CHAT,
+    auto: process.env.ASK_JENNY_MODEL_AUTO,
+    default: process.env.ASK_JENNY_MODEL_DEFAULT,
   };
 
   const envModel = envVarMap[useCase] || envVarMap.default;
@@ -353,13 +353,13 @@ export interface CreateSdkOptionsConfig {
   thinkingLevel?: ThinkingLevel;
 }
 
-// Re-export MCP types from @automaker/types for convenience
+// Re-export MCP types from @ask-jenny/types for convenience
 export type {
   McpServerConfig,
   McpStdioServerConfig,
   McpSSEServerConfig,
   McpHttpServerConfig,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 /**
  * Create SDK options for spec generation
@@ -384,7 +384,7 @@ export function createSpecGenerationOptions(config: CreateSdkOptionsConfig): Opt
     ...getBaseOptions(),
     // Override permissionMode - spec generation only needs read-only tools
     // Using "acceptEdits" can cause Claude to write files to unexpected locations
-    // See: https://github.com/AutoMaker-Org/automaker/issues/149
+    // See: https://github.com/wsbaser/ask-jenny/issues/149
     permissionMode: 'default',
     model: getModelForUseCase('spec', config.model),
     maxTurns: MAX_TURNS.maximum,

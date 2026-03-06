@@ -10,7 +10,7 @@
  * user confirmation or server-side path resolution.
  */
 
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 
 const logger = createLogger('FilePicker');
 

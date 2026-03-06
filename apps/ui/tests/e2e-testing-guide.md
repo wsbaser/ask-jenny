@@ -198,7 +198,7 @@ await expect(page.locator('[data-testid="board-view"]')).toBeVisible({ timeout: 
 const projectPath = path.join(TEST_TEMP_DIR, projectName);
 expect(fs.existsSync(projectPath)).toBe(true);
 
-const appSpecPath = path.join(projectPath, '.automaker', 'app_spec.txt');
+const appSpecPath = path.join(projectPath, '.ask-jenny', 'app_spec.txt');
 expect(fs.existsSync(appSpecPath)).toBe(true);
 
 const content = fs.readFileSync(appSpecPath, 'utf-8');

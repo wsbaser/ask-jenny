@@ -17,7 +17,7 @@
 - added to do's list checkbox directly into the card so as it's going through if there's any to do items we can see those update live
 - When the feature is done, I want to see a summary of the LLM. That's the first thing I should see when I double click the card.
 - I went away to mass edit all my features. For example, when I created a new project, it added auto testing on every single feature card. Now I have to manually go through one by one and change those. Have a way to mass edit those, the configuration of all them.
-- Double check and debug if there's memory leaks. It seems like the memory of automaker grows like 3 gigabytes. It's 5gb right now and I'm running three different cursor cli features implementing at the same time.
+- Double check and debug if there's memory leaks. It seems like the memory of ask-jenny grows like 3 gigabytes. It's 5gb right now and I'm running three different cursor cli features implementing at the same time.
 - Typing in the text area of the plan mode was super laggy.
 - When I have a bunch of features running at the same time, it seems like I cannot edit the features in the backlog. Like they don't persist their file changes and I think this is because of the secure FS file has an internal queue to prevent hitting that file open write limit. We may have to reconsider refactoring away from file system and do Postgres or SQLite or something.
 - modals are not scrollable if height of the screen is small enough

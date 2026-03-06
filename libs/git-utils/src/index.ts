@@ -1,6 +1,6 @@
 /**
- * @automaker/git-utils
- * Git operations utilities for AutoMaker
+ * @ask-jenny/git-utils
+ * Git operations utilities for Ask Jenny
  */
 
 // Export types and constants

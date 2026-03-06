@@ -8,7 +8,7 @@
  * Claude responses when structured output is not available.
  */
 
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('JsonExtractor');
 

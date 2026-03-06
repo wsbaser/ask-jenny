@@ -16,7 +16,7 @@ import { Archive, Settings2, CheckSquare, GripVertical, Plus, Zap } from 'lucide
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useResponsiveKanban } from '@/hooks/use-responsive-kanban';
 import { getColumnsWithPipeline, type ColumnId } from './constants';
-import type { PipelineConfig } from '@automaker/types';
+import type { PipelineConfig } from '@ask-jenny/types';
 import { cn } from '@/lib/utils';
 interface KanbanBoardProps {
   activeFeature: Feature | null;

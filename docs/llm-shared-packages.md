@@ -1,10 +1,10 @@
-# AutoMaker Shared Packages - LLM Guide
+# Ask Jenny Shared Packages - LLM Guide
 
-This guide helps AI assistants understand how to use AutoMaker's shared packages effectively.
+This guide helps AI assistants understand how to use Ask Jenny's shared packages effectively.
 
 ## Package Overview
 
-AutoMaker uses a monorepo structure with shared packages in `libs/`:
+Ask Jenny uses a monorepo structure with shared packages in `libs/`:
 
 ```
 libs/
@@ -19,9 +19,9 @@ libs/
 
 ## When to Use Each Package
 
-### @automaker/types
+### @ask-jenny/types
 
-**Use when:** You need type definitions for any AutoMaker concept.
+**Use when:** You need type definitions for any Ask Jenny concept.
 
 **Import for:**
 
@@ -35,12 +35,12 @@ libs/
 **Example:**
 
 ```typescript
-import type { Feature, ExecuteOptions } from '@automaker/types';
+import type { Feature, ExecuteOptions } from '@ask-jenny/types';
 ```
 
 **Never import from:** `services/feature-loader`, `providers/types`
 
-### @automaker/utils
+### @ask-jenny/utils
 
 **Use when:** You need common utilities like logging, error handling, or image processing.
 
@@ -56,12 +56,12 @@ import type { Feature, ExecuteOptions } from '@automaker/types';
 **Example:**
 
 ```typescript
-import { createLogger, classifyError } from '@automaker/utils';
+import { createLogger, classifyError } from '@ask-jenny/utils';
 ```
 
 **Never import from:** `lib/logger`, `lib/error-handler`, `lib/prompt-builder`, `lib/image-handler`
 
-### @automaker/prompts
+### @ask-jenny/prompts
 
 **Use when:** You need AI prompt templates for text enhancement or other AI-powered features.
 
@@ -80,7 +80,7 @@ import { createLogger, classifyError } from '@automaker/utils';
 **Example:**
 
 ```typescript
-import { getEnhancementPrompt, isValidEnhancementMode } from '@automaker/prompts';
+import { getEnhancementPrompt, isValidEnhancementMode } from '@ask-jenny/prompts';
 
 if (isValidEnhancementMode('improve')) {
   const { systemPrompt, userPrompt } = getEnhancementPrompt('improve', description);
@@ -97,28 +97,28 @@ if (isValidEnhancementMode('improve')) {
 - `simplify` - Make verbose descriptions concise and focused
 - `acceptance` - Add testable acceptance criteria
 
-### @automaker/platform
+### @ask-jenny/platform
 
-**Use when:** You need to work with AutoMaker's directory structure or spawn processes.
+**Use when:** You need to work with Ask Jenny's directory structure or spawn processes.
 
 **Import for:**
 
-- `getAutomakerDir(projectPath)` - Get .automaker directory
+- `getAskJennyDir(projectPath)` - Get .ask-jenny directory
 - `getFeaturesDir(projectPath)` - Get features directory
 - `getFeatureDir(projectPath, featureId)` - Get specific feature directory
-- `ensureAutomakerDir(projectPath)` - Create .automaker if needed
+- `ensureAskJennyDir(projectPath)` - Create .ask-jenny if needed
 - `spawnJSONLProcess()` - Spawn process with JSONL output
 - `initAllowedPaths()` - Security path validation
 
 **Example:**
 
 ```typescript
-import { getFeatureDir, ensureAutomakerDir } from '@automaker/platform';
+import { getFeatureDir, ensureAskJennyDir } from '@ask-jenny/platform';
 ```
 
-**Never import from:** `lib/automaker-paths`, `lib/subprocess-manager`, `lib/security`
+**Never import from:** `lib/ask-jenny-paths`, `lib/subprocess-manager`, `lib/security`
 
-### @automaker/model-resolver
+### @ask-jenny/model-resolver
 
 **Use when:** You need to convert model aliases to full model IDs.
 
@@ -130,7 +130,7 @@ import { getFeatureDir, ensureAutomakerDir } from '@automaker/platform';
 **Example:**
 
 ```typescript
-import { resolveModelString, DEFAULT_MODELS } from '@automaker/model-resolver';
+import { resolveModelString, DEFAULT_MODELS } from '@ask-jenny/model-resolver';
 
 // Convert user input to model ID
 const modelId = resolveModelString('sonnet'); // → 'claude-sonnet-4-20250514'
@@ -144,7 +144,7 @@ const modelId = resolveModelString('sonnet'); // → 'claude-sonnet-4-20250514'
 - `sonnet` → `claude-sonnet-4-20250514` (balanced, recommended)
 - `opus` → `claude-opus-4-5-20251101` (maximum capability)
 
-### @automaker/dependency-resolver
+### @ask-jenny/dependency-resolver
 
 **Use when:** You need to order features by dependencies or check if dependencies are satisfied.
 
@@ -157,7 +157,7 @@ const modelId = resolveModelString('sonnet'); // → 'claude-sonnet-4-20250514'
 **Example:**
 
 ```typescript
-import { resolveDependencies, areDependenciesSatisfied } from '@automaker/dependency-resolver';
+import { resolveDependencies, areDependenciesSatisfied } from '@ask-jenny/dependency-resolver';
 
 const { orderedFeatures, hasCycle } = resolveDependencies(features);
 if (!hasCycle) {
@@ -176,7 +176,7 @@ if (!hasCycle) {
 - Auto-mode feature execution (server)
 - Board view feature ordering (UI)
 
-### @automaker/git-utils
+### @ask-jenny/git-utils
 
 **Use when:** You need git operations, status parsing, or diff generation.
 
@@ -191,7 +191,7 @@ if (!hasCycle) {
 **Example:**
 
 ```typescript
-import { isGitRepo, getGitRepositoryDiffs } from '@automaker/git-utils';
+import { isGitRepo, getGitRepositoryDiffs } from '@ask-jenny/git-utils';
 
 if (await isGitRepo(projectPath)) {
   const { diff, files, hasChanges } = await getGitRepositoryDiffs(projectPath);
@@ -213,11 +213,11 @@ if (await isGitRepo(projectPath)) {
 ### Creating a Feature Executor
 
 ```typescript
-import type { Feature, ExecuteOptions } from '@automaker/types';
-import { createLogger, classifyError } from '@automaker/utils';
-import { resolveModelString, DEFAULT_MODELS } from '@automaker/model-resolver';
-import { areDependenciesSatisfied } from '@automaker/dependency-resolver';
-import { getFeatureDir } from '@automaker/platform';
+import type { Feature, ExecuteOptions } from '@ask-jenny/types';
+import { createLogger, classifyError } from '@ask-jenny/utils';
+import { resolveModelString, DEFAULT_MODELS } from '@ask-jenny/model-resolver';
+import { areDependenciesSatisfied } from '@ask-jenny/dependency-resolver';
+import { getFeatureDir } from '@ask-jenny/platform';
 
 const logger = createLogger('FeatureExecutor');
 
@@ -254,8 +254,8 @@ async function executeFeature(feature: Feature, allFeatures: Feature[], projectP
 ### Analyzing Git Changes
 
 ```typescript
-import { getGitRepositoryDiffs, parseGitStatus } from '@automaker/git-utils';
-import { createLogger } from '@automaker/utils';
+import { getGitRepositoryDiffs, parseGitStatus } from '@ask-jenny/git-utils';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('GitAnalyzer');
 
@@ -284,9 +284,9 @@ async function analyzeChanges(projectPath: string) {
 ### Ordering Features for Execution
 
 ```typescript
-import type { Feature } from '@automaker/types';
-import { resolveDependencies, getBlockingDependencies } from '@automaker/dependency-resolver';
-import { createLogger } from '@automaker/utils';
+import type { Feature } from '@ask-jenny/types';
+import { resolveDependencies, getBlockingDependencies } from '@ask-jenny/dependency-resolver';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('FeatureOrdering');
 
@@ -318,29 +318,29 @@ function orderAndFilterFeatures(features: Feature[]): Feature[] {
 ### ✅ DO
 
 ```typescript
-// Import types from @automaker/types
-import type { Feature, ExecuteOptions } from '@automaker/types';
+// Import types from @ask-jenny/types
+import type { Feature, ExecuteOptions } from '@ask-jenny/types';
 
-// Import constants from @automaker/types
-import { CLAUDE_MODEL_MAP, DEFAULT_MODELS } from '@automaker/types';
+// Import constants from @ask-jenny/types
+import { CLAUDE_MODEL_MAP, DEFAULT_MODELS } from '@ask-jenny/types';
 
-// Import utilities from @automaker/utils
-import { createLogger, classifyError } from '@automaker/utils';
+// Import utilities from @ask-jenny/utils
+import { createLogger, classifyError } from '@ask-jenny/utils';
 
-// Import prompts from @automaker/prompts
-import { getEnhancementPrompt, isValidEnhancementMode } from '@automaker/prompts';
+// Import prompts from @ask-jenny/prompts
+import { getEnhancementPrompt, isValidEnhancementMode } from '@ask-jenny/prompts';
 
-// Import platform utils from @automaker/platform
-import { getFeatureDir, ensureAutomakerDir } from '@automaker/platform';
+// Import platform utils from @ask-jenny/platform
+import { getFeatureDir, ensureAskJennyDir } from '@ask-jenny/platform';
 
-// Import model resolution from @automaker/model-resolver
-import { resolveModelString } from '@automaker/model-resolver';
+// Import model resolution from @ask-jenny/model-resolver
+import { resolveModelString } from '@ask-jenny/model-resolver';
 
-// Import dependency resolution from @automaker/dependency-resolver
-import { resolveDependencies } from '@automaker/dependency-resolver';
+// Import dependency resolution from @ask-jenny/dependency-resolver
+import { resolveDependencies } from '@ask-jenny/dependency-resolver';
 
-// Import git utils from @automaker/git-utils
-import { getGitRepositoryDiffs } from '@automaker/git-utils';
+// Import git utils from @ask-jenny/git-utils
+import { getGitRepositoryDiffs } from '@ask-jenny/git-utils';
 ```
 
 ### ❌ DON'T
@@ -356,25 +356,25 @@ import { resolveDependencies } from '../lib/dependency-resolver'; // ❌
 import { getEnhancementPrompt } from '../lib/enhancement-prompts'; // ❌
 
 // DON'T import from old lib/ paths
-import { getFeatureDir } from '../lib/automaker-paths';         // ❌
+import { getFeatureDir } from '../lib/ask-jenny-paths';         // ❌
 import { classifyError } from '../lib/error-handler';           // ❌
 
-// DON'T define types that exist in @automaker/types
-interface Feature { ... }  // ❌ Use: import type { Feature } from '@automaker/types';
+// DON'T define types that exist in @ask-jenny/types
+interface Feature { ... }  // ❌ Use: import type { Feature } from '@ask-jenny/types';
 ```
 
 ## Migration Checklist
 
 When refactoring server code, check:
 
-- [ ] All `Feature` imports use `@automaker/types`
-- [ ] All `ExecuteOptions` imports use `@automaker/types`
-- [ ] All logger usage uses `@automaker/utils`
-- [ ] All prompt templates use `@automaker/prompts`
-- [ ] All path operations use `@automaker/platform`
-- [ ] All model resolution uses `@automaker/model-resolver`
-- [ ] All dependency checks use `@automaker/dependency-resolver`
-- [ ] All git operations use `@automaker/git-utils`
+- [ ] All `Feature` imports use `@ask-jenny/types`
+- [ ] All `ExecuteOptions` imports use `@ask-jenny/types`
+- [ ] All logger usage uses `@ask-jenny/utils`
+- [ ] All prompt templates use `@ask-jenny/prompts`
+- [ ] All path operations use `@ask-jenny/platform`
+- [ ] All model resolution uses `@ask-jenny/model-resolver`
+- [ ] All dependency checks use `@ask-jenny/dependency-resolver`
+- [ ] All git operations use `@ask-jenny/git-utils`
 - [ ] No imports from old `lib/` paths
 - [ ] No imports from `services/feature-loader` for types
 - [ ] No imports from `providers/types`
@@ -384,18 +384,18 @@ When refactoring server code, check:
 Understanding the dependency chain helps prevent circular dependencies:
 
 ```
-@automaker/types (no dependencies)
+@ask-jenny/types (no dependencies)
     ↓
-@automaker/utils
-@automaker/prompts
-@automaker/platform
-@automaker/model-resolver
-@automaker/dependency-resolver
+@ask-jenny/utils
+@ask-jenny/prompts
+@ask-jenny/platform
+@ask-jenny/model-resolver
+@ask-jenny/dependency-resolver
     ↓
-@automaker/git-utils
+@ask-jenny/git-utils
     ↓
-@automaker/server
-@automaker/ui
+@ask-jenny/server
+@ask-jenny/ui
 ```
 
 **Rule:** Packages can only depend on packages above them in the chain.
@@ -426,8 +426,8 @@ When writing tests:
 
 ```typescript
 // ✅ Import from packages
-import type { Feature } from '@automaker/types';
-import { createLogger } from '@automaker/utils';
+import type { Feature } from '@ask-jenny/types';
+import { createLogger } from '@ask-jenny/utils';
 
 // ❌ Don't import from src
 import { Feature } from '../../../src/services/feature-loader';
@@ -437,13 +437,13 @@ import { Feature } from '../../../src/services/feature-loader';
 
 **Quick reference:**
 
-- Types → `@automaker/types`
-- Logging/Errors/Utils → `@automaker/utils`
-- AI Prompts → `@automaker/prompts`
-- Paths/Security → `@automaker/platform`
-- Model Resolution → `@automaker/model-resolver`
-- Dependency Ordering → `@automaker/dependency-resolver`
-- Git Operations → `@automaker/git-utils`
+- Types → `@ask-jenny/types`
+- Logging/Errors/Utils → `@ask-jenny/utils`
+- AI Prompts → `@ask-jenny/prompts`
+- Paths/Security → `@ask-jenny/platform`
+- Model Resolution → `@ask-jenny/model-resolver`
+- Dependency Ordering → `@ask-jenny/dependency-resolver`
+- Git Operations → `@ask-jenny/git-utils`
 
 **Never import from:** `lib/*`, `services/feature-loader` (for types), `providers/types`, `routes/common`
 

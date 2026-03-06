@@ -20,13 +20,13 @@ import type {
   PipelineConfig,
   ThinkingLevel,
   PlanningMode,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import {
   DEFAULT_PHASE_MODELS,
   DEFAULT_MAX_CONCURRENCY,
   isClaudeModel,
   stripProviderPrefix,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import {
   buildPromptWithImages,
   classifyError,
@@ -38,18 +38,18 @@ import {
   readJsonWithRecovery,
   logRecoveryWarning,
   DEFAULT_BACKUP_COUNT,
-} from '@automaker/utils';
+} from '@ask-jenny/utils';
 
 const logger = createLogger('AutoMode');
-import { resolveModelString, resolvePhaseModel, DEFAULT_MODELS } from '@automaker/model-resolver';
-import { resolveDependencies, areDependenciesSatisfied } from '@automaker/dependency-resolver';
+import { resolveModelString, resolvePhaseModel, DEFAULT_MODELS } from '@ask-jenny/model-resolver';
+import { resolveDependencies, areDependenciesSatisfied } from '@ask-jenny/dependency-resolver';
 import {
   getFeatureDir,
-  getAutomakerDir,
+  getAskJennyDir,
   getFeaturesDir,
   getExecutionStatePath,
-  ensureAutomakerDir,
-} from '@automaker/platform';
+  ensureAskJennyDir,
+} from '@ask-jenny/platform';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
@@ -90,7 +90,7 @@ async function getCurrentBranch(projectPath: string): Promise<string | null> {
   }
 }
 
-// PlanningMode type is imported from @automaker/types
+// PlanningMode type is imported from @ask-jenny/types
 
 interface ParsedTask {
   id: string; // e.g., "T001"
@@ -850,7 +850,7 @@ export class AutoModeService {
     maxConcurrency: number
   ): Promise<void> {
     try {
-      await ensureAutomakerDir(projectPath);
+      await ensureAskJennyDir(projectPath);
       const statePath = getExecutionStatePath(projectPath);
       const runningFeatureIds = Array.from(this.runningFeatures.entries())
         .filter(([, f]) => f.projectPath === projectPath)
@@ -1603,7 +1603,7 @@ Complete the pipeline step instructions above. Review the previous work and appl
     }
 
     // Normal resume flow for non-pipeline features
-    // Check if context exists in .automaker directory
+    // Check if context exists in .ask-jenny directory
     const featureDir = getFeatureDir(projectPath, featureId);
     const contextPath = path.join(featureDir, 'agent-output.md');
 
@@ -2258,7 +2258,7 @@ Address the follow-up instructions above. Review the previous work and make the 
       const commitMessage = feature
         ? `feat: ${this.extractTitleFromDescription(
             feature.description
-          )}\n\nImplemented by Automaker auto-mode`
+          )}\n\nImplemented by Ask Jenny auto-mode`
         : `feat: Feature ${featureId}`;
 
       // Stage and commit
@@ -2292,7 +2292,7 @@ Address the follow-up instructions above. Review the previous work and make the 
    * Check if context exists for a feature
    */
   async contextExists(projectPath: string, featureId: string): Promise<boolean> {
-    // Context is stored in .automaker directory
+    // Context is stored in .ask-jenny directory
     const featureDir = getFeatureDir(projectPath, featureId);
     const contextPath = path.join(featureDir, 'agent-output.md');
 
@@ -2404,10 +2404,10 @@ Format your response as a structured markdown document.`;
         }
       }
 
-      // Save analysis to .automaker directory
-      const automakerDir = getAutomakerDir(projectPath);
-      const analysisPath = path.join(automakerDir, 'project-analysis.md');
-      await secureFs.mkdir(automakerDir, { recursive: true });
+      // Save analysis to .ask-jenny directory
+      const askJennyDir = getAskJennyDir(projectPath);
+      const analysisPath = path.join(askJennyDir, 'project-analysis.md');
+      await secureFs.mkdir(askJennyDir, { recursive: true });
       await secureFs.writeFile(analysisPath, analysisResult);
 
       this.emitAutoModeEvent('auto_mode_feature_complete', {
@@ -2812,7 +2812,7 @@ Format your response as a structured markdown document.`;
   }
 
   private async loadFeature(projectPath: string, featureId: string): Promise<Feature | null> {
-    // Features are stored in .automaker directory
+    // Features are stored in .ask-jenny directory
     const featureDir = getFeatureDir(projectPath, featureId);
     const featurePath = path.join(featureDir, 'feature.json');
 
@@ -2829,7 +2829,7 @@ Format your response as a structured markdown document.`;
     featureId: string,
     status: string
   ): Promise<void> {
-    // Features are stored in .automaker directory
+    // Features are stored in .ask-jenny directory
     const featureDir = getFeatureDir(projectPath, featureId);
     const featurePath = path.join(featureDir, 'feature.json');
 
@@ -2973,7 +2973,7 @@ Format your response as a structured markdown document.`;
     projectPath: string,
     branchName: string | null = null
   ): Promise<Feature[]> {
-    // Features are stored in .automaker directory
+    // Features are stored in .ask-jenny directory
     const featuresDir = getFeaturesDir(projectPath);
 
     // Get the actual primary branch name for the project (e.g., "main", "master", "develop")
@@ -3317,9 +3317,9 @@ You can use the Read tool to view these images at any time during implementation
       (planningMode === 'lite' && options?.requirePlanApproval === true);
     const requiresApproval = planningModeRequiresApproval && options?.requirePlanApproval === true;
 
-    // CI/CD Mock Mode: Return early with mock response when AUTOMAKER_MOCK_AGENT is set
+    // CI/CD Mock Mode: Return early with mock response when ASK_JENNY_MOCK_AGENT is set
     // This prevents actual API calls during automated testing
-    if (process.env.AUTOMAKER_MOCK_AGENT === 'true') {
+    if (process.env.ASK_JENNY_MOCK_AGENT === 'true') {
       logger.info(`MOCK MODE: Skipping real agent execution for feature ${featureId}`);
 
       // Simulate some work being done
@@ -3364,7 +3364,7 @@ This is a mock agent response for CI/CD testing.
 - Created \`yellow.txt\` with content "yellow"
 
 ## Notes
-This mock response was generated because AUTOMAKER_MOCK_AGENT=true was set.
+This mock response was generated because ASK_JENNY_MOCK_AGENT=true was set.
 `;
 
       await secureFs.mkdir(path.dirname(outputPath), { recursive: true });
@@ -3435,7 +3435,7 @@ This mock response was generated because AUTOMAKER_MOCK_AGENT=true was set.
 
     // Try to find a provider for the model (if it's a provider model like "GLM-4.7")
     // This allows users to select provider models in the Auto Mode / Feature execution
-    let claudeCompatibleProvider: import('@automaker/types').ClaudeCompatibleProvider | undefined;
+    let claudeCompatibleProvider: import('@ask-jenny/types').ClaudeCompatibleProvider | undefined;
     let providerResolvedModel: string | undefined;
     if (finalModel && this.settingsService) {
       const providerResult = await getProviderByModelId(
@@ -3483,17 +3483,17 @@ This mock response was generated because AUTOMAKER_MOCK_AGENT=true was set.
       : '';
     let specDetected = false;
 
-    // Agent output goes to .automaker directory
+    // Agent output goes to .ask-jenny directory
     // Note: We use projectPath here, not workDir, because workDir might be a worktree path
     const featureDirForOutput = getFeatureDir(projectPath, featureId);
     const outputPath = path.join(featureDirForOutput, 'agent-output.md');
     const rawOutputPath = path.join(featureDirForOutput, 'raw-output.jsonl');
 
     // Raw output logging is configurable via environment variable
-    // Set AUTOMAKER_DEBUG_RAW_OUTPUT=true to enable raw stream event logging
+    // Set ASK_JENNY_DEBUG_RAW_OUTPUT=true to enable raw stream event logging
     const enableRawOutput =
-      process.env.AUTOMAKER_DEBUG_RAW_OUTPUT === 'true' ||
-      process.env.AUTOMAKER_DEBUG_RAW_OUTPUT === '1';
+      process.env.ASK_JENNY_DEBUG_RAW_OUTPUT === 'true' ||
+      process.env.ASK_JENNY_DEBUG_RAW_OUTPUT === '1';
 
     // Incremental file writing state
     let writeTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -4358,7 +4358,7 @@ After generating the revised spec, output:
    */
   private async saveExecutionState(projectPath: string): Promise<void> {
     try {
-      await ensureAutomakerDir(projectPath);
+      await ensureAskJennyDir(projectPath);
       const statePath = getExecutionStatePath(projectPath);
       const state: ExecutionState = {
         version: 1,

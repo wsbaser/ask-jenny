@@ -1,10 +1,10 @@
 import type { ModelAlias } from '@/store/app-store';
-import type { ModelProvider, ThinkingLevel, ReasoningEffort } from '@automaker/types';
+import type { ModelProvider, ThinkingLevel, ReasoningEffort } from '@ask-jenny/types';
 import {
   CURSOR_MODEL_MAP,
   CODEX_MODEL_MAP,
   OPENCODE_MODELS as OPENCODE_MODEL_CONFIGS,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import { Brain, Zap, Scale, Cpu, Rocket, Sparkles } from 'lucide-react';
 import { AnthropicIcon, CursorIcon, OpenAIIcon, OpenCodeIcon } from '@/components/ui/provider-icon';
 

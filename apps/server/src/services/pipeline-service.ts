@@ -2,14 +2,14 @@
  * Pipeline Service - Handles reading/writing pipeline configuration
  *
  * Provides persistent storage for:
- * - Pipeline configuration ({projectPath}/.automaker/pipeline.json)
+ * - Pipeline configuration ({projectPath}/.ask-jenny/pipeline.json)
  */
 
 import path from 'path';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import * as secureFs from '../lib/secure-fs.js';
-import { ensureAutomakerDir } from '@automaker/platform';
-import type { PipelineConfig, PipelineStep, FeatureStatusWithPipeline } from '@automaker/types';
+import { ensureAskJennyDir } from '@ask-jenny/platform';
+import type { PipelineConfig, PipelineStep, FeatureStatusWithPipeline } from '@ask-jenny/types';
 
 const logger = createLogger('PipelineService');
 
@@ -67,7 +67,7 @@ function generateStepId(): string {
  * Get the pipeline config file path for a project
  */
 function getPipelineConfigPath(projectPath: string): string {
-  return path.join(projectPath, '.automaker', 'pipeline.json');
+  return path.join(projectPath, '.ask-jenny', 'pipeline.json');
 }
 
 /**
@@ -102,7 +102,7 @@ export class PipelineService {
    * @param config - Complete PipelineConfig to save
    */
   async savePipelineConfig(projectPath: string, config: PipelineConfig): Promise<void> {
-    await ensureAutomakerDir(projectPath);
+    await ensureAskJennyDir(projectPath);
     const configPath = getPipelineConfigPath(projectPath);
     await atomicWriteJson(configPath, config);
     logger.info(`Pipeline config saved for project: ${projectPath}`);

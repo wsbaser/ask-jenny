@@ -12,7 +12,7 @@ import type {
   ClaudeCompatibleProvider,
   ProviderModel,
   ClaudeModelAlias,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import {
   stripProviderPrefix,
   STANDALONE_CURSOR_MODELS,
@@ -20,7 +20,7 @@ import {
   isGroupSelected,
   getSelectedVariant,
   codexModelHasThinking,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import {
   CLAUDE_MODELS,
   CURSOR_MODELS,

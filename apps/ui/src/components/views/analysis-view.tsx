@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore, FileTreeNode, ProjectAnalysis } from '@/store/app-store';
 import { getElectronAPI } from '@/lib/electron';
@@ -370,7 +370,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
 `;
 
       // Write the spec file
-      const specPath = `${currentProject.path}/.automaker/app_spec.txt`;
+      const specPath = `${currentProject.path}/.ask-jenny/app_spec.txt`;
       const writeResult = await api.writeFile(specPath, specContent);
 
       if (writeResult.success) {
@@ -386,7 +386,7 @@ ${Object.entries(projectAnalysis.filesByExtension)
     }
   }, [currentProject, projectAnalysis]);
 
-  // Generate features from analysis and save to .automaker/features folder
+  // Generate features from analysis and save to .ask-jenny/features folder
   const generateFeatureList = useCallback(async () => {
     if (!currentProject || !projectAnalysis) return;
 

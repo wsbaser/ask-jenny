@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { cn } from '@/lib/utils';
 
 const logger = createLogger('ImageDropZone');

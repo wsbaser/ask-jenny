@@ -1,7 +1,7 @@
 /**
  * Memory Loader - Smart loading of agent memory files
  *
- * Loads relevant memory files from .automaker/memory/ based on:
+ * Loads relevant memory files from .ask-jenny/memory/ based on:
  * - Tag matching with feature keywords
  * - Historical usefulness (usage stats)
  * - File importance
@@ -129,7 +129,7 @@ async function withFileLock<T>(filePath: string, operation: () => Promise<T>): P
  * Get the memory directory path for a project
  */
 export function getMemoryDir(projectPath: string): string {
-  return path.join(projectPath, '.automaker', 'memory');
+  return path.join(projectPath, '.ask-jenny', 'memory');
 }
 
 /**

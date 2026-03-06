@@ -1,5 +1,5 @@
 /**
- * Ideation types for AutoMaker brainstorming and idea management
+ * Ideation types for Ask Jenny brainstorming and idea management
  */
 
 // ============================================================================

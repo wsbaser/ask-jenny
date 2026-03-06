@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAppStore } from '@/store/app-store';
-import type { ModelAlias, CursorModelId, PhaseModelKey, PhaseModelEntry } from '@automaker/types';
+import type { ModelAlias, CursorModelId, PhaseModelKey, PhaseModelEntry } from '@ask-jenny/types';
 import { PhaseModelSelector } from '@/components/views/settings-view/model-defaults/phase-model-selector';
 
 /**

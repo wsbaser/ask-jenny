@@ -15,8 +15,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
-import type { StoredEventSummary, StoredEvent, EventHookTrigger } from '@automaker/types';
-import { EVENT_HOOK_TRIGGER_LABELS } from '@automaker/types';
+import type { StoredEventSummary, StoredEvent, EventHookTrigger } from '@ask-jenny/types';
+import { EVENT_HOOK_TRIGGER_LABELS } from '@ask-jenny/types';
 import { getHttpApiClient } from '@/lib/http-api-client';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 

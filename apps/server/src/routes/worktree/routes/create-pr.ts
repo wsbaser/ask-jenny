@@ -12,8 +12,8 @@ import {
   isGhCliAvailable,
 } from '../common.js';
 import { updateWorktreePRInfo } from '../../../lib/worktree-metadata.js';
-import { createLogger } from '@automaker/utils';
-import { validatePRState } from '@automaker/types';
+import { createLogger } from '@ask-jenny/utils';
+import { validatePRState } from '@ask-jenny/types';
 
 const logger = createLogger('CreatePR');
 
@@ -40,7 +40,7 @@ export function createCreatePRHandler() {
       }
 
       // Use projectPath if provided, otherwise derive from worktreePath
-      // For worktrees, projectPath is needed to store metadata in the main project's .automaker folder
+      // For worktrees, projectPath is needed to store metadata in the main project's .ask-jenny folder
       const effectiveProjectPath = projectPath || worktreePath;
 
       // Get current branch name

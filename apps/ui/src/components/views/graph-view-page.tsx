@@ -20,9 +20,9 @@ import { useAutoMode } from '@/hooks/use-auto-mode';
 import { pathsEqual } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { getElectronAPI } from '@/lib/electron';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { toast } from 'sonner';
-import type { BacklogPlanResult } from '@automaker/types';
+import type { BacklogPlanResult } from '@ask-jenny/types';
 
 const logger = createLogger('GraphViewPage');
 

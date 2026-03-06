@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getHttpApiClient } from '@/lib/http-api-client';
 import { jiraKeys } from '@/hooks/queries/use-jira';
 import { queryKeys } from '@/lib/query-keys';
-import type { JiraImportResponse, JiraIssue } from '@automaker/types';
+import type { JiraImportResponse, JiraIssue } from '@ask-jenny/types';
 
 /**
  * Hook to initiate Jira OAuth connection

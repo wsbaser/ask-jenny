@@ -7,7 +7,7 @@
 
 import { BaseProvider } from './base-provider.js';
 import type { InstallationStatus, ModelDefinition } from './types.js';
-import { isCursorModel, isCodexModel, isOpencodeModel, type ModelProvider } from '@automaker/types';
+import { isCursorModel, isCodexModel, isOpencodeModel, type ModelProvider } from '@ask-jenny/types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -25,7 +25,7 @@ export function isProviderDisconnected(providerName: string): boolean {
   const markerFile = DISCONNECTED_MARKERS[providerName.toLowerCase()];
   if (!markerFile) return false;
 
-  const markerPath = path.join(process.cwd(), '.automaker', markerFile);
+  const markerPath = path.join(process.cwd(), '.ask-jenny', markerFile);
   return fs.existsSync(markerPath);
 }
 

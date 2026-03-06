@@ -6,7 +6,7 @@
 import path from 'path';
 import * as secureFs from '../lib/secure-fs.js';
 import type { EventEmitter } from '../lib/events.js';
-import type { Feature, ExecuteOptions } from '@automaker/types';
+import type { Feature, ExecuteOptions } from '@ask-jenny/types';
 import type {
   Idea,
   IdeaCategory,
@@ -23,7 +23,7 @@ import type {
   SendMessageOptions,
   PromptCategory,
   IdeationPrompt,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import {
   getIdeationDir,
   getIdeasDir,
@@ -33,14 +33,14 @@ import {
   getIdeationSessionPath,
   getIdeationAnalysisPath,
   ensureIdeationDir,
-} from '@automaker/platform';
-import { createLogger, loadContextFiles, isAbortError } from '@automaker/utils';
+} from '@ask-jenny/platform';
+import { createLogger, loadContextFiles, isAbortError } from '@ask-jenny/utils';
 import { ProviderFactory } from '../providers/provider-factory.js';
 import type { SettingsService } from './settings-service.js';
 import type { FeatureLoader } from './feature-loader.js';
 import { createChatOptions, validateWorkingDirectory } from '../lib/sdk-options.js';
-import { resolveModelString } from '@automaker/model-resolver';
-import { stripProviderPrefix } from '@automaker/types';
+import { resolveModelString } from '@ask-jenny/model-resolver';
+import { stripProviderPrefix } from '@ask-jenny/types';
 import { getPromptCustomization, getProviderByModelId } from '../lib/settings-helpers.js';
 
 const logger = createLogger('IdeationService');
@@ -211,7 +211,7 @@ export class IdeationService {
       let modelId = resolveModelString(options?.model ?? 'sonnet');
 
       // Try to find a provider for this model (e.g., GLM, MiniMax models)
-      let claudeCompatibleProvider: import('@automaker/types').ClaudeCompatibleProvider | undefined;
+      let claudeCompatibleProvider: import('@ask-jenny/types').ClaudeCompatibleProvider | undefined;
       let credentials = await this.settingsService?.getCredentials();
 
       if (this.settingsService && options?.model) {

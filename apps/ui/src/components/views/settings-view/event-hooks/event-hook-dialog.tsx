@@ -26,8 +26,8 @@ import type {
   EventHookHttpMethod,
   EventHookShellAction,
   EventHookHttpAction,
-} from '@automaker/types';
-import { EVENT_HOOK_TRIGGER_LABELS } from '@automaker/types';
+} from '@ask-jenny/types';
+import { EVENT_HOOK_TRIGGER_LABELS } from '@ask-jenny/types';
 import { generateUUID } from '@/lib/utils';
 
 interface EventHookDialogProps {

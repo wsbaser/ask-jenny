@@ -330,7 +330,7 @@ await codexConfigManager.configureMcpServer(cwd, mcpServerScriptPath);
 Generates `.codex/config.toml`:
 
 ```toml
-[mcp_servers.automaker-tools]
+[mcp_servers.ask-jenny-tools]
 command = "node"
 args = ["/path/to/mcp-server.js"]
 enabled_tools = ["UpdateFeatureStatus"]

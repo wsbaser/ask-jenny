@@ -40,7 +40,7 @@ export function useSpecFile(projectPath: string | undefined) {
       if (!projectPath) throw new Error('No project path');
 
       const api = getElectronAPI();
-      const result = await api.readFile(`${projectPath}/.automaker/app_spec.txt`);
+      const result = await api.readFile(`${projectPath}/.ask-jenny/app_spec.txt`);
 
       if (result.success && result.content) {
         return {

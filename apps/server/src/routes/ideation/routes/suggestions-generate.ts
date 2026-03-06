@@ -4,7 +4,7 @@
 
 import type { Request, Response } from 'express';
 import type { IdeationService } from '../../../services/ideation-service.js';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import { getErrorMessage, logError } from '../common.js';
 
 const logger = createLogger('ideation:suggestions-generate');

@@ -18,8 +18,8 @@ import type {
   OpencodeProvider,
   OpencodeModelConfig,
   ModelDefinition,
-} from '@automaker/types';
-import { OPENCODE_MODELS, OPENCODE_MODEL_CONFIG_MAP } from '@automaker/types';
+} from '@ask-jenny/types';
+import { OPENCODE_MODELS, OPENCODE_MODEL_CONFIG_MAP } from '@ask-jenny/types';
 import type { OpenCodeProviderInfo } from '../cli-status/opencode-cli-status';
 import {
   OpenCodeIcon,

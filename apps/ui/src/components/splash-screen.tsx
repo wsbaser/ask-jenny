@@ -253,7 +253,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         </svg>
       </div>
 
-      {/* Automaker text that fades in below the logo */}
+      {/* Ask Jenny text that fades in below the logo */}
       <div
         className="absolute flex items-center gap-1"
         style={{
@@ -274,7 +274,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         }}
       >
         <span className="font-bold text-foreground text-4xl tracking-tight leading-none">
-          automaker<span className="text-brand-500">.</span>
+          ask-jenny<span className="text-brand-500">.</span>
         </span>
       </div>
     </div>

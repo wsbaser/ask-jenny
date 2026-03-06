@@ -4,10 +4,10 @@
  * Provides persistent storage for:
  * - Global settings (DATA_DIR/settings.json)
  * - Credentials (DATA_DIR/credentials.json)
- * - Per-project settings ({projectPath}/.automaker/settings.json)
+ * - Per-project settings ({projectPath}/.ask-jenny/settings.json)
  */
 
-import { createLogger, atomicWriteJson, DEFAULT_BACKUP_COUNT } from '@automaker/utils';
+import { createLogger, atomicWriteJson, DEFAULT_BACKUP_COUNT } from '@ask-jenny/utils';
 import * as secureFs from '../lib/secure-fs.js';
 import os from 'os';
 import path from 'path';
@@ -18,8 +18,8 @@ import {
   getCredentialsPath,
   getProjectSettingsPath,
   ensureDataDir,
-  ensureAutomakerDir,
-} from '@automaker/platform';
+  ensureAskJennyDir,
+} from '@ask-jenny/platform';
 import type {
   GlobalSettings,
   Credentials,
@@ -49,7 +49,7 @@ import {
   migrateModelId,
   migrateCursorModelIds,
   migrateOpencodeModelIds,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 const logger = createLogger('SettingsService');
 
@@ -96,7 +96,7 @@ async function writeSettingsJson(filePath: string, data: unknown): Promise<void>
  * for reliability. Provides three levels of settings:
  * - Global settings: shared preferences in {dataDir}/settings.json
  * - Credentials: sensitive API keys in {dataDir}/credentials.json
- * - Project settings: per-project overrides in {projectPath}/.automaker/settings.json
+ * - Project settings: per-project overrides in {projectPath}/.ask-jenny/settings.json
  *
  * All operations are atomic (write to temp file, then rename) to prevent corruption.
  * Missing files are treated as empty and return defaults on read.
@@ -108,7 +108,7 @@ export class SettingsService {
   /**
    * Create a new SettingsService instance
    *
-   * @param dataDir - Absolute path to global data directory (e.g., ~/.automaker)
+   * @param dataDir - Absolute path to global data directory (e.g., ~/.ask-jenny)
    */
   constructor(dataDir: string) {
     this.dataDir = dataDir;
@@ -757,7 +757,7 @@ export class SettingsService {
   /**
    * Get project-specific settings with defaults applied
    *
-   * Reads from {projectPath}/.automaker/settings.json. If file doesn't exist,
+   * Reads from {projectPath}/.ask-jenny/settings.json. If file doesn't exist,
    * returns defaults. Project settings are optional - missing values fall back
    * to global settings on the UI side.
    *
@@ -777,7 +777,7 @@ export class SettingsService {
   /**
    * Update project-specific settings with partial changes
    *
-   * Performs a deep merge on boardBackground. Creates .automaker directory
+   * Performs a deep merge on boardBackground. Creates .ask-jenny directory
    * in project if needed. Updates are written atomically.
    *
    * @param projectPath - Absolute path to project directory
@@ -788,7 +788,7 @@ export class SettingsService {
     projectPath: string,
     updates: Partial<ProjectSettings>
   ): Promise<ProjectSettings> {
-    await ensureAutomakerDir(projectPath);
+    await ensureAskJennyDir(projectPath);
     const settingsPath = getProjectSettingsPath(projectPath);
 
     const current = await this.getProjectSettings(projectPath);
@@ -837,7 +837,7 @@ export class SettingsService {
    * Check if project settings file exists
    *
    * @param projectPath - Absolute path to project directory
-   * @returns Promise resolving to true if {projectPath}/.automaker/settings.json exists
+   * @returns Promise resolving to true if {projectPath}/.ask-jenny/settings.json exists
    */
   async hasProjectSettings(projectPath: string): Promise<boolean> {
     const settingsPath = getProjectSettingsPath(projectPath);

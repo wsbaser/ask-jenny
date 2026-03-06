@@ -5,7 +5,7 @@
  * ensuring data integrity even during crashes or power failures.
  */
 
-import { secureFs } from '@automaker/platform';
+import { secureFs } from '@ask-jenny/platform';
 import path from 'path';
 import crypto from 'crypto';
 import { createLogger } from './logger.js';

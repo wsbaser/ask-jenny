@@ -12,7 +12,7 @@ import { useAppStore } from '@/store/app-store';
 import { useGenerateIdeationSuggestions } from '@/hooks/mutations';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
-import type { IdeaCategory, IdeationPrompt } from '@automaker/types';
+import type { IdeaCategory, IdeationPrompt } from '@ask-jenny/types';
 
 interface PromptListProps {
   category: IdeaCategory;

@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { getErrorMessage, logError, isValidBranchName, execGitCommand } from '../common.js';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 
 const execAsync = promisify(exec);
 const logger = createLogger('Worktree');
