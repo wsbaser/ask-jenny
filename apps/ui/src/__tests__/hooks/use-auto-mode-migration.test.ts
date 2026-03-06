@@ -236,10 +236,7 @@ describe('use-auto-mode session key migration', () => {
     it('should handle empty object', () => {
       writeAutoModeSession({});
 
-      expect(sessionStorageMock.setItem).toHaveBeenCalledWith(
-        AUTO_MODE_SESSION_KEY,
-        '{}'
-      );
+      expect(sessionStorageMock.setItem).toHaveBeenCalledWith(AUTO_MODE_SESSION_KEY, '{}');
     });
 
     it('should overwrite existing data', () => {

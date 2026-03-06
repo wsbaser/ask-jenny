@@ -4,8 +4,8 @@ import {
   areDependenciesSatisfied,
   getBlockingDependencies,
   type DependencyResolutionResult,
-} from '@automaker/dependency-resolver';
-import type { Feature } from '@automaker/types';
+} from '@ask-jenny/dependency-resolver';
+import type { Feature } from '@ask-jenny/types';
 
 // Helper to create test features
 function createFeature(

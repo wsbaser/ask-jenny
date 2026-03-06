@@ -2,14 +2,14 @@
  * Port Configuration Consistency Tests
  *
  * These tests verify that port configuration is consistent across the application.
- * They ensure that the centralized port constants from @automaker/types are used
+ * They ensure that the centralized port constants from @ask-jenny/types are used
  * correctly throughout the codebase.
  */
 
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
-import { SERVER_PORT, STATIC_PORT, RESERVED_PORTS } from '@automaker/types';
+import { SERVER_PORT, STATIC_PORT, RESERVED_PORTS } from '@ask-jenny/types';
 
 // Root project directory
 const PROJECT_ROOT = path.resolve(__dirname, '../../../../');
@@ -112,8 +112,8 @@ test.describe('Port Configuration - API Base URL', () => {
     const constantsPath = path.join(PROJECT_ROOT, 'apps/ui/tests/utils/core/constants.ts');
     const content = fs.readFileSync(constantsPath, 'utf-8');
 
-    // Verify it imports from @automaker/types
-    expect(content).toContain("import { SERVER_PORT, STATIC_PORT } from '@automaker/types'");
+    // Verify it imports from @ask-jenny/types
+    expect(content).toContain("import { SERVER_PORT, STATIC_PORT } from '@ask-jenny/types'");
 
     // Verify API_BASE_URL uses SERVER_PORT
     expect(content).toContain('${SERVER_PORT}');
@@ -124,7 +124,7 @@ test.describe('Port Configuration - API Base URL', () => {
     const content = fs.readFileSync(clientPath, 'utf-8');
 
     // Verify it imports SERVER_PORT
-    expect(content).toContain("import { SERVER_PORT } from '@automaker/types'");
+    expect(content).toContain("import { SERVER_PORT } from '@ask-jenny/types'");
 
     // Verify it uses the constant (not hardcoded)
     expect(content).toContain('${SERVER_PORT}');

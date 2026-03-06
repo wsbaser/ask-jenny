@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { SpecOutput } from '@automaker/spec-parser';
+import type { SpecOutput } from '@ask-jenny/spec-parser';
 
 type RoadmapPhase = NonNullable<SpecOutput['implementation_roadmap']>[number];
 type PhaseStatus = 'completed' | 'in_progress' | 'pending';

@@ -3,7 +3,7 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { isGitRepo } from '@automaker/git-utils';
+import { isGitRepo } from '@ask-jenny/git-utils';
 import { hasCommits } from './common.js';
 
 interface ValidationOptions {

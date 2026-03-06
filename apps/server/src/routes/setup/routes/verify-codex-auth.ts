@@ -3,11 +3,11 @@
  */
 
 import type { Request, Response } from 'express';
-import { createLogger } from '@automaker/utils';
-import { CODEX_MODEL_MAP } from '@automaker/types';
+import { createLogger } from '@ask-jenny/utils';
+import { CODEX_MODEL_MAP } from '@ask-jenny/types';
 import { ProviderFactory } from '../../../providers/provider-factory.js';
 import { getApiKey } from '../common.js';
-import { getCodexAuthIndicators } from '@automaker/platform';
+import { getCodexAuthIndicators } from '@ask-jenny/platform';
 import {
   createSecureAuthEnv,
   AuthSessionManager,

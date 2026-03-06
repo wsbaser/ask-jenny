@@ -4,7 +4,7 @@ import {
   isValidSpecXml,
   type ParseResult,
   type SpecOutput,
-} from '@automaker/spec-parser';
+} from '@ask-jenny/spec-parser';
 
 /**
  * Result of the spec parsing hook.

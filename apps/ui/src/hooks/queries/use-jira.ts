@@ -11,7 +11,7 @@ import type {
   JiraBoard,
   JiraSprint,
   JiraSprintIssuesResponse,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 /**
  * Query key factory for Jira

@@ -17,10 +17,10 @@ const __dirname = path.dirname(__filename);
 // Resolve workspace root (apps/ui/scripts -> workspace root)
 const WORKSPACE_ROOT = path.resolve(__dirname, '../../..');
 const FIXTURE_PATH = path.join(WORKSPACE_ROOT, 'test/fixtures/projectA');
-const SPEC_FILE_PATH = path.join(FIXTURE_PATH, '.automaker/app_spec.txt');
+const SPEC_FILE_PATH = path.join(FIXTURE_PATH, '.ask-jenny/app_spec.txt');
 const SERVER_SETTINGS_PATH = path.join(WORKSPACE_ROOT, 'apps/server/data/settings.json');
 // Create a shared test workspace directory that will be used as default for project creation
-const TEST_WORKSPACE_DIR = path.join(os.tmpdir(), 'automaker-e2e-workspace');
+const TEST_WORKSPACE_DIR = path.join(os.tmpdir(), 'ask-jenny-e2e-workspace');
 
 const SPEC_CONTENT = `<app_spec>
   <name>Test Project A</name>

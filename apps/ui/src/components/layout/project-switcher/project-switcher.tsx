@@ -120,7 +120,7 @@ export function ProjectSwitcher() {
 
   const handleBugReportClick = useCallback(() => {
     const api = getElectronAPI();
-    api.openExternalLink('https://github.com/AutoMaker-Org/automaker/issues');
+    api.openExternalLink('https://github.com/wsbaser/ask-jenny/issues');
   }, []);
 
   const handleWikiClick = useCallback(() => {
@@ -140,10 +140,10 @@ export function ProjectSwitcher() {
       const name = path.split(/[/\\]/).filter(Boolean).pop() || 'Untitled Project';
 
       try {
-        // Check if this is a brand new project (no .automaker directory)
+        // Check if this is a brand new project (no .ask-jenny directory)
         const hadAutomakerDir = await hasAutomakerDir(path);
 
-        // Initialize the .automaker directory structure
+        // Initialize the .ask-jenny directory structure
         const initResult = await initializeProject(path);
 
         if (!initResult.success) {
@@ -169,7 +169,7 @@ export function ProjectSwitcher() {
           });
         } else if (initResult.createdFiles && initResult.createdFiles.length > 0) {
           toast.success(initResult.isNewProject ? 'Project initialized' : 'Project updated', {
-            description: `Set up ${initResult.createdFiles.length} file(s) in .automaker`,
+            description: `Set up ${initResult.createdFiles.length} file(s) in .ask-jenny`,
           });
         } else {
           toast.success('Project opened', {
@@ -278,7 +278,7 @@ export function ProjectSwitcher() {
         )}
         data-testid="project-switcher"
       >
-        {/* Automaker Logo and Version */}
+        {/* Ask Jenny Logo and Version */}
         <div className="flex flex-col items-center pt-3 pb-2 px-2">
           <button
             onClick={() => navigate({ to: '/dashboard' })}

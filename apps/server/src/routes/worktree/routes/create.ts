@@ -13,7 +13,7 @@ import { promisify } from 'util';
 import path from 'path';
 import * as secureFs from '../../../lib/secure-fs.js';
 import type { EventEmitter } from '../../../lib/events.js';
-import { isGitRepo } from '@automaker/git-utils';
+import { isGitRepo } from '@ask-jenny/git-utils';
 import {
   getErrorMessage,
   logError,
@@ -23,7 +23,7 @@ import {
   execGitCommand,
 } from '../common.js';
 import { trackBranch } from './branch-tracking.js';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import { runInitScript } from '../../../services/init-script-service.js';
 
 const logger = createLogger('Worktree');
@@ -129,10 +129,10 @@ export function createCreateHandler(events: EventEmitter) {
       // Ensure the repository has at least one commit so worktree commands referencing HEAD succeed
       // Pass git identity env vars so commits work without global git config
       const gitEnv = {
-        GIT_AUTHOR_NAME: 'Automaker',
-        GIT_AUTHOR_EMAIL: 'automaker@localhost',
-        GIT_COMMITTER_NAME: 'Automaker',
-        GIT_COMMITTER_EMAIL: 'automaker@localhost',
+        GIT_AUTHOR_NAME: 'Ask Jenny',
+        GIT_AUTHOR_EMAIL: 'ask-jenny@localhost',
+        GIT_COMMITTER_NAME: 'Ask Jenny',
+        GIT_COMMITTER_EMAIL: 'ask-jenny@localhost',
       };
       await ensureInitialCommit(projectPath, gitEnv);
 
@@ -189,7 +189,7 @@ export function createCreateHandler(events: EventEmitter) {
         );
       }
 
-      // Note: We intentionally do NOT symlink .automaker to worktrees
+      // Note: We intentionally do NOT symlink .ask-jenny to worktrees
       // Features and config are always accessed from the main project path
       // This avoids symlink loop issues when activating worktrees
 

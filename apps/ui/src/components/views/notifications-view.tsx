@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Bell, Check, CheckCheck, Trash2, ExternalLink } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useNavigate } from '@tanstack/react-router';
-import type { Notification } from '@automaker/types';
+import type { Notification } from '@ask-jenny/types';
 
 /**
  * Format a date as relative time (e.g., "2 minutes ago", "3 hours ago")

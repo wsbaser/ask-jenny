@@ -5,7 +5,7 @@
  * but communicates with the backend server via HTTP/WebSocket.
  */
 
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import type {
   ElectronAPI,
   FileResult,
@@ -35,12 +35,12 @@ import type {
   NotificationsAPI,
   EventHistoryAPI,
 } from './electron';
-import type { EventHistoryFilter } from '@automaker/types';
+import type { EventHistoryFilter } from '@ask-jenny/types';
 import type { Message, SessionListItem } from '@/types/electron';
 import type { Feature, ClaudeUsageResponse, CodexUsageResponse } from '@/store/app-store';
 import type { WorktreeAPI, GitAPI, ModelDefinition, ProviderStatus } from '@/types/electron';
-import type { ModelId, ThinkingLevel, ReasoningEffort } from '@automaker/types';
-import { SERVER_PORT } from '@automaker/types';
+import type { ModelId, ThinkingLevel, ReasoningEffort } from '@ask-jenny/types';
+import { SERVER_PORT } from '@ask-jenny/types';
 import { getGlobalFileBrowser } from '@/contexts/file-browser-context';
 
 const logger = createLogger('HttpClient');
@@ -56,7 +56,7 @@ let cachedServerUrl: string | null = null;
 const notifyLoggedOut = (): void => {
   if (typeof window === 'undefined') return;
   try {
-    window.dispatchEvent(new CustomEvent('automaker:logged-out'));
+    window.dispatchEvent(new CustomEvent('ask-jenny:logged-out'));
   } catch {
     // Ignore - navigation will still be handled by failed requests in most cases
   }
@@ -87,7 +87,7 @@ const handleUnauthorized = (): void => {
 const notifyServerOffline = (): void => {
   if (typeof window === 'undefined') return;
   try {
-    window.dispatchEvent(new CustomEvent('automaker:server-offline'));
+    window.dispatchEvent(new CustomEvent('ask-jenny:server-offline'));
   } catch {
     // Ignore
   }
@@ -174,7 +174,7 @@ let apiKeyInitPromise: Promise<void> | null = null;
 // Cached session token for authentication (Web mode - explicit header auth)
 // Persisted to localStorage to survive page reloads
 let cachedSessionToken: string | null = null;
-const SESSION_TOKEN_KEY = 'automaker:sessionToken';
+const SESSION_TOKEN_KEY = 'ask-jenny:sessionToken';
 
 // Initialize cached session token from localStorage on module load
 // This ensures web mode survives page reloads with valid authentication

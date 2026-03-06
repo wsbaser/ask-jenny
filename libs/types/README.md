@@ -1,15 +1,15 @@
-# @automaker/types
+# @ask-jenny/types
 
-Shared TypeScript type definitions for AutoMaker.
+Shared TypeScript type definitions for Ask Jenny.
 
 ## Overview
 
-This package contains all core type definitions used across AutoMaker's server and UI components. It has no dependencies and serves as the foundation for other packages.
+This package contains all core type definitions used across Ask Jenny's server and UI components. It has no dependencies and serves as the foundation for other packages.
 
 ## Installation
 
 ```bash
-npm install @automaker/types
+npm install @ask-jenny/types
 ```
 
 ## Exports
@@ -28,7 +28,7 @@ import type {
   InstallationStatus,
   ValidationResult,
   ModelDefinition,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 ```
 
 ### Feature Types
@@ -36,7 +36,7 @@ import type {
 Feature management and workflow types.
 
 ```typescript
-import type { Feature, FeatureStatus, PlanningMode, PlanSpec } from '@automaker/types';
+import type { Feature, FeatureStatus, PlanningMode, PlanSpec } from '@ask-jenny/types';
 ```
 
 **Feature Interface:**
@@ -59,7 +59,7 @@ import type {
   SessionListItem,
   CreateSessionParams,
   UpdateSessionParams,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 ```
 
 ### Error Types
@@ -67,7 +67,7 @@ import type {
 Error classification and handling.
 
 ```typescript
-import type { ErrorType, ErrorInfo } from '@automaker/types';
+import type { ErrorType, ErrorInfo } from '@ask-jenny/types';
 ```
 
 ### Image Types
@@ -75,7 +75,7 @@ import type { ErrorType, ErrorInfo } from '@automaker/types';
 Image handling for prompts.
 
 ```typescript
-import type { ImageData, ImageContentBlock } from '@automaker/types';
+import type { ImageData, ImageContentBlock } from '@ask-jenny/types';
 ```
 
 ### Model Types
@@ -83,13 +83,13 @@ import type { ImageData, ImageContentBlock } from '@automaker/types';
 Claude model definitions and mappings.
 
 ```typescript
-import { CLAUDE_MODEL_MAP, DEFAULT_MODELS, type ModelAlias } from '@automaker/types';
+import { CLAUDE_MODEL_MAP, DEFAULT_MODELS, type ModelAlias } from '@ask-jenny/types';
 ```
 
 ## Usage Example
 
 ```typescript
-import type { Feature, ExecuteOptions } from '@automaker/types';
+import type { Feature, ExecuteOptions } from '@ask-jenny/types';
 
 const feature: Feature = {
   id: 'auth-feature',
@@ -110,33 +110,33 @@ const options: ExecuteOptions = {
 
 None - this is a pure types package.
 
-**IMPORTANT**: This package must NEVER depend on other `@automaker/*` packages to prevent circular dependencies. All other packages depend on this one, making it the foundation of the dependency tree.
+**IMPORTANT**: This package must NEVER depend on other `@ask-jenny/*` packages to prevent circular dependencies. All other packages depend on this one, making it the foundation of the dependency tree.
 
 ## Used By
 
-- `@automaker/utils`
-- `@automaker/platform`
-- `@automaker/model-resolver`
-- `@automaker/dependency-resolver`
-- `@automaker/git-utils`
-- `@automaker/server`
-- `@automaker/ui`
+- `@ask-jenny/utils`
+- `@ask-jenny/platform`
+- `@ask-jenny/model-resolver`
+- `@ask-jenny/dependency-resolver`
+- `@ask-jenny/git-utils`
+- `@ask-jenny/server`
+- `@ask-jenny/ui`
 
 ## Circular Dependency Prevention
 
 To maintain the package dependency hierarchy and prevent circular dependencies:
 
-1. **Never add dependencies** to other `@automaker/*` packages in `package.json`
-2. **Keep result types here** - For example, `DependencyResolutionResult` should stay in `@automaker/dependency-resolver`, not be moved here
+1. **Never add dependencies** to other `@ask-jenny/*` packages in `package.json`
+2. **Keep result types here** - For example, `DependencyResolutionResult` should stay in `@ask-jenny/dependency-resolver`, not be moved here
 3. **Import only base types** - Other packages can import from here, but this package cannot import from them
 4. **Document the rule** - When adding new functionality, ensure it follows this constraint
 
 This constraint ensures a clean one-way dependency flow:
 
 ```
-@automaker/types (foundation - no dependencies)
+@ask-jenny/types (foundation - no dependencies)
     ↓
-@automaker/utils, @automaker/platform, etc.
+@ask-jenny/utils, @ask-jenny/platform, etc.
     ↓
-@automaker/server, @automaker/ui
+@ask-jenny/server, @ask-jenny/ui
 ```

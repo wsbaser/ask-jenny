@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type { Project, TrashedProject } from '@/lib/electron';
 import { getElectronAPI } from '@/lib/electron';
 import { getHttpApiClient } from '@/lib/http-api-client';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { setItem, getItem } from '@/lib/storage';
 import {
   UI_SANS_FONT_OPTIONS,
@@ -34,7 +34,7 @@ import type {
   EventHook,
   ClaudeApiProfile,
   ClaudeCompatibleProvider,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import {
   getAllCursorModelIds,
   getAllCodexModelIds,
@@ -42,7 +42,7 @@ import {
   DEFAULT_PHASE_MODELS,
   DEFAULT_OPENCODE_MODEL,
   DEFAULT_MAX_CONCURRENCY,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 const logger = createLogger('AppStore');
 const OPENCODE_BEDROCK_PROVIDER_ID = 'amazon-bedrock';
@@ -134,12 +134,47 @@ export const MAX_INIT_OUTPUT_LINES = 500;
 
 // Valid theme values for runtime validation
 const VALID_THEMES: readonly ThemeMode[] = [
-  'system', 'dark', 'retro', 'dracula', 'nord', 'monokai', 'tokyonight',
-  'solarized', 'gruvbox', 'catppuccin', 'onedark', 'synthwave', 'red',
-  'sunset', 'gray', 'forest', 'ocean', 'ember', 'ayu-dark', 'ayu-mirage',
-  'matcha', 'light', 'cream', 'solarizedlight', 'github', 'paper', 'rose',
-  'mint', 'lavender', 'sand', 'sky', 'peach', 'snow', 'sepia', 'gruvboxlight',
-  'nordlight', 'blossom', 'ayu-light', 'onelight', 'bluloco', 'feather'
+  'system',
+  'dark',
+  'retro',
+  'dracula',
+  'nord',
+  'monokai',
+  'tokyonight',
+  'solarized',
+  'gruvbox',
+  'catppuccin',
+  'onedark',
+  'synthwave',
+  'red',
+  'sunset',
+  'gray',
+  'forest',
+  'ocean',
+  'ember',
+  'ayu-dark',
+  'ayu-mirage',
+  'matcha',
+  'light',
+  'cream',
+  'solarizedlight',
+  'github',
+  'paper',
+  'rose',
+  'mint',
+  'lavender',
+  'sand',
+  'sky',
+  'peach',
+  'snow',
+  'sepia',
+  'gruvboxlight',
+  'nordlight',
+  'blossom',
+  'ayu-light',
+  'onelight',
+  'bluloco',
+  'feather',
 ] as const;
 
 /**
@@ -825,7 +860,7 @@ export interface AppState {
   boardBackgroundByProject: Record<
     string,
     {
-      imagePath: string | null; // Path to background image in .automaker directory
+      imagePath: string | null; // Path to background image in .ask-jenny directory
       imageVersion?: number; // Timestamp to bust browser cache when image is updated
       cardOpacity: number; // Opacity of cards (0-100)
       columnOpacity: number; // Opacity of columns (0-100)
@@ -1107,8 +1142,8 @@ export interface AppActions {
   // Project Phase Model Overrides
   setProjectPhaseModelOverride: (
     projectId: string,
-    phase: import('@automaker/types').PhaseModelKey,
-    entry: import('@automaker/types').PhaseModelEntry | null // null = use global
+    phase: import('@ask-jenny/types').PhaseModelKey,
+    entry: import('@ask-jenny/types').PhaseModelEntry | null // null = use global
   ) => void;
   clearAllProjectPhaseModelOverrides: (projectId: string) => void;
 

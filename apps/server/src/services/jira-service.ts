@@ -6,8 +6,8 @@
 
 import path from 'path';
 import * as fs from 'fs/promises';
-import { createLogger } from '@automaker/utils';
-import { getFeatureImagesDir } from '@automaker/platform';
+import { createLogger } from '@ask-jenny/utils';
+import { getFeatureImagesDir } from '@ask-jenny/platform';
 import type {
   JiraConnectionStatus,
   JiraProject,
@@ -17,7 +17,7 @@ import type {
   JiraSprintIssuesResponse,
   Credentials,
   FeatureImagePath,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 import type { SettingsService } from './settings-service.js';
 
 const logger = createLogger('JiraService');

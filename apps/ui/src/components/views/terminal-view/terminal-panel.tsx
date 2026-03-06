@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import {
   X,
   SplitSquareHorizontal,
@@ -1565,7 +1565,7 @@ export function TerminalPanel({
         if (!api.saveImageToTemp) {
           // Fallback path when Electron API is not available (browser mode)
           logger.warn('saveImageToTemp not available, returning fallback path');
-          return `.automaker/images/${Date.now()}_${filename}`;
+          return `.ask-jenny/images/${Date.now()}_${filename}`;
         }
 
         const projectPath = currentProject?.path;

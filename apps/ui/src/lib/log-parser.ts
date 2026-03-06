@@ -9,7 +9,7 @@ import type {
   CursorAssistantEvent,
   CursorToolCallEvent,
   CursorResultEvent,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 /**
  * Cleans up fragmented streaming text by removing spurious newlines
@@ -786,7 +786,7 @@ export function getProviderStyle(entry: LogEntry): { badge?: string; icon?: stri
     };
   }
 
-  // Default (Claude/AutoMaker)
+  // Default (Claude/Ask Jenny)
   return {
     badge: 'Claude',
     icon: 'bot',

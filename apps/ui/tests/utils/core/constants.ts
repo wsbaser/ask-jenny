@@ -2,7 +2,7 @@
  * Centralized constants for test utilities
  * This file contains all shared constants like URLs, timeouts, and selectors
  */
-import { SERVER_PORT, STATIC_PORT } from '@automaker/types';
+import { SERVER_PORT, STATIC_PORT } from '@ask-jenny/types';
 
 // ============================================================================
 // API Configuration
@@ -19,7 +19,7 @@ export const API_BASE_URL = `http://localhost:${SERVER_PORT}`;
 export const UI_BASE_URL = `http://localhost:${STATIC_PORT}`;
 
 // Re-export port constants for test files that need them directly
-export { SERVER_PORT, STATIC_PORT } from '@automaker/types';
+export { SERVER_PORT, STATIC_PORT } from '@ask-jenny/types';
 
 /**
  * API endpoints for worktree operations
@@ -151,8 +151,8 @@ export const CSS_SELECTORS = {
  * localStorage keys used by the application
  */
 export const STORAGE_KEYS = {
-  appStorage: 'automaker-storage',
-  setupStorage: 'automaker-setup',
+  appStorage: 'ask-jenny-storage',
+  setupStorage: 'ask-jenny-setup',
 } as const;
 
 // ============================================================================

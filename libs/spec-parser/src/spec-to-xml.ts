@@ -3,7 +3,7 @@
  * Converts a structured SpecOutput object back to XML format.
  */
 
-import type { SpecOutput } from '@automaker/types';
+import type { SpecOutput } from '@ask-jenny/types';
 import { escapeXml } from './xml-utils.js';
 
 /**

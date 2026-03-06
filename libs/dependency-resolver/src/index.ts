@@ -1,6 +1,6 @@
 /**
- * @automaker/dependency-resolver
- * Feature dependency resolution for AutoMaker
+ * @ask-jenny/dependency-resolver
+ * Feature dependency resolution for Ask Jenny
  */
 
 export {

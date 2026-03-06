@@ -4,7 +4,7 @@
 
 import type { Request, Response } from 'express';
 import * as fs from 'fs/promises';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import type { JiraService } from '../../../services/jira-service.js';
 import type { FeatureLoader } from '../../../services/feature-loader.js';
 import type {
@@ -12,7 +12,7 @@ import type {
   JiraImportResponse,
   JiraImportResult,
   FeatureImagePath,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 const logger = createLogger('JiraImport');
 

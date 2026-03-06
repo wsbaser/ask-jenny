@@ -11,7 +11,7 @@ import type {
   IdeationPrompt,
   AnalysisSuggestion,
   ProjectAnalysisResult,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 // ============================================================================
 // Generation Job Types

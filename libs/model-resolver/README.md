@@ -1,4 +1,4 @@
-# @automaker/model-resolver
+# @ask-jenny/model-resolver
 
 Claude model resolution and mapping utilities.
 
@@ -9,7 +9,7 @@ This package handles Claude model resolution, converting user-friendly aliases t
 ## Installation
 
 ```bash
-npm install @automaker/model-resolver
+npm install @ask-jenny/model-resolver
 ```
 
 ## Exports
@@ -19,8 +19,8 @@ npm install @automaker/model-resolver
 Convert model aliases to full model identifiers.
 
 ```typescript
-import { resolveModelString, DEFAULT_MODELS } from '@automaker/model-resolver';
-import { CLAUDE_MODEL_MAP } from '@automaker/types';
+import { resolveModelString, DEFAULT_MODELS } from '@ask-jenny/model-resolver';
+import { CLAUDE_MODEL_MAP } from '@ask-jenny/types';
 
 // Resolve model string
 const model = resolveModelString('sonnet');
@@ -46,7 +46,7 @@ const model5 = resolveModelString('claude-opus-4-5-20251101');
 Get the actual model that will be used.
 
 ```typescript
-import { getEffectiveModel } from '@automaker/model-resolver';
+import { getEffectiveModel } from '@ask-jenny/model-resolver';
 
 // Get effective model with fallback chain
 const model = getEffectiveModel({
@@ -61,8 +61,8 @@ const model = getEffectiveModel({
 Access model mappings and defaults.
 
 ```typescript
-import { DEFAULT_MODELS } from '@automaker/model-resolver';
-import { CLAUDE_MODEL_MAP } from '@automaker/types';
+import { DEFAULT_MODELS } from '@ask-jenny/model-resolver';
+import { CLAUDE_MODEL_MAP } from '@ask-jenny/types';
 
 // Default models for different contexts
 console.log(DEFAULT_MODELS.claude); // 'claude-sonnet-4-20250514'
@@ -78,8 +78,8 @@ console.log(CLAUDE_MODEL_MAP.opus); // 'claude-opus-4-5-20251101'
 ## Usage Example
 
 ```typescript
-import { resolveModelString, DEFAULT_MODELS } from '@automaker/model-resolver';
-import type { Feature } from '@automaker/types';
+import { resolveModelString, DEFAULT_MODELS } from '@ask-jenny/model-resolver';
+import type { Feature } from '@ask-jenny/types';
 
 function prepareFeatureExecution(feature: Feature) {
   // Resolve model from feature or use default
@@ -122,11 +122,11 @@ prepareFeatureExecution(feature);
 
 ## Dependencies
 
-- `@automaker/types` - Model type definitions and constants
+- `@ask-jenny/types` - Model type definitions and constants
 
 ## Used By
 
-- `@automaker/server` - Feature execution, agent chat, enhancement
+- `@ask-jenny/server` - Feature execution, agent chat, enhancement
 
 ## Notes
 

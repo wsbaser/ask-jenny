@@ -353,9 +353,9 @@ describe('settings-service.ts', () => {
         theme: 'light',
         useWorktrees: true,
       };
-      const automakerDir = path.join(testProjectDir, '.automaker');
-      await fs.mkdir(automakerDir, { recursive: true });
-      const settingsPath = path.join(automakerDir, 'settings.json');
+      const askJennyDir = path.join(testProjectDir, '.ask-jenny');
+      await fs.mkdir(askJennyDir, { recursive: true });
+      const settingsPath = path.join(askJennyDir, 'settings.json');
       await fs.writeFile(settingsPath, JSON.stringify(customSettings, null, 2));
 
       const settings = await settingsService.getProjectSettings(testProjectDir);
@@ -368,9 +368,9 @@ describe('settings-service.ts', () => {
         version: PROJECT_SETTINGS_VERSION,
         theme: 'dark',
       };
-      const automakerDir = path.join(testProjectDir, '.automaker');
-      await fs.mkdir(automakerDir, { recursive: true });
-      const settingsPath = path.join(automakerDir, 'settings.json');
+      const askJennyDir = path.join(testProjectDir, '.ask-jenny');
+      await fs.mkdir(askJennyDir, { recursive: true });
+      const settingsPath = path.join(askJennyDir, 'settings.json');
       await fs.writeFile(settingsPath, JSON.stringify(partialSettings, null, 2));
 
       const settings = await settingsService.getProjectSettings(testProjectDir);
@@ -392,8 +392,8 @@ describe('settings-service.ts', () => {
       expect(updated.useWorktrees).toBe(true);
       expect(updated.version).toBe(PROJECT_SETTINGS_VERSION);
 
-      const automakerDir = path.join(testProjectDir, '.automaker');
-      const settingsPath = path.join(automakerDir, 'settings.json');
+      const askJennyDir = path.join(testProjectDir, '.ask-jenny');
+      const settingsPath = path.join(askJennyDir, 'settings.json');
       const fileContent = await fs.readFile(settingsPath, 'utf-8');
       const saved = JSON.parse(fileContent);
       expect(saved.theme).toBe('light');
@@ -406,9 +406,9 @@ describe('settings-service.ts', () => {
         theme: 'dark',
         useWorktrees: false,
       };
-      const automakerDir = path.join(testProjectDir, '.automaker');
-      await fs.mkdir(automakerDir, { recursive: true });
-      const settingsPath = path.join(automakerDir, 'settings.json');
+      const askJennyDir = path.join(testProjectDir, '.ask-jenny');
+      await fs.mkdir(askJennyDir, { recursive: true });
+      const settingsPath = path.join(askJennyDir, 'settings.json');
       await fs.writeFile(settingsPath, JSON.stringify(initial, null, 2));
 
       const updates: Partial<ProjectSettings> = {
@@ -435,9 +435,9 @@ describe('settings-service.ts', () => {
           hideScrollbar: false,
         },
       };
-      const automakerDir = path.join(testProjectDir, '.automaker');
-      await fs.mkdir(automakerDir, { recursive: true });
-      const settingsPath = path.join(automakerDir, 'settings.json');
+      const askJennyDir = path.join(testProjectDir, '.ask-jenny');
+      await fs.mkdir(askJennyDir, { recursive: true });
+      const settingsPath = path.join(askJennyDir, 'settings.json');
       await fs.writeFile(settingsPath, JSON.stringify(initial, null, 2));
 
       const updates: Partial<ProjectSettings> = {
@@ -453,13 +453,13 @@ describe('settings-service.ts', () => {
       expect(updated.boardBackground?.columnOpacity).toBe(0.9);
     });
 
-    it('should create .automaker directory if it does not exist', async () => {
+    it('should create .ask-jenny directory if it does not exist', async () => {
       const newProjectDir = path.join(os.tmpdir(), `new-project-${Date.now()}`);
 
       await settingsService.updateProjectSettings(newProjectDir, { theme: 'light' });
 
-      const automakerDir = path.join(newProjectDir, '.automaker');
-      const stats = await fs.stat(automakerDir);
+      const askJennyDir = path.join(newProjectDir, '.ask-jenny');
+      const stats = await fs.stat(askJennyDir);
       expect(stats.isDirectory()).toBe(true);
 
       await fs.rm(newProjectDir, { recursive: true, force: true });

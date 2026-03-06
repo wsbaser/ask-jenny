@@ -12,7 +12,7 @@ import * as path from 'path';
 // secureFs is used for user-controllable paths (working directory validation)
 // to enforce ALLOWED_ROOT_DIRECTORY security boundary
 import * as secureFs from '../lib/secure-fs.js';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('Terminal');
 // System paths module handles shell binary checks and WSL detection
@@ -22,7 +22,7 @@ import {
   systemPathReadFileSync,
   getWslVersionPath,
   getShellPaths,
-} from '@automaker/platform';
+} from '@ask-jenny/platform';
 
 // Maximum scrollback buffer size (characters)
 const MAX_SCROLLBACK_SIZE = 50000; // ~50KB per terminal
@@ -322,12 +322,12 @@ export class TerminalService extends EventEmitter {
 
     // Build environment with some useful defaults
     // These settings ensure consistent terminal behavior across platforms
-    // First, create a clean copy of process.env excluding Automaker-specific variables
+    // First, create a clean copy of process.env excluding Ask Jenny-specific variables
     // that could pollute user shells (e.g., PORT would affect Next.js/other dev servers)
-    const automakerEnvVars = ['PORT', 'DATA_DIR', 'AUTOMAKER_API_KEY', 'NODE_PATH'];
+    const askJennyEnvVars = ['PORT', 'DATA_DIR', 'ASK_JENNY_API_KEY', 'NODE_PATH'];
     const cleanEnv: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {
-      if (value !== undefined && !automakerEnvVars.includes(key)) {
+      if (value !== undefined && !askJennyEnvVars.includes(key)) {
         cleanEnv[key] = value;
       }
     }
@@ -336,7 +336,7 @@ export class TerminalService extends EventEmitter {
       ...cleanEnv,
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
-      TERM_PROGRAM: 'automaker-terminal',
+      TERM_PROGRAM: 'ask-jenny-terminal',
       // Ensure proper locale for character handling
       LANG: process.env.LANG || 'en_US.UTF-8',
       LC_ALL: process.env.LC_ALL || process.env.LANG || 'en_US.UTF-8',

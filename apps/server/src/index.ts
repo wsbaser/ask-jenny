@@ -1,5 +1,5 @@
 /**
- * Automaker Backend Server
+ * Ask Jenny Backend Server
  *
  * Provides HTTP/WebSocket API for both web and Electron modes.
  * In Electron mode, this server runs locally.
@@ -16,8 +16,8 @@ import { createServer } from 'http';
 import dotenv from 'dotenv';
 
 import { createEventEmitter, type EventEmitter } from './lib/events.js';
-import { initAllowedPaths } from '@automaker/platform';
-import { createLogger, setLogLevel, LogLevel } from '@automaker/utils';
+import { initAllowedPaths } from '@ask-jenny/platform';
+import { createLogger, setLogLevel, LogLevel } from '@ask-jenny/utils';
 
 const logger = createLogger('Server');
 
@@ -672,7 +672,7 @@ const startServer = (port: number, host: string) => {
     const wsTerminalUrl = `ws://${HOSTNAME}:${port}/api/terminal/ws`;
     const healthUrl = `http://${HOSTNAME}:${port}/api/health`;
 
-    const sHeader = '🚀 Automaker Backend Server'.padEnd(BOX_CONTENT_WIDTH);
+    const sHeader = '🚀 Ask Jenny Backend Server'.padEnd(BOX_CONTENT_WIDTH);
     const s1 = `Listening:    ${listenAddr}`.padEnd(BOX_CONTENT_WIDTH);
     const s2 = `HTTP API:     ${httpUrl}`.padEnd(BOX_CONTENT_WIDTH);
     const s3 = `WebSocket:    ${wsEventsUrl}`.padEnd(BOX_CONTENT_WIDTH);

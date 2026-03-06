@@ -49,7 +49,7 @@ export async function waitForSplashScreenToDisappear(page: Page, timeout = 5000)
   try {
     // Check if splash screen is shown via sessionStorage first (fastest check)
     const splashShown = await page.evaluate(() => {
-      return sessionStorage.getItem('automaker-splash-shown') === 'true';
+      return sessionStorage.getItem('ask-jenny-splash-shown') === 'true';
     });
 
     // If splash is already marked as shown, it won't appear, so we're done
@@ -63,7 +63,7 @@ export async function waitForSplashScreenToDisappear(page: Page, timeout = 5000)
     await page.waitForFunction(
       () => {
         // Check if splash is marked as shown in sessionStorage
-        if (sessionStorage.getItem('automaker-splash-shown') === 'true') {
+        if (sessionStorage.getItem('ask-jenny-splash-shown') === 'true') {
           return true;
         }
 

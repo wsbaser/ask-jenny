@@ -4,8 +4,8 @@
 
 import type { Request, Response } from 'express';
 import type { EventEmitter } from '../../../lib/events.js';
-import { createLogger } from '@automaker/utils';
-import type { ThinkingLevel } from '@automaker/types';
+import { createLogger } from '@ask-jenny/utils';
+import type { ThinkingLevel } from '@ask-jenny/types';
 import { getSuggestionsStatus, setRunningState, getErrorMessage, logError } from '../common.js';
 import { generateSuggestions } from '../generate-suggestions.js';
 import type { SettingsService } from '../../../services/settings-service.js';

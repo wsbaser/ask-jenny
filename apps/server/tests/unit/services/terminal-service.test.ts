@@ -3,13 +3,13 @@ import { TerminalService, getTerminalService } from '@/services/terminal-service
 import * as pty from 'node-pty';
 import * as os from 'os';
 import * as path from 'path';
-import * as platform from '@automaker/platform';
+import * as platform from '@ask-jenny/platform';
 import * as secureFs from '@/lib/secure-fs.js';
 
 vi.mock('node-pty');
 vi.mock('os');
-vi.mock('@automaker/platform', async () => {
-  const actual = await vi.importActual('@automaker/platform');
+vi.mock('@ask-jenny/platform', async () => {
+  const actual = await vi.importActual('@ask-jenny/platform');
   return {
     ...actual,
     systemPathExists: vi.fn(),

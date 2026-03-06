@@ -5,7 +5,7 @@
 
 import type { Request, Response } from 'express';
 import { query } from '@anthropic-ai/claude-agent-sdk';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import { getApiKey } from '../common.js';
 import {
   createSecureAuthEnv,

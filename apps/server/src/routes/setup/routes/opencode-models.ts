@@ -13,8 +13,8 @@ import {
   type OpenCodeProviderInfo,
 } from '../../../providers/opencode-provider.js';
 import { getErrorMessage, logError } from '../common.js';
-import type { ModelDefinition } from '@automaker/types';
-import { createLogger } from '@automaker/utils';
+import type { ModelDefinition } from '@ask-jenny/types';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('OpenCodeModelsRoute');
 

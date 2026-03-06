@@ -5,8 +5,8 @@ import { useAppStore } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
 import { PhaseModelSelector } from './phase-model-selector';
 import { BulkReplaceDialog } from './bulk-replace-dialog';
-import type { PhaseModelKey } from '@automaker/types';
-import { DEFAULT_PHASE_MODELS } from '@automaker/types';
+import type { PhaseModelKey } from '@ask-jenny/types';
+import { DEFAULT_PHASE_MODELS } from '@ask-jenny/types';
 
 interface PhaseConfig {
   key: PhaseModelKey;

@@ -54,7 +54,7 @@ import {
   useJiraImport,
   jiraIssueToImportFormat,
 } from '@/hooks/mutations/use-jira-mutations';
-import type { JiraIssue } from '@automaker/types';
+import type { JiraIssue } from '@ask-jenny/types';
 
 interface JiraImportDialogProps {
   open: boolean;

@@ -2,8 +2,8 @@
  * Common utilities for worktree routes
  */
 
-import { createLogger } from '@automaker/utils';
-import { spawnProcess } from '@automaker/platform';
+import { createLogger } from '@ask-jenny/utils';
+import { spawnProcess } from '@ask-jenny/platform';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { getErrorMessage as getErrorMessageShared, createLogError } from '../common.js';
@@ -17,7 +17,7 @@ export const execAsync = promisify(exec);
 
 /**
  * Execute git command with array arguments to prevent command injection.
- * Uses spawnProcess from @automaker/platform for secure, cross-platform execution.
+ * Uses spawnProcess from @ask-jenny/platform for secure, cross-platform execution.
  *
  * @param args - Array of git command arguments (e.g., ['worktree', 'add', path])
  * @param cwd - Working directory to execute the command in
@@ -124,7 +124,7 @@ export async function isGhCliAvailable(): Promise<boolean> {
   }
 }
 
-export const AUTOMAKER_INITIAL_COMMIT_MESSAGE = 'chore: automaker initial commit';
+export const ASK_JENNY_INITIAL_COMMIT_MESSAGE = 'chore: ask jenny initial commit';
 
 /**
  * Normalize path separators to forward slashes for cross-platform consistency.
@@ -194,7 +194,7 @@ export async function ensureInitialCommit(
     return false;
   } catch {
     try {
-      await execAsync(`git commit --allow-empty -m "${AUTOMAKER_INITIAL_COMMIT_MESSAGE}"`, {
+      await execAsync(`git commit --allow-empty -m "${ASK_JENNY_INITIAL_COMMIT_MESSAGE}"`, {
         cwd: repoPath,
         env: { ...process.env, ...env },
       });

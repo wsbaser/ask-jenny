@@ -5,8 +5,8 @@
 import path from 'path';
 import * as secureFs from '../../lib/secure-fs.js';
 import type { EventEmitter } from '../../lib/events.js';
-import { createLogger, atomicWriteJson, DEFAULT_BACKUP_COUNT } from '@automaker/utils';
-import { getFeaturesDir } from '@automaker/platform';
+import { createLogger, atomicWriteJson, DEFAULT_BACKUP_COUNT } from '@ask-jenny/utils';
+import { getFeaturesDir } from '@ask-jenny/platform';
 import { extractJsonWithArray } from '../../lib/json-extractor.js';
 import { getNotificationService } from '../../services/notification-service.js';
 

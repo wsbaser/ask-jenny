@@ -6,8 +6,8 @@
  */
 
 import { Codex } from '@openai/codex-sdk';
-import { formatHistoryAsText, classifyError, getUserFriendlyErrorMessage } from '@automaker/utils';
-import { supportsReasoningEffort } from '@automaker/types';
+import { formatHistoryAsText, classifyError, getUserFriendlyErrorMessage } from '@ask-jenny/utils';
+import { supportsReasoningEffort } from '@ask-jenny/types';
 import type { ExecuteOptions, ProviderMessage } from './types.js';
 
 const OPENAI_API_KEY_ENV = 'OPENAI_API_KEY';

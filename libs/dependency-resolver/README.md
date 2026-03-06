@@ -1,15 +1,15 @@
-# @automaker/dependency-resolver
+# @ask-jenny/dependency-resolver
 
 Feature dependency resolution using topological sorting.
 
 ## Overview
 
-This package provides dependency resolution for AutoMaker features using Kahn's algorithm with priority-aware ordering. It ensures features are executed in the correct order based on their dependencies.
+This package provides dependency resolution for Ask Jenny features using Kahn's algorithm with priority-aware ordering. It ensures features are executed in the correct order based on their dependencies.
 
 ## Installation
 
 ```bash
-npm install @automaker/dependency-resolver
+npm install @ask-jenny/dependency-resolver
 ```
 
 ## Exports
@@ -19,8 +19,8 @@ npm install @automaker/dependency-resolver
 Order features based on dependencies and priorities.
 
 ```typescript
-import { resolveDependencies } from '@automaker/dependency-resolver';
-import type { Feature } from '@automaker/types';
+import { resolveDependencies } from '@ask-jenny/dependency-resolver';
+import type { Feature } from '@ask-jenny/types';
 
 const features: Feature[] = [
   {
@@ -61,7 +61,7 @@ if (result.hasCycle) {
 Check if a feature's dependencies are satisfied.
 
 ```typescript
-import { areDependenciesSatisfied } from '@automaker/dependency-resolver';
+import { areDependenciesSatisfied } from '@ask-jenny/dependency-resolver';
 
 const allFeatures: Feature[] = [
   { id: 'database', status: 'completed', ... },
@@ -82,7 +82,7 @@ if (areDependenciesSatisfied(authFeature, allFeatures)) {
 Get list of incomplete dependencies blocking a feature.
 
 ```typescript
-import { getBlockingDependencies } from '@automaker/dependency-resolver';
+import { getBlockingDependencies } from '@ask-jenny/dependency-resolver';
 
 const blocking = getBlockingDependencies(feature, allFeatures);
 
@@ -100,8 +100,8 @@ import {
   resolveDependencies,
   areDependenciesSatisfied,
   getBlockingDependencies,
-} from '@automaker/dependency-resolver';
-import type { Feature } from '@automaker/types';
+} from '@ask-jenny/dependency-resolver';
+import type { Feature } from '@ask-jenny/types';
 
 async function executeFeatures(features: Feature[]) {
   // Resolve dependency order
@@ -180,9 +180,9 @@ Treated same as no dependencies - feature is ready immediately.
 
 ## Dependencies
 
-- `@automaker/types` - Feature type definition
+- `@ask-jenny/types` - Feature type definition
 
 ## Used By
 
-- `@automaker/server` - Auto-mode feature execution
-- `@automaker/ui` - Board view feature ordering
+- `@ask-jenny/server` - Auto-mode feature execution
+- `@ask-jenny/ui` - Board view feature ordering

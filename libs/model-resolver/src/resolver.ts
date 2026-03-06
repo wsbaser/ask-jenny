@@ -26,7 +26,7 @@ import {
   migrateModelId,
   type PhaseModelEntry,
   type ThinkingLevel,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 // Pattern definitions for Codex/OpenAI models
 const CODEX_MODEL_PREFIXES = ['codex-', 'gpt-'];

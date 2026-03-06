@@ -52,13 +52,7 @@ function LogoIcon({ idSuffix, className }: LogoIconProps) {
           <stop offset="100%" style={{ stopColor: 'var(--brand-600)' }} />
         </linearGradient>
         <filter id={`iconShadow-${idSuffix}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow
-            dx="0"
-            dy="4"
-            stdDeviation="4"
-            floodColor="#000000"
-            floodOpacity="0.25"
-          />
+          <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.25" />
         </filter>
       </defs>
       <rect x="16" y="16" width="224" height="224" rx="56" fill={`url(#bg-${idSuffix})`} />

@@ -6,7 +6,7 @@ import {
   classifyError,
   getUserFriendlyErrorMessage,
   type ErrorType,
-} from '@automaker/utils';
+} from '@ask-jenny/utils';
 
 describe('error-handler.ts', () => {
   describe('isAbortError', () => {

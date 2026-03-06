@@ -1,10 +1,11 @@
 /**
- * @automaker/platform
- * Platform-specific utilities for AutoMaker
+ * @ask-jenny/platform
+ * Platform-specific utilities for Ask Jenny
  */
 
 // Path utilities
 export {
+  getAskJennyDir,
   getAutomakerDir,
   getFeaturesDir,
   getFeatureDir,
@@ -25,6 +26,7 @@ export {
   getEventHistoryIndexPath,
   getEventPath,
   ensureEventHistoryDir,
+  ensureAskJennyDir,
   ensureAutomakerDir,
   getGlobalSettingsPath,
   getCredentialsPath,

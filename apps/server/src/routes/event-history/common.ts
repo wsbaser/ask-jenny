@@ -2,7 +2,7 @@
  * Common utilities for event history routes
  */
 
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import { getErrorMessage as getErrorMessageShared, createLogError } from '../common.js';
 
 /** Logger instance for event history operations */

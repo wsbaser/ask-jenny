@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 
 const logger = createLogger('Sidebar');
@@ -177,10 +177,10 @@ export function Sidebar() {
       const name = path.split(/[/\\]/).filter(Boolean).pop() || 'Untitled Project';
 
       try {
-        // Check if this is a brand new project (no .automaker directory)
+        // Check if this is a brand new project (no .ask-jenny directory)
         const hadAutomakerDir = await hasAutomakerDir(path);
 
-        // Initialize the .automaker directory structure
+        // Initialize the .ask-jenny directory structure
         const initResult = await initializeProject(path);
 
         if (!initResult.success) {
@@ -206,7 +206,7 @@ export function Sidebar() {
           });
         } else if (initResult.createdFiles && initResult.createdFiles.length > 0) {
           toast.success(initResult.isNewProject ? 'Project initialized' : 'Project updated', {
-            description: `Set up ${initResult.createdFiles.length} file(s) in .automaker`,
+            description: `Set up ${initResult.createdFiles.length} file(s) in .ask-jenny`,
           });
         } else {
           toast.success('Project opened', {

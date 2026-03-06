@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import {
   Dialog,
   DialogContent,
@@ -27,8 +27,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { cn, modelSupportsThinking } from '@/lib/utils';
 import { Feature, ModelAlias, ThinkingLevel, useAppStore, PlanningMode } from '@/store/app-store';
-import type { ReasoningEffort, PhaseModelEntry, DescriptionHistoryEntry } from '@automaker/types';
-import { migrateModelId } from '@automaker/types';
+import type { ReasoningEffort, PhaseModelEntry, DescriptionHistoryEntry } from '@ask-jenny/types';
+import { migrateModelId } from '@ask-jenny/types';
 import {
   TestingTabContent,
   PrioritySelector,
@@ -42,7 +42,7 @@ import type { WorkMode } from '../shared';
 import { PhaseModelSelector } from '@/components/views/settings-view/model-defaults/phase-model-selector';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DependencyTreeDialog } from './dependency-tree-dialog';
-import { isClaudeModel, supportsReasoningEffort } from '@automaker/types';
+import { isClaudeModel, supportsReasoningEffort } from '@ask-jenny/types';
 
 const logger = createLogger('EditFeatureDialog');
 

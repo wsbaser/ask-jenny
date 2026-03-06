@@ -4,8 +4,8 @@
 
 import type { Request, Response } from 'express';
 import { isAbsolute } from 'path';
-import { openInVSCode } from '@automaker/platform';
-import { createLogger } from '@automaker/utils';
+import { openInVSCode } from '@ask-jenny/platform';
+import { createLogger } from '@ask-jenny/utils';
 import { getErrorMessage, logError } from '../common.js';
 
 const logger = createLogger('open-in-editor');

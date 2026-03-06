@@ -66,7 +66,7 @@ export function SandboxRiskDialog({ open, onConfirm, onDeny }: SandboxRiskDialog
               </div>
 
               <p className="text-sm text-muted-foreground">
-                For safer operation, consider running Automaker in Docker. See the README for
+                For safer operation, consider running Ask Jenny in Docker. See the README for
                 instructions.
               </p>
             </div>

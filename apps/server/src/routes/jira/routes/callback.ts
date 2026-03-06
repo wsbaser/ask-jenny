@@ -3,7 +3,7 @@
  */
 
 import type { Request, Response } from 'express';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import type { JiraService } from '../../../services/jira-service.js';
 
 const logger = createLogger('JiraCallback');

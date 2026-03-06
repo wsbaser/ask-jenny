@@ -1,7 +1,7 @@
 /**
  * Event History Service - Stores and retrieves event records for debugging and replay
  *
- * Provides persistent storage for events in {projectPath}/.automaker/events/
+ * Provides persistent storage for events in {projectPath}/.ask-jenny/events/
  * Each event is stored as a separate JSON file with an index for quick listing.
  *
  * Features:
@@ -11,22 +11,22 @@
  * - Delete old events to manage disk space
  */
 
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import * as secureFs from '../lib/secure-fs.js';
 import {
   getEventHistoryDir,
   getEventHistoryIndexPath,
   getEventPath,
   ensureEventHistoryDir,
-} from '@automaker/platform';
+} from '@ask-jenny/platform';
 import type {
   StoredEvent,
   StoredEventIndex,
   StoredEventSummary,
   EventHistoryFilter,
   EventHookTrigger,
-} from '@automaker/types';
-import { DEFAULT_EVENT_HISTORY_INDEX } from '@automaker/types';
+} from '@ask-jenny/types';
+import { DEFAULT_EVENT_HISTORY_INDEX } from '@ask-jenny/types';
 import { randomUUID } from 'crypto';
 
 const logger = createLogger('EventHistoryService');

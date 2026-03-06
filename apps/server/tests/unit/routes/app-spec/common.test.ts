@@ -5,7 +5,7 @@ import {
   getSpecRegenerationStatus,
 } from '@/routes/app-spec/common.js';
 
-const TEST_PROJECT_PATH = '/tmp/automaker-test-project';
+const TEST_PROJECT_PATH = '/tmp/ask-jenny-test-project';
 
 describe('app-spec/common.ts', () => {
   beforeEach(() => {

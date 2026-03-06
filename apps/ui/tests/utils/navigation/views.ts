@@ -190,7 +190,7 @@ export async function navigateToView(page: Page, viewId: string): Promise<void> 
 export async function getCurrentView(page: Page): Promise<string | null> {
   // Get the current view from zustand store via localStorage
   const storage = await page.evaluate(() => {
-    const item = localStorage.getItem('automaker-storage');
+    const item = localStorage.getItem('ask-jenny-storage');
     return item ? JSON.parse(item) : null;
   });
 

@@ -17,7 +17,7 @@
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { createLogger } from '@automaker/utils';
+import { createLogger } from '@ask-jenny/utils';
 import type { EventEmitter } from '../lib/events.js';
 import type { SettingsService } from './settings-service.js';
 import type { EventHistoryService } from './event-history-service.js';
@@ -27,7 +27,7 @@ import type {
   EventHookTrigger,
   EventHookShellAction,
   EventHookHttpAction,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 const execAsync = promisify(exec);
 const logger = createLogger('EventHooks');

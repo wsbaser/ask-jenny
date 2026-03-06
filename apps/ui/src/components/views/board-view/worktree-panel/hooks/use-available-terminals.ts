@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { getElectronAPI } from '@/lib/electron';
 import { useAppStore } from '@/store/app-store';
-import type { TerminalInfo } from '@automaker/types';
+import type { TerminalInfo } from '@ask-jenny/types';
 
 const logger = createLogger('AvailableTerminals');
 

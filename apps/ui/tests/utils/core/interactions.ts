@@ -114,7 +114,7 @@ export async function handleLoginScreenIfPresent(page: Page): Promise<boolean> {
   const loginVisible = result === 'login-redirect' || result === 'login-input';
 
   if (loginVisible) {
-    const apiKey = process.env.AUTOMAKER_API_KEY || 'test-api-key-for-e2e-tests';
+    const apiKey = process.env.ASK_JENNY_API_KEY || 'test-api-key-for-e2e-tests';
     await loginInput.fill(apiKey);
 
     // Wait a moment for the button to become enabled

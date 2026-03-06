@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { getElectronAPI } from '@/lib/electron';
 import { normalizePath } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -128,7 +128,7 @@ export function useDevServers({ projectPath }: UseDevServersOptions) {
 
       try {
         // Rewrite URL hostname to match the current browser's hostname.
-        // This ensures dev server URLs work when accessing Automaker from
+        // This ensures dev server URLs work when accessing Ask Jenny from
         // remote machines (e.g., 192.168.x.x or hostname.local instead of localhost).
         const devServerUrl = new URL(serverInfo.url);
 

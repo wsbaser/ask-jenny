@@ -65,8 +65,8 @@ services:
       - ./data:/data
 
       # Persist CLI configurations
-      - ask-jenny-claude-config:/home/askjenny/.claude
-      - ask-jenny-cursor-config:/home/askjenny/.cursor
+      - ask-jenny-claude-config:/home/ask-jenny/.claude
+      - ask-jenny-cursor-config:/home/ask-jenny/.cursor
 
       # Note: Workspace mount (/projects) comes from docker-compose.override.yml
 
@@ -83,10 +83,10 @@ services:
         echo 'Building shared packages...' &&
         npm run build:packages &&
 
-        # Fix permissions and start server as askjenny user
-        chown -R askjenny:askjenny /app/node_modules &&
+        # Fix permissions and start server as ask-jenny user
+        chown -R ask-jenny:ask-jenny /app/node_modules &&
         echo 'Starting server in development mode...' &&
-        exec gosu askjenny npm run _dev:server
+        exec gosu ask-jenny npm run _dev:server
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:7008/api/health']
       interval: 10s
@@ -125,12 +125,12 @@ services:
     working_dir: /app/apps/ui
     # Start Vite dev server for UI with HMR
     # --host flag makes Vite bind to 0.0.0.0 for Docker access
-    # Note: We override the entrypoint to run as automaker user
+    # Note: We override the entrypoint to run as ask-jenny user
     entrypoint: /bin/sh
     command:
       - -c
       - |
-        exec gosu askjenny sh -c "
+        exec gosu ask-jenny sh -c "
           echo 'Waiting for dependencies to be ready...' &&
           while [ ! -d /app/node_modules/.bin ]; do sleep 2; done &&
           echo 'Starting UI development server...' &&

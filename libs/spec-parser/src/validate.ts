@@ -2,7 +2,7 @@
  * Validation utilities for SpecOutput objects.
  */
 
-import type { SpecOutput } from '@automaker/types';
+import type { SpecOutput } from '@ask-jenny/types';
 
 /**
  * Validation result containing errors if any.

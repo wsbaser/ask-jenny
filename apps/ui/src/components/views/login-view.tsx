@@ -28,7 +28,7 @@ import { KeyRound, AlertCircle, RefreshCw, ServerCrash } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/store/auth-store';
 import { useSetupStore } from '@/store/setup-store';
-import { SERVER_PORT } from '@automaker/types';
+import { SERVER_PORT } from '@ask-jenny/types';
 
 // =============================================================================
 // State Machine Types
@@ -372,7 +372,9 @@ export function LoginView() {
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Server Unavailable</h1>
-            <p className="text-sm text-muted-foreground" role="alert">{state.message}</p>
+            <p className="text-sm text-muted-foreground" role="alert">
+              {state.message}
+            </p>
           </div>
 
           {/* Troubleshooting guidance */}
@@ -380,9 +382,15 @@ export function LoginView() {
             <p className="font-medium mb-2">Troubleshooting steps:</p>
             <ol className="list-inside list-decimal space-y-1.5 text-muted-foreground">
               <li>Check that the server is running</li>
-              <li>Verify the server is accessible at: <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{serverUrl}</code></li>
+              <li>
+                Verify the server is accessible at:{' '}
+                <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{serverUrl}</code>
+              </li>
               <li>Check for firewall or network issues</li>
-              <li>Try restarting the server with <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">npm run dev</code></li>
+              <li>
+                Try restarting the server with{' '}
+                <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">npm run dev</code>
+              </li>
             </ol>
           </div>
 

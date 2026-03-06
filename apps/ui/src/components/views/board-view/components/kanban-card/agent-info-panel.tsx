@@ -1,6 +1,6 @@
 import { memo, useEffect, useState, useMemo } from 'react';
 import { Feature, ThinkingLevel, ParsedTask } from '@/store/app-store';
-import type { ReasoningEffort } from '@automaker/types';
+import type { ReasoningEffort } from '@ask-jenny/types';
 import { getProviderFromModel } from '@/lib/utils';
 import {
   AgentTaskInfo,

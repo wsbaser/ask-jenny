@@ -4,7 +4,7 @@
 
 import type { Request, Response } from 'express';
 import type { JiraService } from '../../../services/jira-service.js';
-import type { JiraSprintIssuesRequest } from '@automaker/types';
+import type { JiraSprintIssuesRequest } from '@ask-jenny/types';
 
 export function createSprintIssuesHandler(jiraService: JiraService) {
   return async (req: Request<unknown, unknown, JiraSprintIssuesRequest>, res: Response) => {

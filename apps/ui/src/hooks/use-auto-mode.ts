@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { createLogger } from '@automaker/utils/logger';
-import { DEFAULT_MAX_CONCURRENCY } from '@automaker/types';
+import { createLogger } from '@ask-jenny/utils/logger';
+import { DEFAULT_MAX_CONCURRENCY } from '@ask-jenny/types';
 import { useAppStore } from '@/store/app-store';
 import { getElectronAPI } from '@/lib/electron';
 import type { AutoModeEvent } from '@/types/electron';
@@ -10,7 +10,7 @@ import type { WorktreeInfo } from '@/components/views/board-view/worktree-panel/
 const logger = createLogger('AutoMode');
 
 const AUTO_MODE_SESSION_KEY = 'ask-jenny:autoModeRunningByWorktreeKey';
-const LEGACY_AUTO_MODE_SESSION_KEY = 'automaker:autoModeRunningByWorktreeKey';
+const LEGACY_AUTO_MODE_SESSION_KEY = 'ask-jenny:autoModeRunningByWorktreeKey';
 
 /**
  * Generate a worktree key for session storage

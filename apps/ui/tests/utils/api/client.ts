@@ -317,10 +317,10 @@ export async function authenticateWithApiKey(page: Page, apiKey: string): Promis
 
     if (response?.success && response.token) {
       // Manually set the cookie in the browser context
-      // The server sets a cookie named 'automaker_session' (see SESSION_COOKIE_NAME in auth.ts)
+      // The server sets a cookie named 'ask-jenny_session' (see SESSION_COOKIE_NAME in auth.ts)
       await page.context().addCookies([
         {
-          name: 'automaker_session',
+          name: 'ask-jenny_session',
           value: response.token,
           domain: 'localhost',
           path: '/',
@@ -361,11 +361,11 @@ export async function authenticateWithApiKey(page: Page, apiKey: string): Promis
 
 /**
  * Authenticate using the API key from environment variable
- * Falls back to a test default if AUTOMAKER_API_KEY is not set
+ * Falls back to a test default if ASK_JENNY_API_KEY is not set
  */
 export async function authenticateForTests(page: Page): Promise<boolean> {
   // Use the API key from environment, or a test default
-  const apiKey = process.env.AUTOMAKER_API_KEY || 'test-api-key-for-e2e-tests';
+  const apiKey = process.env.ASK_JENNY_API_KEY || 'test-api-key-for-e2e-tests';
   return authenticateWithApiKey(page, apiKey);
 }
 

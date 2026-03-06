@@ -1,6 +1,6 @@
 /**
- * @automaker/prompts
- * AI prompt templates for AutoMaker
+ * @ask-jenny/prompts
+ * AI prompt templates for Ask Jenny
  */
 
 // Enhancement prompts
@@ -21,8 +21,8 @@ export {
   getAvailableEnhancementModes,
 } from './enhancement.js';
 
-// Re-export types from @automaker/types
-export type { EnhancementMode, EnhancementExample } from '@automaker/types';
+// Re-export types from @ask-jenny/types
+export type { EnhancementMode, EnhancementExample } from '@ask-jenny/types';
 
 // Default prompts
 export {
@@ -97,7 +97,7 @@ export {
   mergeAllPrompts,
 } from './merge.js';
 
-// Re-export resolved prompt types from @automaker/types
+// Re-export resolved prompt types from @ask-jenny/types
 export type {
   ResolvedAutoModePrompts,
   ResolvedAgentPrompts,
@@ -111,4 +111,4 @@ export type {
   ResolvedContextDescriptionPrompts,
   ResolvedSuggestionsPrompts,
   ResolvedTaskExecutionPrompts,
-} from '@automaker/types';
+} from '@ask-jenny/types';

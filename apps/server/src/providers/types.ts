@@ -1,11 +1,11 @@
 /**
  * Shared types for AI model providers
  *
- * Re-exports types from @automaker/types for consistency across the codebase.
- * All provider types are defined in @automaker/types to avoid duplication.
+ * Re-exports types from @ask-jenny/types for consistency across the codebase.
+ * All provider types are defined in @ask-jenny/types to avoid duplication.
  */
 
-// Re-export all provider types from @automaker/types
+// Re-export all provider types from @ask-jenny/types
 export type {
   ProviderConfig,
   ConversationMessage,
@@ -19,4 +19,4 @@ export type {
   InstallationStatus,
   ValidationResult,
   ModelDefinition,
-} from '@automaker/types';
+} from '@ask-jenny/types';

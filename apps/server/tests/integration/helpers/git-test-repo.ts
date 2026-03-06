@@ -18,7 +18,7 @@ export interface TestRepo {
  * Create a temporary git repository for testing
  */
 export async function createTestGitRepo(): Promise<TestRepo> {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'automaker-test-'));
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ask-jenny-test-'));
 
   // Initialize git repo
   await execAsync('git init', { cwd: tmpDir });
@@ -86,7 +86,7 @@ export async function createTestFeature(
   featureId: string,
   featureData: any
 ): Promise<void> {
-  const featuresDir = path.join(repoPath, '.automaker', 'features');
+  const featuresDir = path.join(repoPath, '.ask-jenny', 'features');
   const featureDir = path.join(featuresDir, featureId);
 
   await fs.mkdir(featureDir, { recursive: true });

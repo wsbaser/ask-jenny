@@ -16,7 +16,7 @@ import { Feature, ModelAlias, ThinkingLevel, PlanningMode } from '@/store/app-st
 import { TestingTabContent, PrioritySelect, PlanningModeSelect, WorkModeSelector } from '../shared';
 import type { WorkMode } from '../shared';
 import { PhaseModelSelector } from '@/components/views/settings-view/model-defaults/phase-model-selector';
-import { isCursorModel, isClaudeModel, type PhaseModelEntry } from '@automaker/types';
+import { isCursorModel, isClaudeModel, type PhaseModelEntry } from '@ask-jenny/types';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 

@@ -19,7 +19,7 @@ describe('feature-loader.ts', () => {
       const result = loader.getFeaturesDir(testProjectPath);
       expect(result).toContain('test');
       expect(result).toContain('project');
-      expect(result).toContain('.automaker');
+      expect(result).toContain('.ask-jenny');
       expect(result).toContain('features');
     });
   });

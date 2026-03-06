@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { useAppStore } from '@/store/app-store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -151,7 +151,7 @@ export function AgentToolsView() {
         ls: 'app_spec.txt\nfeatures\nnode_modules\npackage.json\nsrc\ntests\ntsconfig.json',
         pwd: currentProject?.path || '/Users/demo/project',
         'echo hello': 'hello',
-        whoami: 'automaker-agent',
+        whoami: 'ask-jenny-agent',
         date: new Date().toString(),
         'cat package.json': '{\n  "name": "demo-project",\n  "version": "1.0.0"\n}',
       };

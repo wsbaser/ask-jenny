@@ -9,8 +9,8 @@ out/
 .turbo/
 release/
 
-# Automaker
-.automaker/
+# Ask Jenny
+.ask-jenny/
 
 # Logs
 logs/

@@ -11,11 +11,11 @@ out/
 .next/
 .turbo/
 
-# Automaker
-.automaker/images/
-.automaker/
-/.automaker/*
-/.automaker/
+# Ask Jenny
+.ask-jenny/images/
+.ask-jenny/
+/.ask-jenny/*
+/.ask-jenny/
 
 .worktrees/
 

@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getElectronAPI } from '@/lib/electron';
 import { queryKeys } from '@/lib/query-keys';
 import { toast } from 'sonner';
-import type { IdeaCategory, IdeaSuggestion } from '@automaker/types';
+import type { IdeaCategory, IdeaSuggestion } from '@ask-jenny/types';
 
 /**
  * Input for generating ideation suggestions

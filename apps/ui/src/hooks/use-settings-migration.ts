@@ -14,7 +14,7 @@
  * 6. Returns a promise that resolves when hydration is complete
  *
  * IMPORTANT: localStorage values are intentionally NOT deleted after migration.
- * This allows users to switch back to older versions of Automaker if needed.
+ * This allows users to switch back to older versions of Ask Jenny if needed.
  *
  * Sync functions for incremental updates:
  * - syncSettingsToServer: Writes global settings to file
@@ -23,7 +23,7 @@
  */
 
 import { useEffect, useState, useRef } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import { getHttpApiClient, waitForApiKeyInit } from '@/lib/http-api-client';
 import { getItem, setItem } from '@/lib/storage';
 import { useAppStore, THEME_STORAGE_KEY } from '@/store/app-store';
@@ -37,7 +37,7 @@ import {
   migratePhaseModelEntry,
   type GlobalSettings,
   type CursorModelId,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 const logger = createLogger('SettingsMigration');
 
@@ -65,7 +65,7 @@ const LOCALSTORAGE_KEYS = [
 ] as const;
 
 // NOTE: We intentionally do NOT clear any localStorage keys after migration.
-// This allows users to switch back to older versions of Automaker that relied on localStorage.
+// This allows users to switch back to older versions of Ask Jenny that relied on localStorage.
 // The `localStorageMigrated` flag in server settings prevents re-migration on subsequent app loads.
 
 // Global promise that resolves when migration is complete
@@ -118,7 +118,7 @@ export function resetMigrationState(): void {
  * Parse localStorage data into settings object
  *
  * Checks for settings in multiple locations:
- * 1. automaker-settings-cache: Fresh server settings cached from last fetch
+ * 1. ask-jenny-settings-cache: Fresh server settings cached from last fetch
  * 2. automaker-storage: Zustand-persisted app store state (legacy)
  * 3. automaker-setup: Setup wizard state (legacy)
  * 4. Standalone keys: worktree-panel-collapsed, file-browser-recent-folders, etc.
@@ -129,7 +129,7 @@ export function parseLocalStorageSettings(): Partial<GlobalSettings> | null {
   try {
     // First, check for fresh server settings cache (updated whenever server settings are fetched)
     // This prevents stale data when switching between modes
-    const settingsCache = getItem('automaker-settings-cache');
+    const settingsCache = getItem('ask-jenny-settings-cache');
     if (settingsCache) {
       try {
         const cached = JSON.parse(settingsCache) as GlobalSettings;
@@ -506,7 +506,7 @@ export function useSettingsMigration(): MigrationState {
             // Update localStorage with fresh server data to keep cache in sync
             // This prevents stale localStorage data from being used when switching between modes
             try {
-              setItem('automaker-settings-cache', JSON.stringify(serverSettings));
+              setItem('ask-jenny-settings-cache', JSON.stringify(serverSettings));
               logger.debug('Updated localStorage with fresh server settings');
             } catch (storageError) {
               logger.warn('Failed to update localStorage cache:', storageError);
@@ -565,7 +565,7 @@ export function useSettingsMigration(): MigrationState {
             if (result.success) {
               logger.info('Synced merged settings to server with migration marker');
               // NOTE: We intentionally do NOT clear localStorage values
-              // This allows users to switch back to older versions of Automaker
+              // This allows users to switch back to older versions of Ask Jenny
             } else {
               logger.warn('Failed to sync merged settings to server:', result.error);
             }

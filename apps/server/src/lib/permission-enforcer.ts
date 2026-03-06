@@ -2,8 +2,8 @@
  * Permission enforcement utilities for Cursor provider
  */
 
-import type { CursorCliConfigFile } from '@automaker/types';
-import { createLogger } from '@automaker/utils';
+import type { CursorCliConfigFile } from '@ask-jenny/types';
+import { createLogger } from '@ask-jenny/utils';
 
 const logger = createLogger('PermissionEnforcer');
 

@@ -64,7 +64,7 @@ export async function setupWelcomeView(
         },
         version: versions.APP_STORE,
       };
-      localStorage.setItem('automaker-storage', JSON.stringify(appState));
+      localStorage.setItem('ask-jenny-storage', JSON.stringify(appState));
 
       // Mark setup as complete to skip the setup wizard
       const setupState = {
@@ -75,31 +75,31 @@ export async function setupWelcomeView(
         },
         version: versions.SETUP_STORE,
       };
-      localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+      localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
       // Set workspace directory if provided
       if (opts?.workspaceDir) {
-        localStorage.setItem('automaker:lastProjectDir', opts.workspaceDir);
+        localStorage.setItem('ask-jenny:lastProjectDir', opts.workspaceDir);
       }
 
       // Disable splash screen in tests
-      sessionStorage.setItem('automaker-splash-shown', 'true');
+      sessionStorage.setItem('ask-jenny-splash-shown', 'true');
 
       // Set up a mechanism to keep currentProject null even after settings hydration
       // Settings API might restore a project, so we override it after hydration
       // Use a flag to indicate we want welcome view
-      sessionStorage.setItem('automaker-test-welcome-view', 'true');
+      sessionStorage.setItem('ask-jenny-test-welcome-view', 'true');
 
       // Override currentProject after a short delay to ensure it happens after settings hydration
       setTimeout(() => {
-        const storage = localStorage.getItem('automaker-storage');
+        const storage = localStorage.getItem('ask-jenny-storage');
         if (storage) {
           try {
             const state = JSON.parse(storage);
-            if (state.state && sessionStorage.getItem('automaker-test-welcome-view') === 'true') {
+            if (state.state && sessionStorage.getItem('ask-jenny-test-welcome-view') === 'true') {
               state.state.currentProject = null;
               state.state.currentView = 'welcome';
-              localStorage.setItem('automaker-storage', JSON.stringify(state));
+              localStorage.setItem('ask-jenny-storage', JSON.stringify(state));
             }
           } catch {
             // Ignore parse errors
@@ -169,7 +169,7 @@ export async function setupRealProject(
         },
         version: versions.APP_STORE,
       };
-      localStorage.setItem('automaker-storage', JSON.stringify(appState));
+      localStorage.setItem('ask-jenny-storage', JSON.stringify(appState));
 
       // Mark setup as complete
       const setupState = {
@@ -180,10 +180,10 @@ export async function setupRealProject(
         },
         version: versions.SETUP_STORE,
       };
-      localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+      localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
       // Disable splash screen in tests
-      sessionStorage.setItem('automaker-splash-shown', 'true');
+      sessionStorage.setItem('ask-jenny-splash-shown', 'true');
     },
     { path: projectPath, name: projectName, opts: options, versions: STORE_VERSIONS }
   );
@@ -216,10 +216,10 @@ export async function setupMockProject(page: Page): Promise<void> {
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   });
 }
 
@@ -252,7 +252,7 @@ export async function setupMockProjectWithConcurrency(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
   }, concurrency);
 }
 
@@ -290,10 +290,10 @@ export async function setupMockProjectAtConcurrencyLimit(
         version: 2, // Must match app-store.ts persist version
       };
 
-      localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+      localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
       // Disable splash screen in tests
-      sessionStorage.setItem('automaker-splash-shown', 'true');
+      sessionStorage.setItem('ask-jenny-splash-shown', 'true');
     },
     { maxConcurrency, runningTasks }
   );
@@ -344,14 +344,14 @@ export async function setupMockProjectWithFeatures(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Also store features in a global variable that the mock electron API can use
     // This is needed because the board-view loads features from the file system
     (window as any).__mockFeatures = mockFeatures;
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   }, options);
 }
 
@@ -387,17 +387,17 @@ export async function setupMockProjectWithContextFile(
         version: 2, // Must match app-store.ts persist version
       };
 
-      localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+      localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
       // Disable splash screen in tests
-      sessionStorage.setItem('automaker-splash-shown', 'true');
+      sessionStorage.setItem('ask-jenny-splash-shown', 'true');
 
       // Set up mock file system with a context file for the feature
       // This will be used by the mock electron API
       // Now uses features/{id}/agent-output.md path
       (window as any).__mockContextFile = {
         featureId,
-        path: `/mock/test-project/.automaker/features/${featureId}/agent-output.md`,
+        path: `/mock/test-project/.ask-jenny/features/${featureId}/agent-output.md`,
         content: contextContent,
       };
     },
@@ -451,7 +451,7 @@ export async function setupMockProjectWithInProgressFeatures(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Also store features in a global variable that the mock electron API can use
     // This is needed because the board-view loads features from the file system
@@ -486,7 +486,7 @@ export async function setupMockProjectWithView(page: Page, view: string): Promis
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
   }, view);
 }
 
@@ -509,10 +509,10 @@ export async function setupEmptyLocalStorage(page: Page): Promise<void> {
       },
       version: 2, // Must match app-store.ts persist version
     };
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   });
 }
 
@@ -551,10 +551,10 @@ export async function setupMockProjectsWithoutCurrent(page: Page): Promise<void>
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   });
 }
 
@@ -605,10 +605,10 @@ export async function setupMockProjectWithSkipTestsFeatures(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   }, options);
 }
 
@@ -645,7 +645,7 @@ export async function setupMockMultipleProjects(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
   }, projectCount);
 }
 
@@ -680,16 +680,16 @@ export async function setupMockProjectWithAgentOutput(
         version: 2, // Must match app-store.ts persist version
       };
 
-      localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+      localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
       // Disable splash screen in tests
-      sessionStorage.setItem('automaker-splash-shown', 'true');
+      sessionStorage.setItem('ask-jenny-splash-shown', 'true');
 
       // Set up mock file system with output content for the feature
       // Now uses features/{id}/agent-output.md path
       (window as any).__mockContextFile = {
         featureId,
-        path: `/mock/test-project/.automaker/features/${featureId}/agent-output.md`,
+        path: `/mock/test-project/.ask-jenny/features/${featureId}/agent-output.md`,
         content: outputContent,
       };
     },
@@ -744,7 +744,7 @@ export async function setupMockProjectWithWaitingApprovalFeatures(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Also store features in a global variable that the mock electron API can use
     (window as any).__mockFeatures = mockFeatures;
@@ -757,8 +757,8 @@ export async function setupMockProjectWithWaitingApprovalFeatures(
 export async function setupFirstRun(page: Page): Promise<void> {
   await page.addInitScript(() => {
     // Clear any existing setup state to simulate first run
-    localStorage.removeItem('automaker-setup');
-    localStorage.removeItem('automaker-storage');
+    localStorage.removeItem('ask-jenny-setup');
+    localStorage.removeItem('ask-jenny-storage');
 
     // Set up the setup store state for first run
     const setupState = {
@@ -779,7 +779,7 @@ export async function setupFirstRun(page: Page): Promise<void> {
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+    localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
     // Also set up app store to show setup view
     const appState = {
@@ -800,10 +800,10 @@ export async function setupFirstRun(page: Page): Promise<void> {
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(appState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(appState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   });
 }
 
@@ -823,9 +823,9 @@ export async function setupComplete(page: Page): Promise<void> {
       version: versions.SETUP_STORE,
     };
 
-    localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+    localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   }, STORE_VERSIONS);
 }

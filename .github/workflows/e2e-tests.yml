@@ -49,11 +49,11 @@ jobs:
           PORT: 7008
           NODE_ENV: test
           # Use a deterministic API key so Playwright can log in reliably
-          AUTOMAKER_API_KEY: test-api-key-for-e2e-tests
+          ASK_JENNY_API_KEY: test-api-key-for-e2e-tests
           # Reduce log noise in CI
-          AUTOMAKER_HIDE_API_KEY: 'true'
+          ASK_JENNY_HIDE_API_KEY: 'true'
           # Avoid real API calls during CI
-          AUTOMAKER_MOCK_AGENT: 'true'
+          ASK_JENNY_MOCK_AGENT: 'true'
           # Simulate containerized environment to skip sandbox confirmation dialogs
           IS_CONTAINERIZED: 'true'
 
@@ -135,7 +135,7 @@ jobs:
           VITE_SERVER_URL: http://localhost:7008
           VITE_SKIP_SETUP: 'true'
           # Keep UI-side login/defaults consistent
-          AUTOMAKER_API_KEY: test-api-key-for-e2e-tests
+          ASK_JENNY_API_KEY: test-api-key-for-e2e-tests
 
       - name: Print backend logs on failure
         if: failure()

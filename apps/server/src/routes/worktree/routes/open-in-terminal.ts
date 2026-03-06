@@ -16,8 +16,8 @@ import {
   detectAllTerminals,
   detectDefaultTerminal,
   openInExternalTerminal,
-} from '@automaker/platform';
-import { createLogger } from '@automaker/utils';
+} from '@ask-jenny/platform';
+import { createLogger } from '@ask-jenny/utils';
 import { getErrorMessage, logError } from '../common.js';
 
 const logger = createLogger('open-in-terminal');

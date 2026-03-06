@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from 'react';
-import { createLogger } from '@automaker/utils/logger';
+import { createLogger } from '@ask-jenny/utils/logger';
 import {
   Dialog,
   DialogContent,
@@ -35,8 +35,8 @@ import {
   PlanningMode,
   Feature,
 } from '@/store/app-store';
-import type { ReasoningEffort, PhaseModelEntry, AgentModel } from '@automaker/types';
-import { supportsReasoningEffort, isClaudeModel } from '@automaker/types';
+import type { ReasoningEffort, PhaseModelEntry, AgentModel } from '@ask-jenny/types';
+import { supportsReasoningEffort, isClaudeModel } from '@ask-jenny/types';
 import {
   TestingTabContent,
   PrioritySelector,
@@ -54,7 +54,7 @@ import {
   getAncestors,
   formatAncestorContextForPrompt,
   type AncestorContext,
-} from '@automaker/dependency-resolver';
+} from '@ask-jenny/dependency-resolver';
 
 const logger = createLogger('AddFeatureDialog');
 

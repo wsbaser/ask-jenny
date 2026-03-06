@@ -1,7 +1,7 @@
 #!/bin/bash
 # Example worktree init script for Automaker
 # Copy this content to Settings > Worktrees > Init Script
-# Or save directly as .automaker/worktree-init.sh in your project
+# Or save directly as .ask-jenny/worktree-init.sh in your project
 
 echo "=========================================="
 echo "  Worktree Init Script Starting..."

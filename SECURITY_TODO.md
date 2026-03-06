@@ -96,7 +96,7 @@ An attacker could inject commands via the remote name:
 
 ### 3. Unsafe Environment Variable Export in Shell Script
 
-**File:** `start-automaker.sh`  
+**File:** `start-ask-jenny.sh`  
 **Lines:** 5068, 5085  
 **Severity:** CRITICAL
 

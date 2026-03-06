@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
-import type { PhaseModelEntry } from '@automaker/types';
+import type { PhaseModelEntry } from '@ask-jenny/types';
 import { useElectronAgent } from '@/hooks/use-electron-agent';
 import { SessionManager } from '@/components/session-manager';
 
@@ -155,7 +155,7 @@ export function AgentView() {
             id: 'welcome',
             role: 'assistant' as const,
             content:
-              "Hello! I'm the Automaker Agent. I can help you build software autonomously. I can read and modify files in this project, run commands, and execute tests. What would you like to create today?",
+              "Hello! I'm the Ask Jenny Agent. I can help you build software autonomously. I can read and modify files in this project, run commands, and execute tests. What would you like to create today?",
             timestamp: new Date().toISOString(),
           },
         ]

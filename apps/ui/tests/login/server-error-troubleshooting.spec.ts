@@ -9,7 +9,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { SERVER_PORT, STATIC_PORT } from '@automaker/types';
+import { SERVER_PORT, STATIC_PORT } from '@ask-jenny/types';
 
 test.describe('Login View - Server Error Troubleshooting', () => {
   test.beforeEach(async ({ page }) => {

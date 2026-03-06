@@ -3,7 +3,7 @@
  */
 
 import type { Request, Response } from 'express';
-import type { BacklogPlanResult, BacklogChange, Feature } from '@automaker/types';
+import type { BacklogPlanResult, BacklogChange, Feature } from '@ask-jenny/types';
 import { FeatureLoader } from '../../../services/feature-loader.js';
 import { clearBacklogPlan, getErrorMessage, logError, logger } from '../common.js';
 

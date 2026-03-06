@@ -1,6 +1,6 @@
 /**
- * @automaker/model-resolver
- * Model resolution utilities for AutoMaker
+ * @ask-jenny/model-resolver
+ * Model resolution utilities for Ask Jenny
  */
 
 // Re-export constants from types
@@ -10,7 +10,7 @@ export {
   DEFAULT_MODELS,
   type ModelAlias,
   type CursorModelId,
-} from '@automaker/types';
+} from '@ask-jenny/types';
 
 // Export resolver functions
 export {

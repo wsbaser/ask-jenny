@@ -1,26 +1,26 @@
-# @automaker/platform
+# @ask-jenny/platform
 
-Platform-specific utilities for AutoMaker.
+Platform-specific utilities for Ask Jenny.
 
 ## Overview
 
-This package provides platform-specific utilities including path management, subprocess handling, and security validation. It handles AutoMaker's directory structure and system operations.
+This package provides platform-specific utilities including path management, subprocess handling, and security validation. It handles Ask Jenny's directory structure and system operations.
 
 ## Installation
 
 ```bash
-npm install @automaker/platform
+npm install @ask-jenny/platform
 ```
 
 ## Exports
 
 ### Path Management
 
-AutoMaker directory structure utilities.
+Ask Jenny directory structure utilities.
 
 ```typescript
 import {
-  getAutomakerDir,
+  getAskJennyDir,
   getFeaturesDir,
   getFeatureDir,
   getFeatureImagesDir,
@@ -30,23 +30,23 @@ import {
   getWorktreesDir,
   getAppSpecPath,
   getBranchTrackingPath,
-  ensureAutomakerDir,
-} from '@automaker/platform';
+  ensureAskJennyDir,
+} from '@ask-jenny/platform';
 
-// Get AutoMaker directory: /project/.automaker
-const automakerDir = getAutomakerDir('/project/path');
+// Get Ask Jenny directory: /project/.ask-jenny
+const askJennyDir = getAskJennyDir('/project/path');
 
-// Get features directory: /project/.automaker/features
+// Get features directory: /project/.ask-jenny/features
 const featuresDir = getFeaturesDir('/project/path');
 
-// Get specific feature directory: /project/.automaker/features/feature-id
+// Get specific feature directory: /project/.ask-jenny/features/feature-id
 const featureDir = getFeatureDir('/project/path', 'feature-id');
 
-// Get feature images: /project/.automaker/features/feature-id/images
+// Get feature images: /project/.ask-jenny/features/feature-id/images
 const imagesDir = getFeatureImagesDir('/project/path', 'feature-id');
 
-// Ensure .automaker directory exists
-await ensureAutomakerDir('/project/path');
+// Ensure .ask-jenny directory exists
+await ensureAskJennyDir('/project/path');
 ```
 
 ### Subprocess Management
@@ -54,7 +54,7 @@ await ensureAutomakerDir('/project/path');
 Spawn and manage subprocesses with JSON-lines output.
 
 ```typescript
-import { spawnJSONLProcess, spawnProcess } from '@automaker/platform';
+import { spawnJSONLProcess, spawnProcess } from '@ask-jenny/platform';
 
 // Spawn process with JSONL output parsing
 const result = await spawnJSONLProcess({
@@ -86,7 +86,7 @@ import {
   getAllowedRootDirectory,
   getDataDirectory,
   PathNotAllowedError,
-} from '@automaker/platform';
+} from '@ask-jenny/platform';
 
 // Initialize allowed paths from environment
 // Reads ALLOWED_ROOT_DIRECTORY and DATA_DIR environment variables
@@ -117,17 +117,17 @@ const allowed = getAllowedPaths(); // array of all allowed paths
 ```typescript
 import {
   getFeatureDir,
-  ensureAutomakerDir,
+  ensureAskJennyDir,
   spawnJSONLProcess,
   validatePath,
-} from '@automaker/platform';
+} from '@ask-jenny/platform';
 
 async function executeFeature(projectPath: string, featureId: string) {
   // Validate project path
   const safePath = validatePath(projectPath);
 
-  // Ensure AutoMaker directory exists
-  await ensureAutomakerDir(safePath);
+  // Ensure Ask Jenny directory exists
+  await ensureAskJennyDir(safePath);
 
   // Get feature directory
   const featureDir = getFeatureDir(safePath, featureId);
@@ -181,7 +181,7 @@ DATA_DIR=/app/data
 The `secureFs` module wraps Node.js `fs` operations with path validation:
 
 ```typescript
-import { secureFs } from '@automaker/platform';
+import { secureFs } from '@ask-jenny/platform';
 
 // All operations validate paths before execution
 await secureFs.readFile('/workspace/project/file.txt');
@@ -191,11 +191,11 @@ await secureFs.mkdir('/workspace/project/new-dir', { recursive: true });
 
 ## Directory Structure
 
-AutoMaker uses the following directory structure:
+Ask Jenny uses the following directory structure:
 
 ```
 /project/
-├── .automaker/
+├── .ask-jenny/
 │   ├── features/          # Feature storage
 │   │   └── {featureId}/
 │   │       ├── feature.json
@@ -210,8 +210,8 @@ AutoMaker uses the following directory structure:
 
 ## Dependencies
 
-- `@automaker/types` - Type definitions
+- `@ask-jenny/types` - Type definitions
 
 ## Used By
 
-- `@automaker/server`
+- `@ask-jenny/server`

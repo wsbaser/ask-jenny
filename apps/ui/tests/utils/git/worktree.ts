@@ -105,13 +105,13 @@ export async function createTestGitRepo(tempDir: string): Promise<TestRepo> {
   // Ensure branch is named 'main' (handles both new repos and older git versions)
   await execAsync('git branch -M main', { cwd: tmpDir, env: gitEnv });
 
-  // Create .automaker directories
-  const automakerDir = path.join(tmpDir, '.automaker');
-  const featuresDir = path.join(automakerDir, 'features');
+  // Create .ask-jenny directories
+  const askJennyDir = path.join(tmpDir, '.ask-jenny');
+  const featuresDir = path.join(askJennyDir, 'features');
   fs.mkdirSync(featuresDir, { recursive: true });
 
   // Create empty categories.json to avoid ENOENT errors in tests
-  fs.writeFileSync(path.join(automakerDir, 'categories.json'), '[]');
+  fs.writeFileSync(path.join(askJennyDir, 'categories.json'), '[]');
 
   return {
     path: tmpDir,
@@ -296,7 +296,7 @@ export function createTestFeature(
   featureId: string,
   featureData: FeatureData
 ): void {
-  const featuresDir = path.join(repoPath, '.automaker', 'features');
+  const featuresDir = path.join(repoPath, '.ask-jenny', 'features');
   const featureDir = path.join(featuresDir, featureId);
 
   fs.mkdirSync(featureDir, { recursive: true });
@@ -307,7 +307,7 @@ export function createTestFeature(
  * Read a feature file from the test repo
  */
 export function readTestFeature(repoPath: string, featureId: string): FeatureData | null {
-  const featureFilePath = path.join(repoPath, '.automaker', 'features', featureId, 'feature.json');
+  const featureFilePath = path.join(repoPath, '.ask-jenny', 'features', featureId, 'feature.json');
 
   if (!fs.existsSync(featureFilePath)) {
     return null;
@@ -320,7 +320,7 @@ export function readTestFeature(repoPath: string, featureId: string): FeatureDat
  * List all feature directories in the test repo
  */
 export function listTestFeatures(repoPath: string): string[] {
-  const featuresDir = path.join(repoPath, '.automaker', 'features');
+  const featuresDir = path.join(repoPath, '.ask-jenny', 'features');
 
   if (!fs.existsSync(featuresDir)) {
     return [];
@@ -366,7 +366,7 @@ export async function setupProjectWithPath(page: Page, projectPath: string): Pro
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Mark setup as complete to skip the setup wizard
     const setupState = {
@@ -378,10 +378,10 @@ export async function setupProjectWithPath(page: Page, projectPath: string): Pro
       },
       version: 0, // setup-store.ts doesn't specify a version, so zustand defaults to 0
     };
-    localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+    localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   }, projectPath);
 }
 
@@ -420,7 +420,7 @@ export async function setupProjectWithPathNoWorktrees(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Mark setup as complete to skip the setup wizard
     const setupState = {
@@ -432,10 +432,10 @@ export async function setupProjectWithPathNoWorktrees(
       },
       version: 0, // setup-store.ts doesn't specify a version, so zustand defaults to 0
     };
-    localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+    localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   }, projectPath);
 }
 
@@ -478,7 +478,7 @@ export async function setupProjectWithStaleWorktree(
       version: 2, // Must match app-store.ts persist version
     };
 
-    localStorage.setItem('automaker-storage', JSON.stringify(mockState));
+    localStorage.setItem('ask-jenny-storage', JSON.stringify(mockState));
 
     // Mark setup as complete to skip the setup wizard
     const setupState = {
@@ -490,10 +490,10 @@ export async function setupProjectWithStaleWorktree(
       },
       version: 0, // setup-store.ts doesn't specify a version, so zustand defaults to 0
     };
-    localStorage.setItem('automaker-setup', JSON.stringify(setupState));
+    localStorage.setItem('ask-jenny-setup', JSON.stringify(setupState));
 
     // Disable splash screen in tests
-    sessionStorage.setItem('automaker-splash-shown', 'true');
+    sessionStorage.setItem('ask-jenny-splash-shown', 'true');
   }, projectPath);
 }
 

@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { COLUMNS, isPipelineStatus } from '../../constants';
-import type { FeatureStatusWithPipeline, PipelineConfig } from '@automaker/types';
+import type { FeatureStatusWithPipeline, PipelineConfig } from '@ask-jenny/types';
 
 /**
  * Status display configuration

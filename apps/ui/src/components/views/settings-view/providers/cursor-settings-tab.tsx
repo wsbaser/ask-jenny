@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store/app-store';
-import type { CursorModelId } from '@automaker/types';
+import type { CursorModelId } from '@ask-jenny/types';
 import {
   CursorCliStatus,
   CursorCliStatusSkeleton,

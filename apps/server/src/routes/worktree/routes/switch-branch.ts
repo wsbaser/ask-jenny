@@ -18,7 +18,7 @@ const execAsync = promisify(exec);
 
 /**
  * Check if there are uncommitted changes in the working directory
- * Excludes .worktrees/ directory which is created by automaker
+ * Excludes .worktrees/ directory which is created by ask-jenny
  */
 async function hasUncommittedChanges(cwd: string): Promise<boolean> {
   try {
@@ -28,7 +28,7 @@ async function hasUncommittedChanges(cwd: string): Promise<boolean> {
       .split('\n')
       .filter((line) => {
         if (!line.trim()) return false;
-        // Exclude .worktrees/ directory (created by automaker)
+        // Exclude .worktrees/ directory (created by ask-jenny)
         if (line.includes('.worktrees/') || line.endsWith('.worktrees')) return false;
         return true;
       });

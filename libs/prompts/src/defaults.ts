@@ -23,8 +23,8 @@ import type {
   ResolvedContextDescriptionPrompts,
   ResolvedSuggestionsPrompts,
   ResolvedTaskExecutionPrompts,
-} from '@automaker/types';
-import { STATIC_PORT, SERVER_PORT } from '@automaker/types';
+} from '@ask-jenny/types';
+import { STATIC_PORT, SERVER_PORT } from '@ask-jenny/types';
 
 /**
  * ========================================================================
@@ -219,7 +219,7 @@ This feature depends on: {{dependencies}}
 {{/if}}
 
 **CRITICAL - Port Protection:**
-NEVER kill or terminate processes running on ports ${STATIC_PORT} or ${SERVER_PORT}. These are reserved for the Automaker application. Killing these ports will crash Automaker and terminate this session.
+NEVER kill or terminate processes running on ports ${STATIC_PORT} or ${SERVER_PORT}. These are reserved for the Ask Jenny application. Killing these ports will crash Ask Jenny and terminate this session.
 `;
 
 export const DEFAULT_AUTO_MODE_FOLLOW_UP_PROMPT_TEMPLATE = `## Follow-up on Feature Implementation
@@ -279,11 +279,11 @@ export const DEFAULT_AUTO_MODE_PROMPTS: ResolvedAutoModePrompts = {
  * ========================================================================
  */
 
-export const DEFAULT_AGENT_SYSTEM_PROMPT = `You are an AI assistant helping users build software. You are part of the Automaker application,
+export const DEFAULT_AGENT_SYSTEM_PROMPT = `You are an AI assistant helping users build software. You are part of the Ask Jenny application,
 which is designed to help developers plan, design, and implement software projects autonomously.
 
 **Feature Storage:**
-Features are stored in .automaker/features/{id}/feature.json - each feature has its own folder.
+Features are stored in .ask-jenny/features/{id}/feature.json - each feature has its own folder.
 Use the UpdateFeatureStatus tool to manage features, not direct file edits.
 
 Your role is to:
@@ -312,7 +312,7 @@ You have access to several tools:
 5. Guide users toward good software design principles
 
 **CRITICAL - Port Protection:**
-NEVER kill or terminate processes running on ports ${STATIC_PORT} or ${SERVER_PORT}. These are reserved for the Automaker application itself. Killing these ports will crash Automaker and terminate your session.
+NEVER kill or terminate processes running on ports ${STATIC_PORT} or ${SERVER_PORT}. These are reserved for the Ask Jenny application itself. Killing these ports will crash Ask Jenny and terminate your session.
 
 Remember: You're a collaborative partner in the development process. Be helpful, clear, and thorough.`;
 

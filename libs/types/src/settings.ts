@@ -1123,7 +1123,7 @@ export interface WorktreeInfo {
 }
 
 /**
- * ProjectSettings - Project-specific overrides stored in {projectPath}/.automaker/settings.json
+ * ProjectSettings - Project-specific overrides stored in {projectPath}/.ask-jenny/settings.json
  *
  * Allows per-project customization without affecting global settings.
  * All fields are optional - missing values fall back to global settings.
@@ -1155,7 +1155,7 @@ export interface ProjectSettings {
   boardBackground?: BoardBackgroundSettings;
 
   // Project Branding
-  /** Custom icon image path for project switcher (relative to .automaker/) */
+  /** Custom icon image path for project switcher (relative to .ask-jenny/) */
   customIconPath?: string;
 
   // UI Visibility
