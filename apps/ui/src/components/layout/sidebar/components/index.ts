@@ -2,7 +2,7 @@ export { SortableProjectItem } from './sortable-project-item';
 export { ThemeMenuItem } from './theme-menu-item';
 export { BugReportButton } from './bug-report-button';
 export { CollapseToggleButton } from './collapse-toggle-button';
-export { AskJennyLogo, AutomakerLogo } from './ask-jenny-logo';
+export { AskJennyLogo } from './ask-jenny-logo';
 export { SidebarHeader } from './sidebar-header';
 export { ProjectActions } from './project-actions';
 export { SidebarNavigation } from './sidebar-navigation';

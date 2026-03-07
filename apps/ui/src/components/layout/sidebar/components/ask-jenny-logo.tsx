@@ -128,8 +128,3 @@ export function AskJennyLogo({ sidebarOpen, navigate }: AskJennyLogoProps) {
     </button>
   );
 }
-
-/**
- * @deprecated Use AskJennyLogo instead
- */
-export const AutomakerLogo = AskJennyLogo;

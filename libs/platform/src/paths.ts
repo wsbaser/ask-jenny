@@ -26,13 +26,6 @@ export function getAskJennyDir(projectPath: string): string {
 }
 
 /**
- * @deprecated Use getAskJennyDir instead
- */
-export function getAutomakerDir(projectPath: string): string {
-  return getAskJennyDir(projectPath);
-}
-
-/**
  * Get the features directory for a project
  *
  * Contains subdirectories for each feature, keyed by featureId.
@@ -218,13 +211,6 @@ export async function ensureAskJennyDir(projectPath: string): Promise<string> {
   const askJennyDir = getAskJennyDir(projectPath);
   await secureFs.mkdir(askJennyDir, { recursive: true });
   return askJennyDir;
-}
-
-/**
- * @deprecated Use ensureAskJennyDir instead
- */
-export async function ensureAutomakerDir(projectPath: string): Promise<string> {
-  return ensureAskJennyDir(projectPath);
 }
 
 // ============================================================================

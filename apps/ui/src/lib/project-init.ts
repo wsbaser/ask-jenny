@@ -226,7 +226,7 @@ export async function hasAppSpec(projectPath: string): Promise<boolean> {
  * @param projectPath - The root path of the project
  * @returns true if .ask-jenny directory exists
  */
-export async function hasAutomakerDir(projectPath: string): Promise<boolean> {
+export async function hasAskJennyDir(projectPath: string): Promise<boolean> {
   const api = getElectronAPI();
   try {
     const fullPath = `${projectPath}/.ask-jenny`;

@@ -6,7 +6,6 @@
 // Path utilities
 export {
   getAskJennyDir,
-  getAutomakerDir,
   getFeaturesDir,
   getFeatureDir,
   getFeatureImagesDir,
@@ -27,7 +26,6 @@ export {
   getEventPath,
   ensureEventHistoryDir,
   ensureAskJennyDir,
-  ensureAutomakerDir,
   getGlobalSettingsPath,
   getCredentialsPath,
   getProjectSettingsPath,

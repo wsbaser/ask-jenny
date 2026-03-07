@@ -14,7 +14,7 @@ import { useProjectCreation } from '@/components/layout/sidebar/hooks';
 import { SIDEBAR_FEATURE_FLAGS } from '@/components/layout/sidebar/constants';
 import type { Project } from '@/lib/electron';
 import { getElectronAPI } from '@/lib/electron';
-import { initializeProject, hasAppSpec, hasAutomakerDir } from '@/lib/project-init';
+import { initializeProject, hasAppSpec, hasAskJennyDir } from '@/lib/project-init';
 import { toast } from 'sonner';
 import { CreateSpecDialog } from '@/components/views/spec-view/dialogs';
 import type { FeatureCount } from '@/components/views/spec-view/types';
@@ -141,7 +141,7 @@ export function ProjectSwitcher() {
 
       try {
         // Check if this is a brand new project (no .ask-jenny directory)
-        const hadAutomakerDir = await hasAutomakerDir(path);
+        const hadAskJennyDir = await hasAskJennyDir(path);
 
         // Initialize the .ask-jenny directory structure
         const initResult = await initializeProject(path);
@@ -160,7 +160,7 @@ export function ProjectSwitcher() {
         // Check if app_spec.txt exists
         const specExists = await hasAppSpec(path);
 
-        if (!hadAutomakerDir && !specExists) {
+        if (!hadAskJennyDir && !specExists) {
           // This is a brand new project - show setup dialog
           setSetupProjectPath(path);
           setShowSetupDialog(true);

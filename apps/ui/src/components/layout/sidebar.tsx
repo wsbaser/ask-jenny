@@ -8,7 +8,7 @@ import { useAppStore } from '@/store/app-store';
 import { useNotificationsStore } from '@/store/notifications-store';
 import { useKeyboardShortcuts, useKeyboardShortcutsConfig } from '@/hooks/use-keyboard-shortcuts';
 import { getElectronAPI } from '@/lib/electron';
-import { initializeProject, hasAppSpec, hasAutomakerDir } from '@/lib/project-init';
+import { initializeProject, hasAppSpec, hasAskJennyDir } from '@/lib/project-init';
 import { toast } from 'sonner';
 import { DeleteProjectDialog } from '@/components/views/settings-view/components/delete-project-dialog';
 import { NewProjectModal } from '@/components/dialogs/new-project-modal';
@@ -178,7 +178,7 @@ export function Sidebar() {
 
       try {
         // Check if this is a brand new project (no .ask-jenny directory)
-        const hadAutomakerDir = await hasAutomakerDir(path);
+        const hadAskJennyDir = await hasAskJennyDir(path);
 
         // Initialize the .ask-jenny directory structure
         const initResult = await initializeProject(path);
@@ -197,7 +197,7 @@ export function Sidebar() {
         // Check if app_spec.txt exists
         const specExists = await hasAppSpec(path);
 
-        if (!hadAutomakerDir && !specExists) {
+        if (!hadAskJennyDir && !specExists) {
           // This is a brand new project - show setup dialog
           setSetupProjectPath(path);
           setShowSetupDialog(true);

@@ -4,7 +4,6 @@ import path from 'path';
 import os from 'os';
 import {
   getAskJennyDir,
-  getAutomakerDir,
   getFeaturesDir,
   getFeatureDir,
   getFeatureImagesDir,
@@ -15,7 +14,6 @@ import {
   getAppSpecPath,
   getBranchTrackingPath,
   ensureAskJennyDir,
-  ensureAutomakerDir,
   getGlobalSettingsPath,
   getCredentialsPath,
   getProjectSettingsPath,
@@ -44,21 +42,10 @@ describe('paths.ts', () => {
     }
   });
 
-  describe('Project-level path construction (new ask-jenny naming)', () => {
+  describe('Project-level path construction', () => {
     it('should return ask-jenny directory path with getAskJennyDir', () => {
       const result = getAskJennyDir(projectPath);
       expect(result).toBe(path.join(projectPath, '.ask-jenny'));
-    });
-
-    it('should return ask-jenny directory path with deprecated getAutomakerDir alias', () => {
-      const result = getAutomakerDir(projectPath);
-      expect(result).toBe(path.join(projectPath, '.ask-jenny'));
-    });
-
-    it('getAutomakerDir should be identical to getAskJennyDir (backwards compatibility)', () => {
-      const askJennyResult = getAskJennyDir(projectPath);
-      const automakerResult = getAutomakerDir(projectPath);
-      expect(askJennyResult).toBe(automakerResult);
     });
 
     it('should return features directory path under .ask-jenny', () => {
@@ -134,28 +121,6 @@ describe('paths.ts', () => {
 
       const stats = await fs.stat(askJennyDir);
       expect(stats.isDirectory()).toBe(true);
-    });
-
-    it('should create ask-jenny directory with deprecated ensureAutomakerDir alias', async () => {
-      const automakerDir = await ensureAutomakerDir(projectPath);
-
-      expect(automakerDir).toBe(path.join(projectPath, '.ask-jenny'));
-
-      const stats = await fs.stat(automakerDir);
-      expect(stats.isDirectory()).toBe(true);
-    });
-
-    it('ensureAutomakerDir should be identical to ensureAskJennyDir (backwards compatibility)', async () => {
-      const askJennyResult = await ensureAskJennyDir(projectPath);
-
-      // Need a fresh directory for the second test
-      const secondProjectPath = path.join(tempDir, 'test-project-2');
-      await fs.mkdir(secondProjectPath, { recursive: true });
-      const automakerResult = await ensureAutomakerDir(secondProjectPath);
-
-      // Both should create .ask-jenny directories
-      expect(askJennyResult).toBe(path.join(projectPath, '.ask-jenny'));
-      expect(automakerResult).toBe(path.join(secondProjectPath, '.ask-jenny'));
     });
 
     it('should be idempotent when creating ask-jenny directory', async () => {
