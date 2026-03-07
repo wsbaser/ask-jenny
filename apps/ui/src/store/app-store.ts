@@ -124,11 +124,6 @@ export const THEME_STORAGE_KEY = 'ask-jenny:theme';
 export const FONT_SANS_STORAGE_KEY = 'ask-jenny:font-sans';
 export const FONT_MONO_STORAGE_KEY = 'ask-jenny:font-mono';
 
-// Legacy keys for backwards compatibility migration
-const LEGACY_THEME_KEY = 'automaker:theme';
-const LEGACY_FONT_SANS_KEY = 'automaker:font-sans';
-const LEGACY_FONT_MONO_KEY = 'automaker:font-mono';
-
 // Maximum number of output lines to keep in init script state (prevents unbounded memory growth)
 export const MAX_INIT_OUTPUT_LINES = 500;
 
@@ -187,31 +182,18 @@ function isValidTheme(value: string): value is ThemeMode {
 /**
  * Get the theme from localStorage as a fallback
  * Used before server settings are loaded (e.g., on login/setup pages)
- * Supports migration from legacy 'automaker:' keys to new 'ask-jenny:' keys
  */
 export function getStoredTheme(): ThemeMode | null {
-  // First try the new key
   const stored = getItem(THEME_STORAGE_KEY);
   if (stored && isValidTheme(stored)) {
     return stored;
   }
 
-  // Try legacy key and migrate if found
-  const legacyStored = getItem(LEGACY_THEME_KEY);
-  if (legacyStored && isValidTheme(legacyStored)) {
-    // Migrate to new key
-    setItem(THEME_STORAGE_KEY, legacyStored);
-    return legacyStored;
-  }
-
-  // Backwards compatibility: older versions stored theme inside the Zustand persist blob.
-  // We intentionally keep reading it as a fallback so users don't get a "default theme flash"
+  // Older versions stored theme inside the Zustand persist blob.
+  // Keep reading it as a fallback so users don't get a "default theme flash"
   // on login/logged-out pages if THEME_STORAGE_KEY hasn't been written yet.
   try {
-    // Try both new and legacy storage keys
-    const newStorage = getItem('ask-jenny-storage');
-    const legacyStorage = getItem('automaker-storage');
-    const storageData = newStorage || legacyStorage;
+    const storageData = getItem('ask-jenny-storage');
     if (!storageData) return null;
     const parsed = JSON.parse(storageData) as { state?: { theme?: unknown } } | { theme?: unknown };
     const theme = (parsed as any)?.state?.theme ?? (parsed as any)?.theme;
@@ -261,36 +243,13 @@ function saveThemeToStorage(theme: ThemeMode): void {
 /**
  * Get fonts from localStorage as a fallback
  * Used before server settings are loaded (e.g., on login/setup pages)
- * Supports migration from legacy 'automaker:' keys to new 'ask-jenny:' keys
  */
 export function getStoredFontSans(): string | null {
-  // First try the new key
-  const stored = getItem(FONT_SANS_STORAGE_KEY);
-  if (stored) return stored;
-
-  // Try legacy key and migrate if found
-  const legacyStored = getItem(LEGACY_FONT_SANS_KEY);
-  if (legacyStored) {
-    setItem(FONT_SANS_STORAGE_KEY, legacyStored);
-    return legacyStored;
-  }
-
-  return null;
+  return getItem(FONT_SANS_STORAGE_KEY);
 }
 
 export function getStoredFontMono(): string | null {
-  // First try the new key
-  const stored = getItem(FONT_MONO_STORAGE_KEY);
-  if (stored) return stored;
-
-  // Try legacy key and migrate if found
-  const legacyStored = getItem(LEGACY_FONT_MONO_KEY);
-  if (legacyStored) {
-    setItem(FONT_MONO_STORAGE_KEY, legacyStored);
-    return legacyStored;
-  }
-
-  return null;
+  return getItem(FONT_MONO_STORAGE_KEY);
 }
 
 /**

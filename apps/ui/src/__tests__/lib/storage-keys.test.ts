@@ -10,9 +10,6 @@ import {
   STORAGE_KEYS,
   SESSION_KEYS,
   EVENT_NAMES,
-  LEGACY_STORAGE_KEYS,
-  LEGACY_SESSION_KEYS,
-  LEGACY_EVENT_NAMES,
   type StorageKey,
   type SessionKey,
   type EventName,
@@ -82,49 +79,6 @@ describe('storage-keys.ts', () => {
     });
   });
 
-  describe('LEGACY_STORAGE_KEYS', () => {
-    it('should have correct legacy theme key with automaker prefix', () => {
-      expect(LEGACY_STORAGE_KEYS.THEME).toBe('automaker:theme');
-    });
-
-    it('should have correct legacy font-sans key with automaker prefix', () => {
-      expect(LEGACY_STORAGE_KEYS.FONT_SANS).toBe('automaker:font-sans');
-    });
-
-    it('should have correct legacy font-mono key with automaker prefix', () => {
-      expect(LEGACY_STORAGE_KEYS.FONT_MONO).toBe('automaker:font-mono');
-    });
-
-    it('should have correct legacy app storage key with automaker prefix', () => {
-      expect(LEGACY_STORAGE_KEYS.APP_STORAGE).toBe('automaker-storage');
-    });
-
-    it('should have exactly 4 legacy storage keys', () => {
-      const keys = Object.keys(LEGACY_STORAGE_KEYS);
-      expect(keys.length).toBe(4);
-    });
-  });
-
-  describe('LEGACY_SESSION_KEYS', () => {
-    it('should have correct legacy auto mode key with automaker prefix', () => {
-      expect(LEGACY_SESSION_KEYS.AUTO_MODE).toBe('automaker:autoModeRunningByWorktreeKey');
-    });
-
-    it('should have correct legacy splash shown key with automaker prefix', () => {
-      expect(LEGACY_SESSION_KEYS.SPLASH_SHOWN).toBe('automaker-splash-shown');
-    });
-  });
-
-  describe('LEGACY_EVENT_NAMES', () => {
-    it('should have correct legacy logged-out event name with automaker prefix', () => {
-      expect(LEGACY_EVENT_NAMES.LOGGED_OUT).toBe('automaker:logged-out');
-    });
-
-    it('should have correct legacy server-offline event name with automaker prefix', () => {
-      expect(LEGACY_EVENT_NAMES.SERVER_OFFLINE).toBe('automaker:server-offline');
-    });
-  });
-
   describe('Key naming conventions', () => {
     it('should have new keys with ask-jenny prefix', () => {
       // All new keys should start with 'ask-jenny'
@@ -137,43 +91,6 @@ describe('storage-keys.ts', () => {
       Object.values(EVENT_NAMES).forEach((key) => {
         expect(key.startsWith('ask-jenny')).toBe(true);
       });
-    });
-
-    it('should have legacy keys with automaker prefix', () => {
-      // All legacy keys should start with 'automaker'
-      Object.values(LEGACY_STORAGE_KEYS).forEach((key) => {
-        expect(key.startsWith('automaker')).toBe(true);
-      });
-      Object.values(LEGACY_SESSION_KEYS).forEach((key) => {
-        expect(key.startsWith('automaker')).toBe(true);
-      });
-      Object.values(LEGACY_EVENT_NAMES).forEach((key) => {
-        expect(key.startsWith('automaker')).toBe(true);
-      });
-    });
-
-    it('should have corresponding keys between new and legacy (for migration)', () => {
-      // Verify key pairs exist for migration
-      expect(STORAGE_KEYS.THEME).toBeDefined();
-      expect(LEGACY_STORAGE_KEYS.THEME).toBeDefined();
-
-      expect(STORAGE_KEYS.FONT_SANS).toBeDefined();
-      expect(LEGACY_STORAGE_KEYS.FONT_SANS).toBeDefined();
-
-      expect(STORAGE_KEYS.FONT_MONO).toBeDefined();
-      expect(LEGACY_STORAGE_KEYS.FONT_MONO).toBeDefined();
-
-      expect(SESSION_KEYS.AUTO_MODE).toBeDefined();
-      expect(LEGACY_SESSION_KEYS.AUTO_MODE).toBeDefined();
-
-      expect(SESSION_KEYS.SPLASH_SHOWN).toBeDefined();
-      expect(LEGACY_SESSION_KEYS.SPLASH_SHOWN).toBeDefined();
-
-      expect(EVENT_NAMES.LOGGED_OUT).toBeDefined();
-      expect(LEGACY_EVENT_NAMES.LOGGED_OUT).toBeDefined();
-
-      expect(EVENT_NAMES.SERVER_OFFLINE).toBeDefined();
-      expect(LEGACY_EVENT_NAMES.SERVER_OFFLINE).toBeDefined();
     });
   });
 

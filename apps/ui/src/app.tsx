@@ -13,13 +13,11 @@ import './styles/font-imports';
 const logger = createLogger('App');
 
 const SPLASH_SESSION_KEY = 'ask-jenny-splash-shown';
-const LEGACY_SPLASH_KEY = 'automaker-splash-shown';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(() => {
     // Only show splash once per session
-    // Check both new and legacy keys for backwards compatibility
-    if (sessionStorage.getItem(SPLASH_SESSION_KEY) || sessionStorage.getItem(LEGACY_SPLASH_KEY)) {
+    if (sessionStorage.getItem(SPLASH_SESSION_KEY)) {
       return false;
     }
     return true;

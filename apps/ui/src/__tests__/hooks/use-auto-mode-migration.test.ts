@@ -1,15 +1,13 @@
 /**
- * Unit tests for auto-mode session key migration in use-auto-mode.ts
+ * Unit tests for auto-mode session key handling in use-auto-mode.ts
  *
- * Tests the backwards compatibility migration from legacy automaker: session keys
- * to new ask-jenny: session keys.
+ * Tests the session storage read/write behavior using ask-jenny: prefixed keys.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Constants matching the source file
 const AUTO_MODE_SESSION_KEY = 'ask-jenny:autoModeRunningByWorktreeKey';
-const LEGACY_AUTO_MODE_SESSION_KEY = 'automaker:autoModeRunningByWorktreeKey';
 
 // Helper functions to test in isolation (mirroring the source implementation)
 function getWorktreeSessionKey(projectPath: string, branchName: string | null): string {
@@ -55,16 +53,7 @@ Object.defineProperty(global, 'window', {
 function readAutoModeSession(): Record<string, boolean> {
   try {
     if (typeof window === 'undefined') return {};
-    // Try new key first, then fall back to legacy key for backwards compatibility
-    let raw = window.sessionStorage?.getItem(AUTO_MODE_SESSION_KEY);
-    if (!raw) {
-      raw = window.sessionStorage?.getItem(LEGACY_AUTO_MODE_SESSION_KEY);
-      // Migrate legacy data to new key if found
-      if (raw) {
-        window.sessionStorage?.setItem(AUTO_MODE_SESSION_KEY, raw);
-        window.sessionStorage?.removeItem(LEGACY_AUTO_MODE_SESSION_KEY);
-      }
-    }
+    const raw = window.sessionStorage?.getItem(AUTO_MODE_SESSION_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object') return {};
@@ -83,7 +72,7 @@ function writeAutoModeSession(next: Record<string, boolean>): void {
   }
 }
 
-describe('use-auto-mode session key migration', () => {
+describe('use-auto-mode session key storage', () => {
   beforeEach(() => {
     sessionStorageMock.clear();
     vi.clearAllMocks();
@@ -97,10 +86,6 @@ describe('use-auto-mode session key migration', () => {
   describe('Session key constants', () => {
     it('should use ask-jenny prefix for new key', () => {
       expect(AUTO_MODE_SESSION_KEY).toBe('ask-jenny:autoModeRunningByWorktreeKey');
-    });
-
-    it('should have legacy key with automaker prefix', () => {
-      expect(LEGACY_AUTO_MODE_SESSION_KEY).toBe('automaker:autoModeRunningByWorktreeKey');
     });
   });
 
@@ -138,39 +123,6 @@ describe('use-auto-mode session key migration', () => {
 
       const result = readAutoModeSession();
       expect(result).toEqual(data);
-    });
-
-    it('should migrate from legacy automaker key to new ask-jenny key', () => {
-      const data = { '/project::feature': true };
-      sessionStorageMock.setItem(LEGACY_AUTO_MODE_SESSION_KEY, JSON.stringify(data));
-
-      const result = readAutoModeSession();
-
-      // Should return the migrated data
-      expect(result).toEqual(data);
-
-      // Should have migrated to new key
-      expect(sessionStorageMock.setItem).toHaveBeenCalledWith(
-        AUTO_MODE_SESSION_KEY,
-        JSON.stringify(data)
-      );
-
-      // Should have removed legacy key
-      expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(LEGACY_AUTO_MODE_SESSION_KEY);
-    });
-
-    it('should prefer new key over legacy key', () => {
-      const newData = { '/project::main': true };
-      const legacyData = { '/project::feature': false };
-
-      sessionStorageMock.setItem(AUTO_MODE_SESSION_KEY, JSON.stringify(newData));
-      sessionStorageMock.setItem(LEGACY_AUTO_MODE_SESSION_KEY, JSON.stringify(legacyData));
-
-      const result = readAutoModeSession();
-      expect(result).toEqual(newData);
-
-      // Should not have touched legacy key since new key exists
-      expect(sessionStorageMock.removeItem).not.toHaveBeenCalled();
     });
 
     it('should return empty object for invalid JSON', () => {
@@ -249,65 +201,6 @@ describe('use-auto-mode session key migration', () => {
         AUTO_MODE_SESSION_KEY,
         JSON.stringify(newData)
       );
-    });
-  });
-
-  describe('Migration scenarios', () => {
-    it('should complete full migration cycle: read legacy -> write new -> read new', () => {
-      // Start with legacy data
-      const originalData = { '/project::feature': true };
-      sessionStorageMock.setItem(LEGACY_AUTO_MODE_SESSION_KEY, JSON.stringify(originalData));
-
-      // First read triggers migration
-      const firstRead = readAutoModeSession();
-      expect(firstRead).toEqual(originalData);
-
-      // Clear mocks to track subsequent calls
-      vi.clearAllMocks();
-
-      // Subsequent reads should use new key directly
-      const secondRead = readAutoModeSession();
-      expect(secondRead).toEqual(originalData);
-
-      // Should not have attempted migration again
-      expect(sessionStorageMock.removeItem).not.toHaveBeenCalled();
-    });
-
-    it('should preserve data integrity during migration', () => {
-      const complexData = {
-        '/home/user/project1::main': true,
-        '/home/user/project1::feature/login': false,
-        '/home/user/project2::__main__': true,
-        'C:\\Projects\\App::develop': true,
-      };
-      sessionStorageMock.setItem(LEGACY_AUTO_MODE_SESSION_KEY, JSON.stringify(complexData));
-
-      const result = readAutoModeSession();
-
-      // All keys and values should be preserved exactly
-      expect(result).toEqual(complexData);
-      expect(Object.keys(result).length).toBe(4);
-    });
-
-    it('should handle migration with write after read', () => {
-      // Legacy data
-      const legacyData = { '/project::old': true };
-      sessionStorageMock.setItem(LEGACY_AUTO_MODE_SESSION_KEY, JSON.stringify(legacyData));
-
-      // Read migrates data
-      const readData = readAutoModeSession();
-      expect(readData).toEqual(legacyData);
-
-      // Add new entry
-      const updatedData = { ...readData, '/project::new': false };
-      writeAutoModeSession(updatedData);
-
-      // Clear to simulate fresh read
-      vi.clearAllMocks();
-
-      // Read should get combined data from new key
-      const finalRead = readAutoModeSession();
-      expect(finalRead).toEqual(updatedData);
     });
   });
 });

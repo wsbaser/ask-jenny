@@ -2,16 +2,9 @@
  * Centralized storage key definitions for Ask Jenny
  *
  * This module provides a single source of truth for all localStorage and sessionStorage keys.
- * It includes both current keys and legacy keys for backwards compatibility during migration.
  *
  * Key naming conventions:
- * - Current keys use 'ask-jenny:' or 'ask-jenny-' prefix
- * - Legacy keys use 'automaker:' or 'automaker-' prefix
- *
- * Migration approach:
- * - When reading a value, first check the current key
- * - If not found, check the legacy key and migrate the value to the current key
- * - This ensures seamless transition for existing users
+ * - Keys use 'ask-jenny:' or 'ask-jenny-' prefix
  */
 
 // Theme and font settings (localStorage)
@@ -42,24 +35,6 @@ export const EVENT_NAMES = {
   LOGGED_OUT: 'ask-jenny:logged-out',
   /** Fired when server connection is lost */
   SERVER_OFFLINE: 'ask-jenny:server-offline',
-} as const;
-
-// Legacy keys for backwards compatibility migration
-export const LEGACY_STORAGE_KEYS = {
-  THEME: 'automaker:theme',
-  FONT_SANS: 'automaker:font-sans',
-  FONT_MONO: 'automaker:font-mono',
-  APP_STORAGE: 'automaker-storage',
-} as const;
-
-export const LEGACY_SESSION_KEYS = {
-  AUTO_MODE: 'automaker:autoModeRunningByWorktreeKey',
-  SPLASH_SHOWN: 'automaker-splash-shown',
-} as const;
-
-export const LEGACY_EVENT_NAMES = {
-  LOGGED_OUT: 'automaker:logged-out',
-  SERVER_OFFLINE: 'automaker:server-offline',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

@@ -56,13 +56,7 @@ interface MigrationState {
 /**
  * localStorage keys that may contain settings to migrate
  */
-const LOCALSTORAGE_KEYS = [
-  'automaker-storage',
-  'automaker-setup',
-  'worktree-panel-collapsed',
-  'file-browser-recent-folders',
-  'automaker:lastProjectDir',
-] as const;
+const LOCALSTORAGE_KEYS = ['worktree-panel-collapsed', 'file-browser-recent-folders'] as const;
 
 // NOTE: We intentionally do NOT clear any localStorage keys after migration.
 // This allows users to switch back to older versions of Ask Jenny that relied on localStorage.
@@ -117,17 +111,15 @@ export function resetMigrationState(): void {
 /**
  * Parse localStorage data into settings object
  *
- * Checks for settings in multiple locations:
+ * Checks for settings in:
  * 1. ask-jenny-settings-cache: Fresh server settings cached from last fetch
- * 2. automaker-storage: Zustand-persisted app store state (legacy)
- * 3. automaker-setup: Setup wizard state (legacy)
- * 4. Standalone keys: worktree-panel-collapsed, file-browser-recent-folders, etc.
+ * 2. Standalone keys: worktree-panel-collapsed, file-browser-recent-folders, etc.
  *
  * @returns Merged settings object or null if no settings found
  */
 export function parseLocalStorageSettings(): Partial<GlobalSettings> | null {
   try {
-    // First, check for fresh server settings cache (updated whenever server settings are fetched)
+    // Check for fresh server settings cache (updated whenever server settings are fetched)
     // This prevents stale data when switching between modes
     const settingsCache = getItem('ask-jenny-settings-cache');
     if (settingsCache) {
@@ -137,87 +129,14 @@ export function parseLocalStorageSettings(): Partial<GlobalSettings> | null {
         logger.info(`[CACHE_LOADED] projects=${cacheProjectCount}, theme=${cached?.theme}`);
         return cached;
       } catch (e) {
-        logger.warn('Failed to parse settings cache, falling back to old storage');
+        logger.warn('Failed to parse settings cache, falling back to standalone keys');
       }
     } else {
       logger.info('[CACHE_EMPTY] No settings cache found in localStorage');
     }
 
-    // Fall back to old Zustand persisted storage
-    const automakerStorage = getItem('automaker-storage');
-    if (!automakerStorage) {
-      return null;
-    }
-
-    const parsed = JSON.parse(automakerStorage) as Record<string, unknown>;
-    // Zustand persist stores state under 'state' key
-    const state = (parsed.state as Record<string, unknown> | undefined) || parsed;
-
-    // Setup wizard state (previously stored in its own persist key)
-    const automakerSetup = getItem('automaker-setup');
-    const setupParsed = automakerSetup
-      ? (JSON.parse(automakerSetup) as Record<string, unknown>)
-      : null;
-    const setupState =
-      (setupParsed?.state as Record<string, unknown> | undefined) || setupParsed || {};
-
-    // Also check for standalone localStorage keys
-    const worktreePanelCollapsed = getItem('worktree-panel-collapsed');
-    const recentFolders = getItem('file-browser-recent-folders');
-    const lastProjectDir = getItem('automaker:lastProjectDir');
-
-    return {
-      setupComplete: setupState.setupComplete as boolean,
-      isFirstRun: setupState.isFirstRun as boolean,
-      skipClaudeSetup: setupState.skipClaudeSetup as boolean,
-      theme: state.theme as GlobalSettings['theme'],
-      sidebarOpen: state.sidebarOpen as boolean,
-      chatHistoryOpen: state.chatHistoryOpen as boolean,
-      maxConcurrency: state.maxConcurrency as number,
-      defaultSkipTests: state.defaultSkipTests as boolean,
-      enableDependencyBlocking: state.enableDependencyBlocking as boolean,
-      skipVerificationInAutoMode: state.skipVerificationInAutoMode as boolean,
-      useWorktrees: state.useWorktrees as boolean,
-      defaultPlanningMode: state.defaultPlanningMode as GlobalSettings['defaultPlanningMode'],
-      defaultRequirePlanApproval: state.defaultRequirePlanApproval as boolean,
-      muteDoneSound: state.muteDoneSound as boolean,
-      enhancementModel: state.enhancementModel as GlobalSettings['enhancementModel'],
-      validationModel: state.validationModel as GlobalSettings['validationModel'],
-      phaseModels: state.phaseModels as GlobalSettings['phaseModels'],
-      enabledCursorModels: state.enabledCursorModels as GlobalSettings['enabledCursorModels'],
-      cursorDefaultModel: state.cursorDefaultModel as GlobalSettings['cursorDefaultModel'],
-      enabledOpencodeModels: state.enabledOpencodeModels as GlobalSettings['enabledOpencodeModels'],
-      opencodeDefaultModel: state.opencodeDefaultModel as GlobalSettings['opencodeDefaultModel'],
-      enabledDynamicModelIds:
-        state.enabledDynamicModelIds as GlobalSettings['enabledDynamicModelIds'],
-      disabledProviders: (state.disabledProviders ?? []) as GlobalSettings['disabledProviders'],
-      autoLoadClaudeMd: state.autoLoadClaudeMd as boolean,
-      keyboardShortcuts: state.keyboardShortcuts as GlobalSettings['keyboardShortcuts'],
-      mcpServers: state.mcpServers as GlobalSettings['mcpServers'],
-      promptCustomization: state.promptCustomization as GlobalSettings['promptCustomization'],
-      eventHooks: state.eventHooks as GlobalSettings['eventHooks'],
-      projects: state.projects as GlobalSettings['projects'],
-      trashedProjects: state.trashedProjects as GlobalSettings['trashedProjects'],
-      currentProjectId: (state.currentProject as { id?: string } | null)?.id ?? null,
-      projectHistory: state.projectHistory as GlobalSettings['projectHistory'],
-      projectHistoryIndex: state.projectHistoryIndex as number,
-      lastSelectedSessionByProject:
-        state.lastSelectedSessionByProject as GlobalSettings['lastSelectedSessionByProject'],
-      // UI State from standalone localStorage keys or Zustand state
-      worktreePanelCollapsed:
-        worktreePanelCollapsed === 'true' || (state.worktreePanelCollapsed as boolean),
-      lastProjectDir: lastProjectDir || (state.lastProjectDir as string),
-      recentFolders: recentFolders ? JSON.parse(recentFolders) : (state.recentFolders as string[]),
-      // Claude API Profiles (legacy)
-      claudeApiProfiles: (state.claudeApiProfiles as GlobalSettings['claudeApiProfiles']) ?? [],
-      activeClaudeApiProfileId:
-        (state.activeClaudeApiProfileId as GlobalSettings['activeClaudeApiProfileId']) ?? null,
-      // Claude Compatible Providers (new system)
-      claudeCompatibleProviders:
-        (state.claudeCompatibleProviders as GlobalSettings['claudeCompatibleProviders']) ?? [],
-    };
-  } catch (error) {
-    logger.error('Failed to parse localStorage settings:', error);
+    return null;
+  } catch {
     return null;
   }
 }
