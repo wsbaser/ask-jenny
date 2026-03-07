@@ -1,19 +1,14 @@
 'use client';
 
 import { Label } from '@/components/ui/label';
-import { BranchAutocomplete } from '@/components/ui/branch-autocomplete';
-import { GitBranch, GitFork, Pencil } from 'lucide-react';
+import { GitBranch, GitFork } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type WorkMode = 'current' | 'auto' | 'custom';
+export type WorkMode = 'current' | 'auto';
 
 interface WorkModeSelectorProps {
   workMode: WorkMode;
   onWorkModeChange: (mode: WorkMode) => void;
-  branchName: string;
-  onBranchNameChange: (branchName: string) => void;
-  branchSuggestions: string[];
-  branchCardCounts?: Record<string, number>;
   currentBranch?: string;
   disabled?: boolean;
   testIdPrefix?: string;
@@ -32,32 +27,20 @@ const WORK_MODES = [
     description: 'Create isolated worktree automatically',
     icon: GitFork,
   },
-  {
-    value: 'custom' as const,
-    label: 'Custom Branch',
-    description: 'Specify a branch name',
-    icon: Pencil,
-  },
 ];
 
 export function WorkModeSelector({
   workMode,
   onWorkModeChange,
-  branchName,
-  onBranchNameChange,
-  branchSuggestions,
-  branchCardCounts,
   currentBranch,
   disabled = false,
   testIdPrefix = 'work-mode',
 }: WorkModeSelectorProps) {
-  const hasError = workMode === 'custom' && !branchName.trim();
-
   return (
     <div className="space-y-3">
       <Label id={`${testIdPrefix}-label`}>Work Mode</Label>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {WORK_MODES.map((mode) => {
           const isSelected = workMode === mode.value;
           const Icon = mode.icon;
@@ -127,31 +110,7 @@ export function WorkModeSelector({
             when this card is created.
           </>
         )}
-        {workMode === 'custom' && (
-          <>Specify a branch name below. A worktree will be created if it doesn't exist.</>
-        )}
       </p>
-
-      {/* Branch input for custom mode */}
-      {workMode === 'custom' && (
-        <div className="space-y-1">
-          <BranchAutocomplete
-            value={branchName}
-            onChange={onBranchNameChange}
-            branches={branchSuggestions}
-            branchCardCounts={branchCardCounts}
-            placeholder="Select or create branch..."
-            data-testid={`${testIdPrefix}-branch-input`}
-            disabled={disabled}
-            error={hasError}
-          />
-          {hasError && (
-            <p className="text-xs text-destructive">
-              Branch name is required for custom branch mode.
-            </p>
-          )}
-        </div>
-      )}
 
       {disabled && (
         <p className="text-xs text-muted-foreground italic">

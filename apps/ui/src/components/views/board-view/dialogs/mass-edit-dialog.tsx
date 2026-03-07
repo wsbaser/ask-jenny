@@ -25,8 +25,6 @@ interface MassEditDialogProps {
   onClose: () => void;
   selectedFeatures: Feature[];
   onApply: (updates: Partial<Feature>, workMode: WorkMode) => Promise<void>;
-  branchSuggestions: string[];
-  branchCardCounts?: Record<string, number>;
   currentBranch?: string;
 }
 
@@ -108,8 +106,6 @@ export function MassEditDialog({
   onClose,
   selectedFeatures,
   onApply,
-  branchSuggestions,
-  branchCardCounts,
   currentBranch,
 }: MassEditDialogProps) {
   const [isApplying, setIsApplying] = useState(false);
@@ -134,16 +130,13 @@ export function MassEditDialog({
   const [priority, setPriority] = useState(2);
   const [skipTests, setSkipTests] = useState(false);
 
-  // Work mode and branch name state
+  // Work mode state
   const [workMode, setWorkMode] = useState<WorkMode>(() => {
     // Derive initial work mode from first selected feature's branchName
     if (selectedFeatures.length > 0 && selectedFeatures[0].branchName) {
-      return 'custom';
+      return 'auto';
     }
     return 'current';
-  });
-  const [branchName, setBranchName] = useState(() => {
-    return getInitialValue(selectedFeatures, 'branchName', '') as string;
   });
 
   // Calculate mixed values
@@ -168,10 +161,9 @@ export function MassEditDialog({
       setRequirePlanApproval(getInitialValue(selectedFeatures, 'requirePlanApproval', false));
       setPriority(getInitialValue(selectedFeatures, 'priority', 2));
       setSkipTests(getInitialValue(selectedFeatures, 'skipTests', false));
-      // Reset work mode and branch name
+      // Reset work mode
       const initialBranchName = getInitialValue(selectedFeatures, 'branchName', '') as string;
-      setBranchName(initialBranchName);
-      setWorkMode(initialBranchName ? 'custom' : 'current');
+      setWorkMode(initialBranchName ? 'auto' : 'current');
     }
   }, [open, selectedFeatures]);
 
@@ -187,8 +179,7 @@ export function MassEditDialog({
     if (applyState.branchName) {
       // For 'current' mode, use empty string (work on current branch)
       // For 'auto' mode, use empty string (will be auto-generated)
-      // For 'custom' mode, use the specified branch name
-      updates.branchName = workMode === 'custom' ? branchName : '';
+      updates.branchName = '';
     }
 
     if (Object.keys(updates).length === 0) {
@@ -345,10 +336,6 @@ export function MassEditDialog({
             <WorkModeSelector
               workMode={workMode}
               onWorkModeChange={setWorkMode}
-              branchName={branchName}
-              onBranchNameChange={setBranchName}
-              branchSuggestions={branchSuggestions}
-              branchCardCounts={branchCardCounts}
               currentBranch={currentBranch}
               testIdPrefix="mass-edit-work-mode"
             />

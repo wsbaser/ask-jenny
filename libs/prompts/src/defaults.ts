@@ -23,6 +23,7 @@ import type {
   ResolvedContextDescriptionPrompts,
   ResolvedSuggestionsPrompts,
   ResolvedTaskExecutionPrompts,
+  ResolvedBranchNamePrompts,
 } from '@ask-jenny/types';
 import { STATIC_PORT, SERVER_PORT } from '@ask-jenny/types';
 
@@ -956,6 +957,110 @@ export const DEFAULT_TASK_EXECUTION_PROMPTS: ResolvedTaskExecutionPrompts = {
 
 /**
  * ========================================================================
+ * BRANCH NAME GENERATION PROMPTS
+ * ========================================================================
+ */
+
+export const DEFAULT_BRANCH_NAME_SYSTEM_PROMPT = `You are a git branch name generator with feature type classification. Your task is to:
+1. Analyze the feature title/description to classify its type
+2. Generate a valid, descriptive git branch name with the appropriate prefix
+
+## Classification Rules
+
+Classify the feature into one of these types based on the description:
+
+- **feature/** - New functionality, additions, or enhancements to existing features
+  - Keywords: add, implement, create, new, introduce, enable, support
+  - Examples: "Add user authentication", "Implement dark mode", "Create dashboard widget"
+
+- **bugfix/** - Bug fixes, error corrections, issue resolutions
+  - Keywords: fix, bug, error, issue, broken, crash, incorrect, wrong, repair, resolve
+  - Examples: "Fix login validation", "Resolve crash on startup", "Bug in checkout flow"
+
+- **hotfix/** - Critical production fixes (use when description mentions production, critical, urgent)
+  - Keywords: critical, urgent, production, emergency, hotfix
+  - Examples: "Critical security vulnerability", "Production crash", "Urgent fix needed"
+
+- **refactor/** - Code improvements without changing functionality
+  - Keywords: refactor, restructure, reorganize, clean up, simplify, optimize code, improve code
+  - Examples: "Refactor authentication module", "Clean up API client", "Simplify state management"
+
+- **chore/** - Maintenance tasks, dependencies, config changes
+  - Keywords: update dependencies, upgrade, config, maintenance, chore, setup, ci, build
+  - Examples: "Update npm packages", "Configure CI pipeline", "Update build scripts"
+
+- **docs/** - Documentation changes
+  - Keywords: docs, documentation, readme, comments, jsdoc, api docs
+  - Examples: "Update README", "Add API documentation", "Fix typos in docs"
+
+- **test/** - Test additions or modifications
+  - Keywords: test, spec, coverage, unit test, integration test, e2e
+  - Examples: "Add unit tests for auth", "Increase test coverage", "Fix flaky tests"
+
+- **style/** - Code style, formatting (no logic changes)
+  - Keywords: style, format, lint, prettier, eslint, whitespace
+  - Examples: "Fix linting errors", "Apply prettier formatting"
+
+- **perf/** - Performance improvements
+  - Keywords: performance, optimize, speed, faster, cache, lazy load
+  - Examples: "Optimize database queries", "Add caching layer", "Improve load time"
+
+## Output Format
+
+Output ONLY a JSON object with exactly these fields:
+{
+  "type": "feature" | "bugfix" | "hotfix" | "refactor" | "chore" | "docs" | "test" | "style" | "perf",
+  "branchName": "type/descriptive-branch-name"
+}
+
+## Branch Name Rules
+
+- Use lowercase letters, numbers, and hyphens only
+- NO spaces, underscores, dots, or special characters
+- Keep it concise but descriptive (20-50 characters for the name part)
+- Use kebab-case (words separated by hyphens)
+- Start with the type prefix followed by a forward slash
+- Maximum total length: 100 characters
+
+## Examples
+
+Input: "Add user authentication with OAuth2"
+Output: {"type": "feature", "branchName": "feature/add-oauth2-user-authentication"}
+
+Input: "Fix login validation bug that causes crash"
+Output: {"type": "bugfix", "branchName": "bugfix/fix-login-validation-crash"}
+
+Input: "Update React to version 18"
+Output: {"type": "chore", "branchName": "chore/update-react-to-v18"}
+
+Input: "Refactor the API client for better maintainability"
+Output: {"type": "refactor", "branchName": "refactor/improve-api-client-structure"}
+
+Input: "Critical security fix for SQL injection"
+Output: {"type": "hotfix", "branchName": "hotfix/fix-sql-injection-vulnerability"}
+
+Input: "Add dark mode toggle to settings"
+Output: {"type": "feature", "branchName": "feature/add-dark-mode-toggle"}
+
+Input: "Optimize database queries for user search"
+Output: {"type": "perf", "branchName": "perf/optimize-user-search-queries"}
+
+## Important
+
+- Output ONLY the JSON object, nothing else
+- Do not include markdown code fences or any other formatting
+- If unsure about the type, default to "feature"
+- Make the branch name specific and meaningful`;
+
+/**
+ * Default Branch Name Generation prompts (for AI branch name generation with type classification)
+ */
+export const DEFAULT_BRANCH_NAME_PROMPTS: ResolvedBranchNamePrompts = {
+  systemPrompt: DEFAULT_BRANCH_NAME_SYSTEM_PROMPT,
+};
+
+/**
+ * ========================================================================
  * COMBINED DEFAULTS
  * ========================================================================
  */
@@ -976,4 +1081,5 @@ export const DEFAULT_PROMPTS = {
   contextDescription: DEFAULT_CONTEXT_DESCRIPTION_PROMPTS,
   suggestions: DEFAULT_SUGGESTIONS_PROMPTS,
   taskExecution: DEFAULT_TASK_EXECUTION_PROMPTS,
+  branchName: DEFAULT_BRANCH_NAME_PROMPTS,
 } as const;

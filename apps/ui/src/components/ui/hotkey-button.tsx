@@ -30,6 +30,8 @@ export interface HotkeyButtonProps
   onHotkeyTrigger?: () => void;
   /** Whether to use the Slot component for composition */
   asChild?: boolean;
+  /** Whether the button is in a loading state */
+  loading?: boolean;
 }
 
 /**
@@ -174,6 +176,7 @@ export function HotkeyButton({
   onHotkeyTrigger,
   onClick,
   disabled,
+  loading = false,
   children,
   className,
   variant,
@@ -193,7 +196,7 @@ export function HotkeyButton({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (!config || !hotkeyActive || disabled) return;
+      if (!config || !hotkeyActive || disabled || loading) return;
 
       // Don't trigger when typing in inputs (unless explicitly scoped or using cmdCtrl modifier)
       // cmdCtrl shortcuts like Cmd+Enter should work even in inputs as they're intentional submit actions
@@ -237,7 +240,7 @@ export function HotkeyButton({
         buttonRef.current.click();
       }
     },
-    [config, hotkeyActive, disabled, scopeRef, onHotkeyTrigger, onClick]
+    [config, hotkeyActive, disabled, loading, scopeRef, onHotkeyTrigger, onClick]
   );
 
   // Set up global key listener
@@ -267,6 +270,7 @@ export function HotkeyButton({
       variant={variant}
       size={size}
       disabled={disabled}
+      loading={loading}
       onClick={onClick}
       className={cn(className)}
       asChild={asChild}

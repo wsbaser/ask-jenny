@@ -483,6 +483,25 @@ export interface FeaturesAPI {
     description: string,
     projectPath?: string
   ) => Promise<{ success: boolean; title?: string; error?: string }>;
+  generateBranchName: (
+    title: string,
+    description?: string,
+    prefix?: string
+  ) => Promise<{
+    success: boolean;
+    branchName?: string;
+    type?:
+      | 'feature'
+      | 'bugfix'
+      | 'hotfix'
+      | 'refactor'
+      | 'chore'
+      | 'docs'
+      | 'test'
+      | 'style'
+      | 'perf';
+    error?: string;
+  }>;
 }
 
 export interface AutoModeAPI {
@@ -3170,6 +3189,23 @@ function createMockFeaturesAPI(): FeaturesAPI {
       const words = description.split(/\s+/).slice(0, 6).join(' ');
       const title = words.length > 40 ? words.substring(0, 40) + '...' : words;
       return { success: true, title: `Add ${title}` };
+    },
+
+    generateBranchName: async (title: string, _description?: string, _prefix?: string) => {
+      console.log('[Mock] Generating branch name for:', title.substring(0, 50));
+      // Mock branch name generation - convert title to kebab-case
+      const branchName = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50);
+      return {
+        success: true,
+        branchName: `feature/${branchName}`,
+        type: 'feature' as const,
+      };
     },
   };
 }

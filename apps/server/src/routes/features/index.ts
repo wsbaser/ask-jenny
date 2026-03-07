@@ -16,6 +16,7 @@ import { createBulkDeleteHandler } from './routes/bulk-delete.js';
 import { createDeleteHandler } from './routes/delete.js';
 import { createAgentOutputHandler, createRawOutputHandler } from './routes/agent-output.js';
 import { createGenerateTitleHandler } from './routes/generate-title.js';
+import { createGenerateBranchNameHandler } from './routes/generate-branch-name.js';
 
 export function createFeaturesRoutes(
   featureLoader: FeatureLoader,
@@ -46,6 +47,7 @@ export function createFeaturesRoutes(
   router.post('/agent-output', createAgentOutputHandler(featureLoader));
   router.post('/raw-output', createRawOutputHandler(featureLoader));
   router.post('/generate-title', createGenerateTitleHandler(settingsService));
+  router.post('/generate-branch-name', createGenerateBranchNameHandler(settingsService));
 
   return router;
 }
