@@ -1,5 +1,5 @@
 #!/bin/bash
-# Example worktree init script for Automaker
+# Example worktree init script for Ask Jenny
 # Copy this content to Settings > Worktrees > Init Script
 # Or save directly as .ask-jenny/worktree-init.sh in your project
 
