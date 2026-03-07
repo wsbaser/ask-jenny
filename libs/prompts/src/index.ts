@@ -77,6 +77,9 @@ export {
   DEFAULT_RESUME_FEATURE_TEMPLATE,
   DEFAULT_PROJECT_ANALYSIS_PROMPT,
   DEFAULT_TASK_EXECUTION_PROMPTS,
+  // Branch Name Generation prompts
+  DEFAULT_BRANCH_NAME_SYSTEM_PROMPT,
+  DEFAULT_BRANCH_NAME_PROMPTS,
   DEFAULT_PROMPTS,
 } from './defaults.js';
 
@@ -94,6 +97,7 @@ export {
   mergeContextDescriptionPrompts,
   mergeSuggestionsPrompts,
   mergeTaskExecutionPrompts,
+  mergeBranchNamePrompts,
   mergeAllPrompts,
 } from './merge.js';
 
@@ -111,4 +115,5 @@ export type {
   ResolvedContextDescriptionPrompts,
   ResolvedSuggestionsPrompts,
   ResolvedTaskExecutionPrompts,
+  ResolvedBranchNamePrompts,
 } from '@ask-jenny/types';

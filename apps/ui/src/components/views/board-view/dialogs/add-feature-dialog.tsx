@@ -22,7 +22,7 @@ import {
   FeatureTextFilePath as DescriptionTextFilePath,
   ImagePreviewMap,
 } from '@/components/ui/description-image-dropzone';
-import { Play, Cpu, FolderKanban, Settings2 } from 'lucide-react';
+import { Play, Cpu, FolderKanban, Settings2, AlertCircle } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -59,26 +59,17 @@ import {
 const logger = createLogger('AddFeatureDialog');
 
 /**
- * Determines the default work mode based on global settings and current worktree selection.
+ * Determines the default work mode based on global settings.
  *
  * Priority:
  * 1. If forceCurrentBranchMode is true, always defaults to 'current' (work on current branch)
- * 2. If a non-main worktree is selected in the board header, defaults to 'custom' (use that branch)
- * 3. If useWorktrees global setting is enabled, defaults to 'auto' (automatic worktree creation)
- * 4. Otherwise, defaults to 'current' (work on current branch without isolation)
+ * 2. If useWorktrees global setting is enabled, defaults to 'auto' (automatic worktree creation)
+ * 3. Otherwise, defaults to 'current' (work on current branch without isolation)
  */
-const getDefaultWorkMode = (
-  useWorktrees: boolean,
-  selectedNonMainWorktreeBranch?: string,
-  forceCurrentBranchMode?: boolean
-): WorkMode => {
+const getDefaultWorkMode = (useWorktrees: boolean, forceCurrentBranchMode?: boolean): WorkMode => {
   // If force current branch mode is enabled (worktree setting is off), always use 'current'
   if (forceCurrentBranchMode) {
     return 'current';
-  }
-  // If a non-main worktree is selected, default to 'custom' mode with that branch
-  if (selectedNonMainWorktreeBranch) {
-    return 'custom';
   }
   // Otherwise, respect the global worktree setting
   return useWorktrees ? 'auto' : 'current';
@@ -107,10 +98,10 @@ type FeatureData = {
 interface AddFeatureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (feature: FeatureData) => void;
-  onAddAndStart?: (feature: FeatureData) => void;
+  onAdd: (feature: FeatureData) => Promise<void>;
+  onAddAndStart?: (feature: FeatureData) => Promise<void>;
   categorySuggestions: string[];
-  branchSuggestions: string[];
+  branchSuggestions?: string[];
   branchCardCounts?: Record<string, number>;
   defaultSkipTests: boolean;
   defaultBranch?: string;
@@ -118,11 +109,6 @@ interface AddFeatureDialogProps {
   isMaximized: boolean;
   parentFeature?: Feature | null;
   allFeatures?: Feature[];
-  /**
-   * When a non-main worktree is selected in the board header, this will be set to that worktree's branch.
-   * When set, the dialog will default to 'custom' work mode with this branch pre-filled.
-   */
-  selectedNonMainWorktreeBranch?: string;
   /**
    * When true, forces the dialog to default to 'current' work mode (work on current branch).
    * This is used when the "Default to worktree mode" setting is disabled.
@@ -143,15 +129,12 @@ export function AddFeatureDialog({
   onAdd,
   onAddAndStart,
   categorySuggestions,
-  branchSuggestions,
-  branchCardCounts,
   defaultSkipTests,
   defaultBranch = 'main',
   currentBranch,
   isMaximized,
   parentFeature = null,
   allFeatures = [],
-  selectedNonMainWorktreeBranch,
   forceCurrentBranchMode,
 }: AddFeatureDialogProps) {
   const isSpawnMode = !!parentFeature;
@@ -166,7 +149,6 @@ export function AddFeatureDialog({
   const [imagePaths, setImagePaths] = useState<DescriptionImagePath[]>([]);
   const [textFilePaths, setTextFilePaths] = useState<DescriptionTextFilePath[]>([]);
   const [skipTests, setSkipTests] = useState(false);
-  const [branchName, setBranchName] = useState('');
   const [priority, setPriority] = useState(2);
 
   // Model selection state
@@ -182,6 +164,10 @@ export function AddFeatureDialog({
   // UI state
   const [previewMap, setPreviewMap] = useState<ImagePreviewMap>(() => new Map());
   const [descriptionError, setDescriptionError] = useState(false);
+
+  // Loading and error states for submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Description history state
   const [descriptionHistory, setDescriptionHistory] = useState<DescriptionHistoryEntry[]>([]);
@@ -208,12 +194,7 @@ export function AddFeatureDialog({
 
     if (justOpened) {
       setSkipTests(defaultSkipTests);
-      // When a non-main worktree is selected, use its branch name for custom mode
-      // Otherwise, use the default branch
-      setBranchName(selectedNonMainWorktreeBranch || defaultBranch || '');
-      setWorkMode(
-        getDefaultWorkMode(useWorktrees, selectedNonMainWorktreeBranch, forceCurrentBranchMode)
-      );
+      setWorkMode(getDefaultWorkMode(useWorktrees, forceCurrentBranchMode));
       setPlanningMode(defaultPlanningMode);
       setRequirePlanApproval(defaultRequirePlanApproval);
       setModelEntry(defaultFeatureModel);
@@ -238,12 +219,10 @@ export function AddFeatureDialog({
   }, [
     open,
     defaultSkipTests,
-    defaultBranch,
     defaultPlanningMode,
     defaultRequirePlanApproval,
     defaultFeatureModel,
     useWorktrees,
-    selectedNonMainWorktreeBranch,
     forceCurrentBranchMode,
     parentFeature,
     allFeatures,
@@ -259,11 +238,6 @@ export function AddFeatureDialog({
       return null;
     }
 
-    if (workMode === 'custom' && !branchName.trim()) {
-      toast.error('Please select a branch name');
-      return null;
-    }
-
     const finalCategory = category || 'Uncategorized';
     const selectedModel = modelEntry.model;
     const normalizedThinking = modelSupportsThinking(selectedModel)
@@ -275,8 +249,7 @@ export function AddFeatureDialog({
 
     // For 'current' mode, use empty string (work on current branch)
     // For 'auto' mode, use empty string (will be auto-generated in use-board-actions)
-    // For 'custom' mode, use the specified branch name
-    const finalBranchName = workMode === 'custom' ? branchName || '' : '';
+    const finalBranchName = '';
 
     // Build final description with ancestor context in spawn mode
     let finalDescription = description;
@@ -340,13 +313,9 @@ export function AddFeatureDialog({
     setImagePaths([]);
     setTextFilePaths([]);
     setSkipTests(defaultSkipTests);
-    // When a non-main worktree is selected, use its branch name for custom mode
-    setBranchName(selectedNonMainWorktreeBranch || '');
     setPriority(2);
     setModelEntry(defaultFeatureModel);
-    setWorkMode(
-      getDefaultWorkMode(useWorktrees, selectedNonMainWorktreeBranch, forceCurrentBranchMode)
-    );
+    setWorkMode(getDefaultWorkMode(useWorktrees, forceCurrentBranchMode));
     setPlanningMode(defaultPlanningMode);
     setRequirePlanApproval(defaultRequirePlanApproval);
     setPreviewMap(new Map());
@@ -354,25 +323,44 @@ export function AddFeatureDialog({
     setDescriptionHistory([]);
     setParentDependencies([]);
     setChildDependencies([]);
+    setIsSubmitting(false);
+    setSubmitError(null);
     onOpenChange(false);
   };
 
-  const handleAction = (actionFn?: (data: FeatureData) => void) => {
-    if (!actionFn) return;
+  const handleAction = async (actionFn?: (data: FeatureData) => Promise<void>) => {
+    if (!actionFn || isSubmitting) return;
+
     const featureData = buildFeatureData();
     if (!featureData) return;
-    actionFn(featureData);
-    resetForm();
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      await actionFn(featureData);
+      resetForm();
+    } catch (error) {
+      logger.error('Error creating feature:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create feature. Please try again.';
+      setSubmitError(errorMessage);
+      setIsSubmitting(false);
+    }
   };
 
   const handleAdd = () => handleAction(onAdd);
   const handleAddAndStart = () => handleAction(onAddAndStart);
 
   const handleDialogClose = (open: boolean) => {
+    // Prevent closing while submitting
+    if (isSubmitting && !open) return;
+
     onOpenChange(open);
     if (!open) {
       setPreviewMap(new Map());
       setDescriptionError(false);
+      setSubmitError(null);
     }
   };
 
@@ -656,10 +644,6 @@ export function AddFeatureDialog({
               <WorkModeSelector
                 workMode={workMode}
                 onWorkModeChange={setWorkMode}
-                branchName={branchName}
-                onBranchNameChange={setBranchName}
-                branchSuggestions={branchSuggestions}
-                branchCardCounts={branchCardCounts}
                 currentBranch={currentBranch}
                 testIdPrefix="feature-work-mode"
               />
@@ -699,29 +683,39 @@ export function AddFeatureDialog({
           </div>
         </div>
 
+        {/* Error Message */}
+        {submitError && (
+          <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+            <p className="text-sm text-destructive">{submitError}</p>
+          </div>
+        )}
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" onClick={() => handleDialogClose(false)} disabled={isSubmitting}>
             Cancel
           </Button>
           {onAddAndStart && (
             <Button
               onClick={handleAddAndStart}
               variant="secondary"
+              disabled={isSubmitting}
+              loading={isSubmitting}
               data-testid="confirm-add-and-start-feature"
-              disabled={workMode === 'custom' && !branchName.trim()}
             >
-              <Play className="w-4 h-4 mr-2" />
-              Make
+              {!isSubmitting && <Play className="w-4 h-4 mr-2" />}
+              {isSubmitting ? 'Creating...' : 'Make'}
             </Button>
           )}
           <HotkeyButton
             onClick={handleAdd}
             hotkey={{ key: 'Enter', cmdCtrl: true }}
-            hotkeyActive={open}
+            hotkeyActive={open && !isSubmitting}
+            disabled={isSubmitting}
+            loading={isSubmitting}
             data-testid="confirm-add-feature"
-            disabled={workMode === 'custom' && !branchName.trim()}
           >
-            {isSpawnMode ? 'Spawn Task' : 'Add Feature'}
+            {isSubmitting ? 'Creating...' : isSpawnMode ? 'Spawn Task' : 'Add Feature'}
           </HotkeyButton>
         </DialogFooter>
       </DialogContent>

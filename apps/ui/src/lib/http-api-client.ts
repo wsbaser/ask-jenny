@@ -1726,6 +1726,8 @@ export class HttpApiClient implements ElectronAPI {
       this.post('/api/features/agent-output', { projectPath, featureId }),
     generateTitle: (description: string, projectPath?: string) =>
       this.post('/api/features/generate-title', { description, projectPath }),
+    generateBranchName: (title: string, description?: string, prefix?: string) =>
+      this.post('/api/features/generate-branch-name', { title, description, prefix }),
     bulkUpdate: (projectPath: string, featureIds: string[], updates: Partial<Feature>) =>
       this.post('/api/features/bulk-update', { projectPath, featureIds, updates }),
     bulkDelete: (projectPath: string, featureIds: string[]) =>

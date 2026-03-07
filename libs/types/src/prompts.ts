@@ -224,6 +224,17 @@ export interface TaskExecutionPrompts {
 }
 
 /**
+ * BranchNamePrompts - Customizable prompts for AI branch name generation
+ *
+ * Controls how the AI generates git branch names from feature descriptions,
+ * including automatic classification of feature types (feature, bugfix, chore, etc.).
+ */
+export interface BranchNamePrompts {
+  /** System prompt for generating branch names with type classification */
+  systemPrompt?: CustomPrompt;
+}
+
+/**
  * PromptCustomization - Complete set of customizable prompts
  *
  * All fields are optional. Undefined values fall back to built-in defaults.
@@ -265,6 +276,9 @@ export interface PromptCustomization {
 
   /** Task execution prompts (Auto Mode task execution, learning extraction) */
   taskExecution?: TaskExecutionPrompts;
+
+  /** Branch name generation prompts (AI-generated branch names with type classification) */
+  branchName?: BranchNamePrompts;
 }
 
 /**
@@ -283,6 +297,7 @@ export const DEFAULT_PROMPT_CUSTOMIZATION: PromptCustomization = {
   contextDescription: {},
   suggestions: {},
   taskExecution: {},
+  branchName: {},
 };
 
 /**
@@ -363,4 +378,8 @@ export interface ResolvedTaskExecutionPrompts {
   continuationAfterApprovalTemplate: string;
   resumeFeatureTemplate: string;
   projectAnalysisPrompt: string;
+}
+
+export interface ResolvedBranchNamePrompts {
+  systemPrompt: string;
 }

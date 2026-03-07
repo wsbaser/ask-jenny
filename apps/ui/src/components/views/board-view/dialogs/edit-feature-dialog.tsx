@@ -73,8 +73,6 @@ interface EditFeatureDialogProps {
     preEnhancementDescription?: string
   ) => void;
   categorySuggestions: string[];
-  branchSuggestions: string[];
-  branchCardCounts?: Record<string, number>; // Map of branch name to unarchived card count
   currentBranch?: string;
   isMaximized: boolean;
   allFeatures: Feature[];
@@ -85,8 +83,6 @@ export function EditFeatureDialog({
   onClose,
   onUpdate,
   categorySuggestions,
-  branchSuggestions,
-  branchCardCounts,
   currentBranch,
   isMaximized,
   allFeatures,
@@ -95,9 +91,9 @@ export function EditFeatureDialog({
   const [editingFeature, setEditingFeature] = useState<Feature | null>(feature);
   // Derive initial workMode from feature's branchName
   const [workMode, setWorkMode] = useState<WorkMode>(() => {
-    // If feature has a branchName, it's using 'custom' mode
+    // If feature has a branchName, it was using worktree mode, default to 'auto'
     // Otherwise, it's on 'current' branch (no worktree isolation)
-    return feature?.branchName ? 'custom' : 'current';
+    return feature?.branchName ? 'auto' : 'current';
   });
   const [editFeaturePreviewMap, setEditFeaturePreviewMap] = useState<ImagePreviewMap>(
     () => new Map()
@@ -152,7 +148,7 @@ export function EditFeatureDialog({
       setPlanningMode(feature.planningMode ?? 'skip');
       setRequirePlanApproval(feature.requirePlanApproval ?? false);
       // Derive workMode from feature's branchName
-      setWorkMode(feature.branchName ? 'custom' : 'current');
+      setWorkMode(feature.branchName ? 'auto' : 'current');
       // Reset history tracking state
       setOriginalDescription(feature.description ?? '');
       setDescriptionChangeSource(null);
@@ -189,13 +185,6 @@ export function EditFeatureDialog({
   const handleUpdate = () => {
     if (!editingFeature) return;
 
-    // Validate branch selection for custom mode
-    const isBranchSelectorEnabled = editingFeature.status === 'backlog';
-    if (isBranchSelectorEnabled && workMode === 'custom' && !editingFeature.branchName?.trim()) {
-      toast.error('Please select a branch name');
-      return;
-    }
-
     const selectedModel = modelEntry.model;
     const normalizedThinking: ThinkingLevel = modelSupportsThinking(selectedModel)
       ? (modelEntry.thinkingLevel ?? 'none')
@@ -206,8 +195,7 @@ export function EditFeatureDialog({
 
     // For 'current' mode, use empty string (work on current branch)
     // For 'auto' mode, use empty string (will be auto-generated in use-board-actions)
-    // For 'custom' mode, use the specified branch name
-    const finalBranchName = workMode === 'custom' ? editingFeature.branchName || '' : '';
+    const finalBranchName = '';
 
     // Check if child dependencies changed
     const childDepsChanged =
@@ -570,15 +558,6 @@ export function EditFeatureDialog({
               <WorkModeSelector
                 workMode={workMode}
                 onWorkModeChange={setWorkMode}
-                branchName={editingFeature.branchName ?? ''}
-                onBranchNameChange={(value) =>
-                  setEditingFeature({
-                    ...editingFeature,
-                    branchName: value,
-                  })
-                }
-                branchSuggestions={branchSuggestions}
-                branchCardCounts={branchCardCounts}
                 currentBranch={currentBranch}
                 disabled={editingFeature.status !== 'backlog'}
                 testIdPrefix="edit-feature-work-mode"
@@ -639,11 +618,6 @@ export function EditFeatureDialog({
               hotkey={{ key: 'Enter', cmdCtrl: true }}
               hotkeyActive={!!editingFeature}
               data-testid="confirm-edit-feature"
-              disabled={
-                editingFeature.status === 'backlog' &&
-                workMode === 'custom' &&
-                !editingFeature.branchName?.trim()
-              }
             >
               Save Changes
             </HotkeyButton>

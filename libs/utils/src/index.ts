@@ -105,3 +105,14 @@ export {
   type LearningEntry,
   type SimpleMemoryFile,
 } from './memory-loader.js';
+
+// Branch utilities
+export {
+  sanitizeBranchName,
+  normalizePrefix,
+  isValidBranchName,
+  generateBranchNameFromTitle,
+  MAX_BRANCH_NAME_LENGTH,
+  MAX_AI_BRANCH_NAME_LENGTH,
+  type SanitizeBranchNameOptions,
+} from './branch-utils.js';

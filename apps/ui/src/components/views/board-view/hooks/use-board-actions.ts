@@ -119,14 +119,13 @@ export function useBoardActions({
       requirePlanApproval: boolean;
       dependencies?: string[];
       childDependencies?: string[]; // Feature IDs that should depend on this feature
-      workMode?: 'current' | 'auto' | 'custom';
+      workMode?: 'current' | 'auto';
     }) => {
       const workMode = featureData.workMode || 'current';
 
       // Determine final branch name based on work mode:
       // - 'current': Use current worktree's branch (or undefined if on main)
-      // - 'auto': Auto-generate branch name based on current branch
-      // - 'custom': Use the provided branch name
+      // - 'auto': Auto-generate branch name using AI, with timestamp fallback
       let finalBranchName: string | undefined;
 
       if (workMode === 'current') {
@@ -134,20 +133,42 @@ export function useBoardActions({
         // This ensures features created on a non-main worktree are associated with that worktree
         finalBranchName = currentWorktreeBranch || undefined;
       } else if (workMode === 'auto') {
-        // Auto-generate a branch name based on primary branch (main/master) and timestamp
-        // Always use primary branch to avoid nested feature/feature/... paths
-        const baseBranch =
-          (currentProject?.path ? getPrimaryWorktreeBranch(currentProject.path) : null) || 'main';
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 6);
-        finalBranchName = `feature/${baseBranch}-${timestamp}-${randomSuffix}`;
-      } else {
-        // Custom mode - use provided branch name
-        finalBranchName = featureData.branchName || undefined;
+        // Try AI-generated branch name first, fall back to timestamp if AI fails
+        const api = getElectronAPI();
+        let aiGeneratedBranch: string | undefined;
+
+        if (api?.features?.generateBranchName) {
+          try {
+            // Use title if available, otherwise use description for AI branch generation
+            const inputForBranchName = featureData.title.trim() || featureData.description;
+            const result = await api.features.generateBranchName(
+              inputForBranchName,
+              featureData.description
+            );
+            if (result.success && result.branchName) {
+              aiGeneratedBranch = result.branchName;
+              logger.info(`AI generated branch name: ${aiGeneratedBranch}`);
+            }
+          } catch (error) {
+            logger.warn('AI branch name generation failed, using fallback:', error);
+          }
+        }
+
+        if (aiGeneratedBranch) {
+          finalBranchName = aiGeneratedBranch;
+        } else {
+          // Fallback: timestamp-based branch name
+          const baseBranch =
+            (currentProject?.path ? getPrimaryWorktreeBranch(currentProject.path) : null) || 'main';
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 6);
+          finalBranchName = `feature/${baseBranch}-${timestamp}-${randomSuffix}`;
+          logger.info(`Using fallback timestamp branch name: ${finalBranchName}`);
+        }
       }
 
-      // Create worktree for 'auto' or 'custom' modes when we have a branch name
-      if ((workMode === 'auto' || workMode === 'custom') && finalBranchName && currentProject) {
+      // Create worktree for 'auto' mode when we have a branch name
+      if (workMode === 'auto' && finalBranchName && currentProject) {
         try {
           const api = getElectronAPI();
           if (api?.worktree?.create) {
@@ -277,7 +298,7 @@ export function useBoardActions({
         priority: number;
         planningMode?: PlanningMode;
         requirePlanApproval?: boolean;
-        workMode?: 'current' | 'auto' | 'custom';
+        workMode?: 'current' | 'auto';
         dependencies?: string[];
         childDependencies?: string[]; // Feature IDs that should depend on this feature
       },
@@ -295,19 +316,42 @@ export function useBoardActions({
         // This ensures features updated on a non-main worktree are associated with that worktree
         finalBranchName = currentWorktreeBranch || undefined;
       } else if (workMode === 'auto') {
-        // Auto-generate a branch name based on primary branch (main/master) and timestamp
-        // Always use primary branch to avoid nested feature/feature/... paths
-        const baseBranch =
-          (currentProject?.path ? getPrimaryWorktreeBranch(currentProject.path) : null) || 'main';
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 6);
-        finalBranchName = `feature/${baseBranch}-${timestamp}-${randomSuffix}`;
-      } else {
-        finalBranchName = updates.branchName || undefined;
+        // Try AI-generated branch name first, fall back to timestamp if AI fails
+        const api = getElectronAPI();
+        let aiGeneratedBranch: string | undefined;
+
+        if (api?.features?.generateBranchName) {
+          try {
+            // Use title if available, otherwise use description for AI branch generation
+            const inputForBranchName = updates.title.trim() || updates.description;
+            const result = await api.features.generateBranchName(
+              inputForBranchName,
+              updates.description
+            );
+            if (result.success && result.branchName) {
+              aiGeneratedBranch = result.branchName;
+              logger.info(`AI generated branch name for update: ${aiGeneratedBranch}`);
+            }
+          } catch (error) {
+            logger.warn('AI branch name generation failed for update, using fallback:', error);
+          }
+        }
+
+        if (aiGeneratedBranch) {
+          finalBranchName = aiGeneratedBranch;
+        } else {
+          // Fallback: timestamp-based branch name
+          const baseBranch =
+            (currentProject?.path ? getPrimaryWorktreeBranch(currentProject.path) : null) || 'main';
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 6);
+          finalBranchName = `feature/${baseBranch}-${timestamp}-${randomSuffix}`;
+          logger.info(`Using fallback timestamp branch name for update: ${finalBranchName}`);
+        }
       }
 
-      // Create worktree for 'auto' or 'custom' modes when we have a branch name
-      if ((workMode === 'auto' || workMode === 'custom') && finalBranchName && currentProject) {
+      // Create worktree for 'auto' mode when we have a branch name
+      if (workMode === 'auto' && finalBranchName && currentProject) {
         try {
           const api = getElectronAPI();
           if (api?.worktree?.create) {

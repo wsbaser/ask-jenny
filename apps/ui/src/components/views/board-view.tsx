@@ -1491,8 +1491,6 @@ export function BoardView() {
         onClose={() => setShowMassEditDialog(false)}
         selectedFeatures={selectedFeatures}
         onApply={handleBulkUpdate}
-        branchSuggestions={branchSuggestions}
-        branchCardCounts={branchCardCounts}
         currentBranch={currentWorktreeBranch || undefined}
       />
 
@@ -1545,20 +1543,12 @@ export function BoardView() {
         onAdd={handleAddFeature}
         onAddAndStart={handleAddAndStartFeature}
         categorySuggestions={categorySuggestions}
-        branchSuggestions={branchSuggestions}
-        branchCardCounts={branchCardCounts}
         defaultSkipTests={defaultSkipTests}
         defaultBranch={selectedWorktreeBranch}
         currentBranch={currentWorktreeBranch || undefined}
         isMaximized={isMaximized}
         parentFeature={spawnParentFeature}
         allFeatures={hookFeatures}
-        // When setting is enabled and a non-main worktree is selected, pass its branch to default to 'custom' work mode
-        selectedNonMainWorktreeBranch={
-          addFeatureUseSelectedWorktreeBranch && currentWorktreePath !== null
-            ? currentWorktreeBranch || undefined
-            : undefined
-        }
         // When the worktree setting is disabled, force 'current' branch mode
         forceCurrentBranchMode={!addFeatureUseSelectedWorktreeBranch}
       />
@@ -1578,8 +1568,6 @@ export function BoardView() {
         onClose={() => setEditingFeature(null)}
         onUpdate={handleUpdateFeature}
         categorySuggestions={categorySuggestions}
-        branchSuggestions={branchSuggestions}
-        branchCardCounts={branchCardCounts}
         currentBranch={currentWorktreeBranch || undefined}
         isMaximized={isMaximized}
         allFeatures={hookFeatures}

@@ -117,6 +117,7 @@ export type {
   ContextDescriptionPrompts,
   SuggestionsPrompts,
   TaskExecutionPrompts,
+  BranchNamePrompts,
   PromptCustomization,
   ResolvedAutoModePrompts,
   ResolvedAgentPrompts,
@@ -130,6 +131,7 @@ export type {
   ResolvedContextDescriptionPrompts,
   ResolvedSuggestionsPrompts,
   ResolvedTaskExecutionPrompts,
+  ResolvedBranchNamePrompts,
 } from './prompts.js';
 export { DEFAULT_PROMPT_CUSTOMIZATION } from './prompts.js';
 

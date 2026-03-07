@@ -22,6 +22,7 @@ import type {
   ContextDescriptionPrompts,
   SuggestionsPrompts,
   TaskExecutionPrompts,
+  BranchNamePrompts,
   CustomPrompt,
   ResolvedAutoModePrompts,
   ResolvedAgentPrompts,
@@ -35,6 +36,7 @@ import type {
   ResolvedContextDescriptionPrompts,
   ResolvedSuggestionsPrompts,
   ResolvedTaskExecutionPrompts,
+  ResolvedBranchNamePrompts,
 } from '@ask-jenny/types';
 import {
   DEFAULT_AUTO_MODE_PROMPTS,
@@ -49,6 +51,7 @@ import {
   DEFAULT_CONTEXT_DESCRIPTION_PROMPTS,
   DEFAULT_SUGGESTIONS_PROMPTS,
   DEFAULT_TASK_EXECUTION_PROMPTS,
+  DEFAULT_BRANCH_NAME_PROMPTS,
 } from './defaults.js';
 
 /**
@@ -317,6 +320,16 @@ export function mergeTaskExecutionPrompts(
 }
 
 /**
+ * Merge custom Branch Name prompts with defaults
+ * Custom prompts override defaults only when enabled=true
+ */
+export function mergeBranchNamePrompts(custom?: BranchNamePrompts): ResolvedBranchNamePrompts {
+  return {
+    systemPrompt: resolvePrompt(custom?.systemPrompt, DEFAULT_BRANCH_NAME_PROMPTS.systemPrompt),
+  };
+}
+
+/**
  * Merge all custom prompts with defaults
  * Returns a complete PromptCustomization with all fields populated
  */
@@ -334,5 +347,6 @@ export function mergeAllPrompts(custom?: PromptCustomization) {
     contextDescription: mergeContextDescriptionPrompts(custom?.contextDescription),
     suggestions: mergeSuggestionsPrompts(custom?.suggestions),
     taskExecution: mergeTaskExecutionPrompts(custom?.taskExecution),
+    branchName: mergeBranchNamePrompts(custom?.branchName),
   };
 }
