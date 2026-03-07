@@ -2,11 +2,10 @@
  * Settings routes - HTTP API for persistent file-based settings
  *
  * Provides endpoints for:
- * - Status checking (migration readiness)
+ * - Status checking
  * - Global settings CRUD
  * - Credentials management
  * - Project-specific settings
- * - localStorage to file migration
  *
  * All endpoints use handler factories that receive the SettingsService instance.
  * Mounted at /api/settings in the main server.
@@ -21,7 +20,6 @@ import { createGetCredentialsHandler } from './routes/get-credentials.js';
 import { createUpdateCredentialsHandler } from './routes/update-credentials.js';
 import { createGetProjectHandler } from './routes/get-project.js';
 import { createUpdateProjectHandler } from './routes/update-project.js';
-import { createMigrateHandler } from './routes/migrate.js';
 import { createStatusHandler } from './routes/status.js';
 import { createDiscoverAgentsHandler } from './routes/discover-agents.js';
 
@@ -32,14 +30,13 @@ import { createDiscoverAgentsHandler } from './routes/discover-agents.js';
  * Each handler is created with the provided SettingsService instance.
  *
  * Endpoints:
- * - GET /status - Check migration status and data availability
+ * - GET /status - Check settings data availability
  * - GET /global - Get global settings
  * - PUT /global - Update global settings
  * - GET /credentials - Get masked credentials (safe for UI)
  * - PUT /credentials - Update API keys
  * - POST /project - Get project settings (requires projectPath in body)
  * - PUT /project - Update project settings
- * - POST /migrate - Migrate settings from localStorage
  * - POST /agents/discover - Discover filesystem agents from .claude/agents/ (read-only)
  *
  * @param settingsService - Instance of SettingsService for file I/O
@@ -70,9 +67,6 @@ export function createSettingsRoutes(settingsService: SettingsService): Router {
     validatePathParams('projectPath'),
     createUpdateProjectHandler(settingsService)
   );
-
-  // Migration from localStorage
-  router.post('/migrate', createMigrateHandler(settingsService));
 
   // Filesystem agents discovery (read-only)
   router.post('/agents/discover', createDiscoverAgentsHandler());

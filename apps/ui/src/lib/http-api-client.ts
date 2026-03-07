@@ -2327,11 +2327,8 @@ export class HttpApiClient implements ElectronAPI {
 
     // Migration from localStorage
     migrate: (data: {
-      'automaker-storage'?: string;
-      'automaker-setup'?: string;
       'worktree-panel-collapsed'?: string;
       'file-browser-recent-folders'?: string;
-      'automaker:lastProjectDir'?: string;
     }): Promise<{
       success: boolean;
       migratedGlobalSettings: boolean;

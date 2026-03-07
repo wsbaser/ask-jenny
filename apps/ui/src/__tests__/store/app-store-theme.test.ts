@@ -36,12 +36,6 @@ describe('app-store storage key constants', () => {
       expect(FONT_MONO_STORAGE_KEY).toMatch(/^ask-jenny:/);
     });
 
-    it('should not use the old automaker prefix', () => {
-      expect(THEME_STORAGE_KEY).not.toMatch(/^automaker:/);
-      expect(FONT_SANS_STORAGE_KEY).not.toMatch(/^automaker:/);
-      expect(FONT_MONO_STORAGE_KEY).not.toMatch(/^automaker:/);
-    });
-
     it('keys should use colon separator convention', () => {
       expect(THEME_STORAGE_KEY).toContain(':');
       expect(FONT_SANS_STORAGE_KEY).toContain(':');

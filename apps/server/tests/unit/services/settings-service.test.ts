@@ -480,15 +480,10 @@ describe('settings-service.ts', () => {
   });
 
   describe('migrateFromLocalStorage', () => {
-    it('should migrate global settings from localStorage data', async () => {
+    it('should migrate UI state from localStorage', async () => {
       const localStorageData = {
-        'automaker-storage': JSON.stringify({
-          state: {
-            theme: 'light',
-            sidebarOpen: false,
-            maxConcurrency: 5,
-          },
-        }),
+        'file-browser-recent-folders': JSON.stringify(['/path1', '/path2']),
+        'worktree-panel-collapsed': 'true',
       };
 
       const result = await settingsService.migrateFromLocalStorage(localStorageData);
@@ -499,122 +494,21 @@ describe('settings-service.ts', () => {
       expect(result.migratedProjectCount).toBe(0);
 
       const settings = await settingsService.getGlobalSettings();
-      expect(settings.theme).toBe('light');
-      expect(settings.sidebarOpen).toBe(false);
-      expect(settings.maxConcurrency).toBe(5);
+      expect(settings.recentFolders).toEqual(['/path1', '/path2']);
+      expect(settings.worktreePanelCollapsed).toBe(true);
     });
 
-    it('should migrate credentials from localStorage data', async () => {
+    it('should handle invalid JSON in file-browser-recent-folders gracefully', async () => {
       const localStorageData = {
-        'automaker-storage': JSON.stringify({
-          state: {
-            apiKeys: {
-              anthropic: 'sk-test-key',
-            },
-          },
-        }),
-      };
-
-      const result = await settingsService.migrateFromLocalStorage(localStorageData);
-
-      expect(result.success).toBe(true);
-      expect(result.migratedCredentials).toBe(true);
-
-      const credentials = await settingsService.getCredentials();
-      expect(credentials.apiKeys.anthropic).toBe('sk-test-key');
-    });
-
-    it('should migrate project settings from localStorage data', async () => {
-      const localStorageData = {
-        'automaker-storage': JSON.stringify({
-          state: {
-            projects: [
-              {
-                id: 'proj1',
-                name: 'Project 1',
-                path: testProjectDir,
-                theme: 'light',
-              },
-            ],
-            boardBackgroundByProject: {
-              [testProjectDir]: {
-                imagePath: '/path/to/image.jpg',
-                cardOpacity: 0.8,
-                columnOpacity: 0.9,
-                columnBorderEnabled: true,
-                cardGlassmorphism: false,
-                cardBorderEnabled: true,
-                cardBorderOpacity: 0.5,
-                hideScrollbar: false,
-              },
-            },
-          },
-        }),
-      };
-
-      const result = await settingsService.migrateFromLocalStorage(localStorageData);
-
-      expect(result.success).toBe(true);
-      expect(result.migratedProjectCount).toBe(1);
-
-      const projectSettings = await settingsService.getProjectSettings(testProjectDir);
-      expect(projectSettings.theme).toBe('light');
-      expect(projectSettings.boardBackground?.imagePath).toBe('/path/to/image.jpg');
-    });
-
-    it('should handle direct localStorage values', async () => {
-      const localStorageData = {
-        'automaker:lastProjectDir': '/path/to/project',
-        'file-browser-recent-folders': JSON.stringify(['/path1', '/path2']),
-        'worktree-panel-collapsed': 'true',
+        'file-browser-recent-folders': 'invalid json',
       };
 
       const result = await settingsService.migrateFromLocalStorage(localStorageData);
 
       expect(result.success).toBe(true);
       const settings = await settingsService.getGlobalSettings();
-      expect(settings.lastProjectDir).toBe('/path/to/project');
-      expect(settings.recentFolders).toEqual(['/path1', '/path2']);
-      expect(settings.worktreePanelCollapsed).toBe(true);
+      expect(settings.recentFolders).toEqual([]);
     });
-
-    it('should handle invalid JSON gracefully', async () => {
-      const localStorageData = {
-        'automaker-storage': 'invalid json',
-        'file-browser-recent-folders': 'invalid json',
-      };
-
-      const result = await settingsService.migrateFromLocalStorage(localStorageData);
-
-      expect(result.success).toBe(false);
-      expect(result.errors.length).toBeGreaterThan(0);
-    });
-
-    // Skip on Windows as chmod doesn't work the same way (CI runs on Linux)
-    it.skipIf(process.platform === 'win32')(
-      'should handle migration errors gracefully',
-      async () => {
-        // Create a read-only directory to cause write errors
-        const readOnlyDir = path.join(os.tmpdir(), `readonly-${Date.now()}`);
-        await fs.mkdir(readOnlyDir, { recursive: true });
-        await fs.chmod(readOnlyDir, 0o444);
-
-        const readOnlyService = new SettingsService(readOnlyDir);
-        const localStorageData = {
-          'automaker-storage': JSON.stringify({
-            state: { theme: 'light' },
-          }),
-        };
-
-        const result = await readOnlyService.migrateFromLocalStorage(localStorageData);
-
-        expect(result.success).toBe(false);
-        expect(result.errors.length).toBeGreaterThan(0);
-
-        await fs.chmod(readOnlyDir, 0o755);
-        await fs.rm(readOnlyDir, { recursive: true, force: true });
-      }
-    );
   });
 
   describe('getDataDir', () => {

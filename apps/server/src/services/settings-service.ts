@@ -9,9 +9,7 @@
 
 import { createLogger, atomicWriteJson, DEFAULT_BACKUP_COUNT } from '@ask-jenny/utils';
 import * as secureFs from '../lib/secure-fs.js';
-import os from 'os';
 import path from 'path';
-import fs from 'fs/promises';
 
 import {
   getGlobalSettingsPath,
@@ -24,11 +22,6 @@ import type {
   GlobalSettings,
   Credentials,
   ProjectSettings,
-  KeyboardShortcuts,
-  ProjectRef,
-  TrashedProjectRef,
-  BoardBackgroundSettings,
-  WorktreeInfo,
   PhaseModelConfig,
   PhaseModelEntry,
   ClaudeApiProfile,
@@ -44,12 +37,7 @@ import {
   CREDENTIALS_VERSION,
   PROJECT_SETTINGS_VERSION,
 } from '../types/settings.js';
-import {
-  DEFAULT_MAX_CONCURRENCY,
-  migrateModelId,
-  migrateCursorModelIds,
-  migrateOpencodeModelIds,
-} from '@ask-jenny/types';
+import { migrateModelId, migrateCursorModelIds, migrateOpencodeModelIds } from '@ask-jenny/types';
 
 const logger = createLogger('SettingsService');
 
@@ -860,11 +848,8 @@ export class SettingsService {
    * @returns Promise resolving to migration result with success status and error list
    */
   async migrateFromLocalStorage(localStorageData: {
-    'automaker-storage'?: string;
-    'automaker-setup'?: string;
     'worktree-panel-collapsed'?: string;
     'file-browser-recent-folders'?: string;
-    'automaker:lastProjectDir'?: string;
   }): Promise<{
     success: boolean;
     migratedGlobalSettings: boolean;
@@ -874,78 +859,11 @@ export class SettingsService {
   }> {
     const errors: string[] = [];
     let migratedGlobalSettings = false;
-    let migratedCredentials = false;
-    let migratedProjectCount = 0;
+    const migratedCredentials = false;
+    const migratedProjectCount = 0;
 
     try {
-      // Parse the main automaker-storage
-      let appState: Record<string, unknown> = {};
-      if (localStorageData['automaker-storage']) {
-        try {
-          const parsed = JSON.parse(localStorageData['automaker-storage']);
-          appState = parsed.state || parsed;
-        } catch (e) {
-          errors.push(`Failed to parse automaker-storage: ${e}`);
-        }
-      }
-
-      // Parse setup wizard state (previously stored in localStorage)
-      let setupState: Record<string, unknown> = {};
-      if (localStorageData['automaker-setup']) {
-        try {
-          const parsed = JSON.parse(localStorageData['automaker-setup']);
-          setupState = parsed.state || parsed;
-        } catch (e) {
-          errors.push(`Failed to parse automaker-setup: ${e}`);
-        }
-      }
-
-      // Extract global settings
-      const globalSettings: Partial<GlobalSettings> = {
-        setupComplete:
-          setupState.setupComplete !== undefined ? (setupState.setupComplete as boolean) : false,
-        isFirstRun: setupState.isFirstRun !== undefined ? (setupState.isFirstRun as boolean) : true,
-        skipClaudeSetup:
-          setupState.skipClaudeSetup !== undefined
-            ? (setupState.skipClaudeSetup as boolean)
-            : false,
-        theme: (appState.theme as GlobalSettings['theme']) || 'dark',
-        sidebarOpen: appState.sidebarOpen !== undefined ? (appState.sidebarOpen as boolean) : true,
-        chatHistoryOpen: (appState.chatHistoryOpen as boolean) || false,
-        maxConcurrency: (appState.maxConcurrency as number) || DEFAULT_MAX_CONCURRENCY,
-        defaultSkipTests:
-          appState.defaultSkipTests !== undefined ? (appState.defaultSkipTests as boolean) : true,
-        enableDependencyBlocking:
-          appState.enableDependencyBlocking !== undefined
-            ? (appState.enableDependencyBlocking as boolean)
-            : true,
-        skipVerificationInAutoMode:
-          appState.skipVerificationInAutoMode !== undefined
-            ? (appState.skipVerificationInAutoMode as boolean)
-            : false,
-        useWorktrees:
-          appState.useWorktrees !== undefined ? (appState.useWorktrees as boolean) : true,
-        defaultPlanningMode:
-          (appState.defaultPlanningMode as GlobalSettings['defaultPlanningMode']) || 'skip',
-        defaultRequirePlanApproval: (appState.defaultRequirePlanApproval as boolean) || false,
-        muteDoneSound: (appState.muteDoneSound as boolean) || false,
-        enhancementModel:
-          (appState.enhancementModel as GlobalSettings['enhancementModel']) || 'sonnet',
-        keyboardShortcuts:
-          (appState.keyboardShortcuts as KeyboardShortcuts) ||
-          DEFAULT_GLOBAL_SETTINGS.keyboardShortcuts,
-        projects: (appState.projects as ProjectRef[]) || [],
-        trashedProjects: (appState.trashedProjects as TrashedProjectRef[]) || [],
-        projectHistory: (appState.projectHistory as string[]) || [],
-        projectHistoryIndex: (appState.projectHistoryIndex as number) || -1,
-        lastSelectedSessionByProject:
-          (appState.lastSelectedSessionByProject as Record<string, string>) || {},
-      };
-
-      // Add direct localStorage values
-      if (localStorageData['automaker:lastProjectDir']) {
-        globalSettings.lastProjectDir = localStorageData['automaker:lastProjectDir'];
-      }
+      const globalSettings: Partial<GlobalSettings> = {};
 
       if (localStorageData['file-browser-recent-folders']) {
         try {
@@ -962,93 +880,13 @@ export class SettingsService {
           localStorageData['worktree-panel-collapsed'] === 'true';
       }
 
-      // Save global settings
-      await this.updateGlobalSettings(globalSettings);
-      migratedGlobalSettings = true;
-      logger.info('Migrated global settings from localStorage');
-
-      // Extract and save credentials
-      if (appState.apiKeys) {
-        const apiKeys = appState.apiKeys as {
-          anthropic?: string;
-          google?: string;
-          openai?: string;
-        };
-        await this.updateCredentials({
-          apiKeys: {
-            anthropic: apiKeys.anthropic || '',
-            google: apiKeys.google || '',
-            openai: apiKeys.openai || '',
-          },
-        });
-        migratedCredentials = true;
-        logger.info('Migrated credentials from localStorage');
+      if (Object.keys(globalSettings).length > 0) {
+        await this.updateGlobalSettings(globalSettings);
+        migratedGlobalSettings = true;
+        logger.info('Migrated UI state from localStorage');
       }
 
-      // Migrate per-project settings
-      const boardBackgroundByProject = appState.boardBackgroundByProject as
-        | Record<string, BoardBackgroundSettings>
-        | undefined;
-      const currentWorktreeByProject = appState.currentWorktreeByProject as
-        | Record<string, { path: string | null; branch: string }>
-        | undefined;
-      const worktreesByProject = appState.worktreesByProject as
-        | Record<string, WorktreeInfo[]>
-        | undefined;
-
-      // Get unique project paths that have per-project settings
-      const projectPaths = new Set<string>();
-      if (boardBackgroundByProject) {
-        Object.keys(boardBackgroundByProject).forEach((p) => projectPaths.add(p));
-      }
-      if (currentWorktreeByProject) {
-        Object.keys(currentWorktreeByProject).forEach((p) => projectPaths.add(p));
-      }
-      if (worktreesByProject) {
-        Object.keys(worktreesByProject).forEach((p) => projectPaths.add(p));
-      }
-
-      // Also check projects list for theme settings
-      const projects = (appState.projects as ProjectRef[]) || [];
-      for (const project of projects) {
-        if (project.theme) {
-          projectPaths.add(project.path);
-        }
-      }
-
-      // Migrate each project's settings
-      for (const projectPath of projectPaths) {
-        try {
-          const projectSettings: Partial<ProjectSettings> = {};
-
-          // Get theme from project object
-          const project = projects.find((p) => p.path === projectPath);
-          if (project?.theme) {
-            projectSettings.theme = project.theme as ProjectSettings['theme'];
-          }
-
-          if (boardBackgroundByProject?.[projectPath]) {
-            projectSettings.boardBackground = boardBackgroundByProject[projectPath];
-          }
-
-          if (currentWorktreeByProject?.[projectPath]) {
-            projectSettings.currentWorktree = currentWorktreeByProject[projectPath];
-          }
-
-          if (worktreesByProject?.[projectPath]) {
-            projectSettings.worktrees = worktreesByProject[projectPath];
-          }
-
-          if (Object.keys(projectSettings).length > 0) {
-            await this.updateProjectSettings(projectPath, projectSettings);
-            migratedProjectCount++;
-          }
-        } catch (e) {
-          errors.push(`Failed to migrate project settings for ${projectPath}: ${e}`);
-        }
-      }
-
-      logger.info(`Migration complete: ${migratedProjectCount} projects migrated`);
+      logger.info('Migration complete');
 
       return {
         success: errors.length === 0,
@@ -1080,204 +918,5 @@ export class SettingsService {
    */
   getDataDir(): string {
     return this.dataDir;
-  }
-
-  /**
-   * Get the legacy Electron userData directory path
-   *
-   * Returns the platform-specific path where Electron previously stored settings
-   * before the migration to shared data directories.
-   *
-   * @returns Absolute path to legacy userData directory
-   */
-  private getLegacyElectronUserDataPath(): string {
-    const homeDir = os.homedir();
-
-    switch (process.platform) {
-      case 'darwin':
-        // macOS: ~/Library/Application Support/Automaker
-        return path.join(homeDir, 'Library', 'Application Support', 'Automaker');
-      case 'win32':
-        // Windows: %APPDATA%\Automaker
-        return path.join(
-          process.env.APPDATA || path.join(homeDir, 'AppData', 'Roaming'),
-          'Automaker'
-        );
-      default:
-        // Linux and others: ~/.config/Automaker
-        return path.join(process.env.XDG_CONFIG_HOME || path.join(homeDir, '.config'), 'Automaker');
-    }
-  }
-
-  /**
-   * Migrate entire data directory from legacy Electron userData location to new shared data directory
-   *
-   * This handles the migration from when Electron stored data in the platform-specific
-   * userData directory (e.g., ~/.config/Automaker) to the new shared ./data directory.
-   *
-   * Migration only occurs if:
-   * 1. The new location does NOT have settings.json
-   * 2. The legacy location DOES have settings.json
-   *
-   * Migrates all files and directories including:
-   * - settings.json (global settings)
-   * - credentials.json (API keys)
-   * - sessions-metadata.json (chat session metadata)
-   * - agent-sessions/ (conversation histories)
-   * - Any other files in the data directory
-   *
-   * @returns Promise resolving to migration result
-   */
-  async migrateFromLegacyElectronPath(): Promise<{
-    migrated: boolean;
-    migratedFiles: string[];
-    legacyPath: string;
-    errors: string[];
-  }> {
-    const legacyPath = this.getLegacyElectronUserDataPath();
-    const migratedFiles: string[] = [];
-    const errors: string[] = [];
-
-    // Skip if legacy path is the same as current data dir (no migration needed)
-    if (path.resolve(legacyPath) === path.resolve(this.dataDir)) {
-      logger.debug('Legacy path same as current data dir, skipping migration');
-      return { migrated: false, migratedFiles, legacyPath, errors };
-    }
-
-    logger.info(`Checking for legacy data migration from: ${legacyPath}`);
-    logger.info(`Current data directory: ${this.dataDir}`);
-
-    // Check if new settings already exist
-    const newSettingsPath = getGlobalSettingsPath(this.dataDir);
-    let newSettingsExist = false;
-    try {
-      await fs.access(newSettingsPath);
-      newSettingsExist = true;
-    } catch {
-      // New settings don't exist, migration may be needed
-    }
-
-    if (newSettingsExist) {
-      logger.debug('Settings already exist in new location, skipping migration');
-      return { migrated: false, migratedFiles, legacyPath, errors };
-    }
-
-    // Check if legacy directory exists and has settings
-    const legacySettingsPath = path.join(legacyPath, 'settings.json');
-    let legacySettingsExist = false;
-    try {
-      await fs.access(legacySettingsPath);
-      legacySettingsExist = true;
-    } catch {
-      // Legacy settings don't exist
-    }
-
-    if (!legacySettingsExist) {
-      logger.debug('No legacy settings found, skipping migration');
-      return { migrated: false, migratedFiles, legacyPath, errors };
-    }
-
-    // Perform migration of specific application data files only
-    // (not Electron internal caches like Code Cache, GPU Cache, etc.)
-    logger.info('Found legacy data directory, migrating application data to new location...');
-
-    // Ensure new data directory exists
-    try {
-      await ensureDataDir(this.dataDir);
-    } catch (error) {
-      const msg = `Failed to create data directory: ${error}`;
-      logger.error(msg);
-      errors.push(msg);
-      return { migrated: false, migratedFiles, legacyPath, errors };
-    }
-
-    // Only migrate specific application data files/directories
-    const itemsToMigrate = [
-      'settings.json',
-      'credentials.json',
-      'sessions-metadata.json',
-      'agent-sessions',
-      '.api-key',
-      '.sessions',
-    ];
-
-    for (const item of itemsToMigrate) {
-      const srcPath = path.join(legacyPath, item);
-      const destPath = path.join(this.dataDir, item);
-
-      // Check if source exists
-      try {
-        await fs.access(srcPath);
-      } catch {
-        // Source doesn't exist, skip
-        continue;
-      }
-
-      // Check if destination already exists
-      try {
-        await fs.access(destPath);
-        logger.debug(`Skipping ${item} - already exists in destination`);
-        continue;
-      } catch {
-        // Destination doesn't exist, proceed with copy
-      }
-
-      // Copy file or directory
-      try {
-        const stat = await fs.stat(srcPath);
-        if (stat.isDirectory()) {
-          await this.copyDirectory(srcPath, destPath);
-          migratedFiles.push(item + '/');
-          logger.info(`Migrated directory: ${item}/`);
-        } else {
-          const content = await fs.readFile(srcPath);
-          await fs.writeFile(destPath, content);
-          migratedFiles.push(item);
-          logger.info(`Migrated file: ${item}`);
-        }
-      } catch (error) {
-        const msg = `Failed to migrate ${item}: ${error}`;
-        logger.error(msg);
-        errors.push(msg);
-      }
-    }
-
-    if (migratedFiles.length > 0) {
-      logger.info(
-        `Migration complete. Migrated ${migratedFiles.length} item(s): ${migratedFiles.join(', ')}`
-      );
-      logger.info(`Legacy path: ${legacyPath}`);
-      logger.info(`New path: ${this.dataDir}`);
-    }
-
-    return {
-      migrated: migratedFiles.length > 0,
-      migratedFiles,
-      legacyPath,
-      errors,
-    };
-  }
-
-  /**
-   * Recursively copy a directory from source to destination
-   *
-   * @param srcDir - Source directory path
-   * @param destDir - Destination directory path
-   */
-  private async copyDirectory(srcDir: string, destDir: string): Promise<void> {
-    await fs.mkdir(destDir, { recursive: true });
-    const entries = await fs.readdir(srcDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const srcPath = path.join(srcDir, entry.name);
-      const destPath = path.join(destDir, entry.name);
-
-      if (entry.isDirectory()) {
-        await this.copyDirectory(srcPath, destPath);
-      } else if (entry.isFile()) {
-        const content = await fs.readFile(srcPath);
-        await fs.writeFile(destPath, content);
-      }
-    }
   }
 }
