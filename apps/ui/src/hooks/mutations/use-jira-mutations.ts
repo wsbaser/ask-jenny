@@ -72,6 +72,8 @@ interface IssueForImport {
   priority?: string;
   issueType?: string;
   storyPoints?: number;
+  /** Selected subtask keys (if this is a parent issue with subtasks) */
+  subtaskKeys?: string[];
 }
 
 /**
@@ -122,8 +124,10 @@ export function useJiraImport() {
 
 /**
  * Helper to convert JiraIssue to IssueForImport format
+ * @param issue - The Jira issue to convert
+ * @param subtaskKeys - Optional selected subtask keys for parent issues
  */
-export function jiraIssueToImportFormat(issue: JiraIssue): IssueForImport {
+export function jiraIssueToImportFormat(issue: JiraIssue, subtaskKeys?: string[]): IssueForImport {
   return {
     key: issue.key,
     summary: issue.summary,
@@ -132,5 +136,6 @@ export function jiraIssueToImportFormat(issue: JiraIssue): IssueForImport {
     priority: issue.priority?.name,
     issueType: issue.issueType?.name,
     storyPoints: issue.storyPoints,
+    ...(subtaskKeys && { subtaskKeys }),
   };
 }

@@ -13,6 +13,7 @@ import type {
   JiraProject,
   JiraSprint,
   JiraIssue,
+  JiraIssueSummary,
   JiraBoard,
   JiraSprintIssuesResponse,
   Credentials,
@@ -117,6 +118,18 @@ interface JiraIssueFieldsResponse {
   labels?: string[];
   created: string;
   updated: string;
+  subtasks?: Array<{
+    id: string;
+    key: string;
+    fields: {
+      summary: string;
+      status: { id: string; name: string; statusCategory?: { key: string } };
+      issuetype: { id: string; name: string; iconUrl?: string; subtask: boolean };
+    };
+  }>;
+  parent?: {
+    key: string;
+  };
 }
 
 interface JiraIssueResponse {
@@ -725,7 +738,8 @@ export class JiraService {
   async getSprintIssues(
     sprintId: number,
     statusFilter: 'todo' | 'indeterminate' | 'all' = 'todo',
-    maxResults: number = DEFAULT_MAX_ISSUES
+    maxResults: number = DEFAULT_MAX_ISSUES,
+    importedIssueKeys?: Set<string>
   ): Promise<{ issues: JiraIssue[]; total: number }> {
     const tokenData = await this.getValidAccessToken();
     if (!tokenData) {
@@ -744,7 +758,7 @@ export class JiraService {
       jql += ' AND statusCategory = "In Progress"';
     }
 
-    const fields = `summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated,${STORY_POINTS_FIELD_ID}`;
+    const fields = `summary,description,status,priority,issuetype,assignee,reporter,labels,created,updated,${STORY_POINTS_FIELD_ID},subtasks,parent`;
 
     // Try the Agile API first
     try {
@@ -758,7 +772,7 @@ export class JiraService {
       );
 
       const issues: JiraIssue[] = response.issues.map((issue) =>
-        this.mapIssueResponseToJiraIssue(issue, siteUrl)
+        this.mapIssueResponseToJiraIssue(issue, siteUrl, importedIssueKeys)
       );
 
       return { issues, total: response.total };
@@ -787,7 +801,7 @@ export class JiraService {
     );
 
     const issues: JiraIssue[] = response.issues.map((issue) =>
-      this.mapIssueResponseToJiraIssue(issue, siteUrl)
+      this.mapIssueResponseToJiraIssue(issue, siteUrl, importedIssueKeys)
     );
 
     return { issues, total: response.total };
@@ -815,9 +829,14 @@ export class JiraService {
    * Map Jira API issue response to our JiraIssue type
    * @param issue - Raw issue response from Jira API
    * @param siteUrl - Base URL of the Jira site for constructing issue links
+   * @param importedIssueKeys - Set of already imported issue keys (for duplicate detection)
    * @returns Normalized JiraIssue object
    */
-  private mapIssueResponseToJiraIssue(issue: JiraIssueResponse, siteUrl: string): JiraIssue {
+  private mapIssueResponseToJiraIssue(
+    issue: JiraIssueResponse,
+    siteUrl: string,
+    importedIssueKeys?: Set<string>
+  ): JiraIssue {
     const { fields } = issue;
 
     // Parse Atlassian Document Format description to plain text
@@ -825,6 +844,29 @@ export class JiraService {
       fields.description?.content
         ?.map((block) => block.content?.map((c) => c.text || '').join('') || '')
         .join('\n') || '';
+
+    // Map subtasks if present (parent issues only)
+    const subtasks: JiraIssueSummary[] | undefined = fields.subtasks
+      ? fields.subtasks.map((subtask) => ({
+          id: subtask.id,
+          key: subtask.key,
+          summary: subtask.fields.summary,
+          status: {
+            id: subtask.fields.status.id,
+            name: subtask.fields.status.name,
+            statusCategory: this.mapStatusCategory(subtask.fields.status.statusCategory?.key),
+          },
+          issueType: {
+            id: subtask.fields.issuetype.id,
+            name: subtask.fields.issuetype.name,
+            iconUrl: subtask.fields.issuetype.iconUrl,
+            subtask: subtask.fields.issuetype.subtask,
+          },
+          // Subtask is imported if either the subtask itself or its parent is imported
+          imported:
+            importedIssueKeys?.has(subtask.key) || importedIssueKeys?.has(issue.key) || false,
+        }))
+      : undefined;
 
     return {
       id: issue.id,
@@ -870,6 +912,12 @@ export class JiraService {
       created: fields.created,
       updated: fields.updated,
       url: `${siteUrl}/browse/${issue.key}`,
+      subtasks,
+      parentKey: fields.parent?.key,
+      imported:
+        importedIssueKeys?.has(issue.key) ||
+        (fields.parent?.key && importedIssueKeys?.has(fields.parent.key)) ||
+        false,
     };
   }
 
@@ -881,6 +929,7 @@ export class JiraService {
     sprintId?: number;
     statusFilter?: 'todo' | 'indeterminate' | 'all';
     maxResults?: number;
+    importedIssueKeys?: Set<string>;
   }): Promise<JiraSprintIssuesResponse> {
     let { boardId, sprintId, statusFilter = 'todo', maxResults = DEFAULT_MAX_ISSUES } = options;
 
@@ -918,7 +967,12 @@ export class JiraService {
       }
     }
 
-    const { issues, total } = await this.getSprintIssues(sprintId, statusFilter, maxResults);
+    const { issues, total } = await this.getSprintIssues(
+      sprintId,
+      statusFilter,
+      maxResults,
+      options.importedIssueKeys
+    );
 
     return {
       sprint,

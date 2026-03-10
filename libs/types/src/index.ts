@@ -341,6 +341,7 @@ export type {
   JiraPriority,
   JiraUser,
   JiraIssueType,
+  JiraIssueSummary,
   JiraIssue,
   JiraImportRequest,
   JiraImportResult,
