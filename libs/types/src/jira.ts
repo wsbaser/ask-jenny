@@ -123,6 +123,24 @@ export interface JiraIssueType {
 }
 
 /**
+ * Jira issue summary (minimal subset for subtask listings)
+ */
+export interface JiraIssueSummary {
+  /** Issue ID */
+  id: string;
+  /** Issue key (e.g., PROJ-123) */
+  key: string;
+  /** Issue summary/title */
+  summary: string;
+  /** Issue status */
+  status: JiraStatus;
+  /** Issue type */
+  issueType: JiraIssueType;
+  /** Whether this issue has already been imported as a feature */
+  imported?: boolean;
+}
+
+/**
  * Jira issue/task returned from API
  */
 export interface JiraIssue {
@@ -160,6 +178,12 @@ export interface JiraIssue {
     name: string;
     state: string;
   };
+  /** Subtasks (only present for parent issues) */
+  subtasks?: JiraIssueSummary[];
+  /** Parent key (only present for subtasks) */
+  parentKey?: string;
+  /** Whether this issue has already been imported as a feature */
+  imported?: boolean;
 }
 
 /**
@@ -176,6 +200,8 @@ export interface JiraImportRequest {
   includeIssueKey?: boolean;
   /** Whether to include issue URL in description */
   includeUrl?: boolean;
+  /** Subtask selections: maps parent issue key to array of selected subtask keys */
+  subtaskSelections?: Record<string, string[]>;
 }
 
 /**

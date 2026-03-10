@@ -31,7 +31,7 @@ export function createJiraRoutes(
   // Data fetching
   router.get('/boards', createBoardsHandler(jiraService));
   router.get('/boards/:boardId/sprints', createSprintsHandler(jiraService));
-  router.post('/sprint-issues', createSprintIssuesHandler(jiraService));
+  router.post('/sprint-issues', createSprintIssuesHandler(jiraService, featureLoader));
 
   // Import
   router.post('/import', createImportIssuesHandler(jiraService, featureLoader));

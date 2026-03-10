@@ -40,6 +40,8 @@ import {
   Circle,
   ListTodo,
   Zap,
+  ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -53,7 +55,10 @@ import {
   useJiraDisconnect,
   useJiraImport,
   jiraIssueToImportFormat,
+  type IssueForImport,
+  type SubtaskForImport,
 } from '@/hooks/mutations/use-jira-mutations';
+import { useJiraSelection } from '@/hooks/use-jira-selection';
 import type { JiraIssue } from '@ask-jenny/types';
 
 interface JiraImportDialogProps {
@@ -96,6 +101,7 @@ export function JiraImportDialog({
     refetch: refetchIssues,
     isError: isIssuesError,
   } = useJiraSprintIssues({
+    projectPath,
     boardId: selectedBoardId,
     statusFilter: 'todo',
     enabled: !!selectedBoardId && (connectionStatus?.connected ?? false),
@@ -103,13 +109,22 @@ export function JiraImportDialog({
 
   // Import state
   const importMutation = useJiraImport();
-  const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const [category, setCategory] = useState('Jira Import');
   const [includeIssueKey, setIncludeIssueKey] = useState(true);
   const [includeUrl, setIncludeUrl] = useState(true);
 
-  // Accessibility: Track focused issue index for keyboard navigation
-  const [focusedIssueIndex, setFocusedIssueIndex] = useState<number>(-1);
+  // Sorted issues for display
+  const issues = [...(sprintData?.issues ?? [])].sort((a, b) => {
+    const nameA = a.assignee?.displayName ?? '\uffff';
+    const nameB = b.assignee?.displayName ?? '\uffff';
+    return nameA.localeCompare(nameB);
+  });
+
+  // Selection state management - extracted to custom hook
+  const selection = useJiraSelection({ issues });
+
+  // Accessibility: Track focused issue key for keyboard navigation
+  const [focusedIssueKey, setFocusedIssueKey] = useState<string | null>(null);
   const issueListRef = useRef<HTMLDivElement>(null);
 
   // Import progress tracking
@@ -133,9 +148,10 @@ export function JiraImportDialog({
 
   // Reset selection when sprint data changes
   useEffect(() => {
-    setSelectedIssues(new Set());
-    setFocusedIssueIndex(-1);
-  }, [sprintData?.sprint?.id]);
+    selection.clearSelection();
+    setFocusedIssueKey(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sprintData?.sprint?.id]); // clearSelection is stable
 
   // Clean up progress interval when dialog closes or component unmounts
   useEffect(() => {
@@ -217,103 +233,164 @@ export function JiraImportDialog({
     setShowDisconnectConfirm(true);
   };
 
-  const handleToggleIssue = useCallback((issueKey: string) => {
-    setSelectedIssues((prev) => {
-      const next = new Set(prev);
-      if (next.has(issueKey)) {
-        next.delete(issueKey);
-      } else {
-        next.add(issueKey);
+  // Build flat list of all selectable items (parents + subtasks) for keyboard navigation
+  const buildFlatItemList = useCallback((): Array<{
+    issue: JiraIssue;
+    isSubtask: boolean;
+    parentKey?: string;
+  }> => {
+    const flatList: Array<{ issue: JiraIssue; isSubtask: boolean; parentKey?: string }> = [];
+
+    for (const issue of issues) {
+      flatList.push({ issue, isSubtask: false });
+      if (selection.hasSubtasks(issue) && selection.expandedIssues.has(issue.key)) {
+        for (const subtask of issue.subtasks!) {
+          flatList.push({ issue: subtask, isSubtask: true, parentKey: issue.key });
+        }
       }
-      return next;
-    });
-  }, []);
-
-  const handleSelectAll = useCallback(() => {
-    if (!sprintData?.issues) return;
-    if (selectedIssues.size === sprintData.issues.length) {
-      setSelectedIssues(new Set());
-    } else {
-      setSelectedIssues(new Set(sprintData.issues.map((i) => i.key)));
     }
-  }, [sprintData?.issues, selectedIssues.size]);
 
-  // Sort issues by assignee name (unassigned last)
-  const issues = [...(sprintData?.issues ?? [])].sort((a, b) => {
-    const nameA = a.assignee?.displayName ?? '\uffff';
-    const nameB = b.assignee?.displayName ?? '\uffff';
-    return nameA.localeCompare(nameB);
-  });
+    return flatList;
+  }, [issues, selection]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!issues.length) return;
+      if (!issues.length || !focusedIssueKey) return;
+
+      const flatList = buildFlatItemList();
+      const currentIndex = flatList.findIndex((item) => item.issue.key === focusedIssueKey);
+
+      if (currentIndex === -1) return;
+
+      const currentItem = flatList[currentIndex];
 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setFocusedIssueIndex((prev) => Math.min(prev + 1, issues.length - 1));
+          const nextIndex = Math.min(currentIndex + 1, flatList.length - 1);
+          setFocusedIssueKey(flatList[nextIndex].issue.key);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setFocusedIssueIndex((prev) => Math.max(prev - 1, 0));
+          const prevIndex = Math.max(currentIndex - 1, 0);
+          setFocusedIssueKey(flatList[prevIndex].issue.key);
+          break;
+        case 'ArrowRight':
+          // Expand parent issue
+          if (
+            !currentItem.isSubtask &&
+            selection.hasSubtasks(currentItem.issue) &&
+            !selection.expandedIssues.has(currentItem.issue.key)
+          ) {
+            e.preventDefault();
+            selection.toggleExpand(currentItem.issue.key);
+          }
+          break;
+        case 'ArrowLeft':
+          // Collapse parent issue
+          if (
+            !currentItem.isSubtask &&
+            selection.hasSubtasks(currentItem.issue) &&
+            selection.expandedIssues.has(currentItem.issue.key)
+          ) {
+            e.preventDefault();
+            selection.toggleExpand(currentItem.issue.key);
+          }
           break;
         case ' ':
         case 'Enter':
           e.preventDefault();
-          if (focusedIssueIndex >= 0 && focusedIssueIndex < issues.length) {
-            handleToggleIssue(issues[focusedIssueIndex].key);
+          if (currentItem.isSubtask) {
+            selection.toggleSubtask(currentItem.issue.key);
+          } else if (selection.hasSubtasks(currentItem.issue)) {
+            selection.toggleParent(currentItem.issue);
+          } else {
+            selection.toggleIssue(currentItem.issue.key);
           }
           break;
         case 'Home':
           e.preventDefault();
-          setFocusedIssueIndex(0);
+          setFocusedIssueKey(flatList[0].issue.key);
           break;
         case 'End':
           e.preventDefault();
-          setFocusedIssueIndex(issues.length - 1);
+          setFocusedIssueKey(flatList[flatList.length - 1].issue.key);
           break;
         case 'Escape':
           // Clear selection when Escape is pressed
-          if (selectedIssues.size > 0) {
+          if (selection.selectedIssues.size > 0 || selection.selectedSubtasks.size > 0) {
             e.preventDefault();
             e.stopPropagation();
-            setSelectedIssues(new Set());
-            setFocusedIssueIndex(-1);
+            selection.clearSelection();
+            setFocusedIssueKey(null);
           }
           break;
         case 'a':
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
-            handleSelectAll();
+            selection.selectAll();
           }
           break;
       }
     },
-    [issues, focusedIssueIndex, handleToggleIssue, handleSelectAll, selectedIssues.size]
+    [issues, focusedIssueKey, buildFlatItemList, selection]
   );
 
   // Scroll focused issue into view
   useEffect(() => {
-    if (focusedIssueIndex >= 0 && issueListRef.current) {
+    if (focusedIssueKey && issueListRef.current) {
       const focusedElement = issueListRef.current.querySelector(
-        `[data-issue-index="${focusedIssueIndex}"]`
+        `[data-issue-key="${focusedIssueKey}"]`
       );
       focusedElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
-  }, [focusedIssueIndex]);
+  }, [focusedIssueKey]);
 
   const handleImport = async () => {
-    if (selectedIssues.size === 0 || !sprintData?.issues) {
+    if (
+      (selection.selectedIssues.size === 0 && selection.selectedSubtasks.size === 0) ||
+      !sprintData?.issues
+    ) {
       toast.error('No issues selected', {
         description: 'Please select at least one issue to import.',
       });
       return;
     }
 
-    const issuesToImport = sprintData.issues
-      .filter((i) => selectedIssues.has(i.key))
-      .map(jiraIssueToImportFormat);
+    // Collect issues to import
+    const issuesToImport: IssueForImport[] = [];
+    const subtaskSelections: Record<string, string[]> = {};
+
+    // Add regular issues (without subtasks)
+    sprintData.issues
+      .filter((i) => selection.selectedIssues.has(i.key))
+      .forEach((issue) => {
+        issuesToImport.push(jiraIssueToImportFormat(issue));
+      });
+
+    // Process parent issues with subtask selections
+    const parentIssues = sprintData.issues.filter((issue) => selection.hasSubtasks(issue));
+    for (const parent of parentIssues) {
+      const subtaskKeys = parent.subtasks!.map((s) => s.key);
+      const selectedSubtaskKeys = subtaskKeys.filter((key) => selection.selectedSubtasks.has(key));
+
+      if (selectedSubtaskKeys.length > 0) {
+        // Build full subtask details for import
+        const subtasksForImport: SubtaskForImport[] = parent.subtasks!.map((st) => ({
+          key: st.key,
+          summary: st.summary,
+          description: '', // JiraIssueSummary doesn't have description
+          url: parent.url ? parent.url.replace(parent.key, st.key) : undefined,
+          status: st.status.name,
+        }));
+
+        // Add parent with full subtask details
+        issuesToImport.push(jiraIssueToImportFormat(parent, subtasksForImport));
+
+        // Track which subtasks are selected for this parent
+        subtaskSelections[parent.key] = selectedSubtaskKeys;
+      }
+    }
 
     // Simulate progress for better UX
     setImportProgress(10);
@@ -328,6 +405,7 @@ export function JiraImportDialog({
         defaultCategory: category,
         includeIssueKey,
         includeUrl,
+        subtaskSelections,
       });
 
       if (progressIntervalRef.current) {
@@ -338,7 +416,7 @@ export function JiraImportDialog({
 
       // Show detailed success message
       if (result.successful > 0) {
-        toast.success(`Imported ${result.successful} issue${result.successful > 1 ? 's' : ''}`, {
+        toast.success(`Imported ${result.successful} feature${result.successful > 1 ? 's' : ''}`, {
           description: 'Features have been added to your backlog.',
           duration: 4000,
         });
@@ -357,7 +435,7 @@ export function JiraImportDialog({
       }
 
       // Clear selection after successful import
-      setSelectedIssues(new Set());
+      selection.clearSelection();
 
       // Close dialog if all succeeded (with longer delay for user feedback)
       if (result.failed === 0) {
@@ -688,21 +766,20 @@ export function JiraImportDialog({
                       <Label className="text-sm font-medium">
                         Select Issues to Import
                         <span className="ml-2 text-muted-foreground font-normal">
-                          ({selectedIssues.size} of {issues.length} selected)
+                          ({selection.featureCount} feature{selection.featureCount !== 1 ? 's' : ''}{' '}
+                          to create)
                         </span>
                       </Label>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleSelectAll}
+                        onClick={() => selection.selectAll()}
                         className="h-8 text-xs"
                         aria-label={
-                          selectedIssues.size === issues.length
-                            ? 'Deselect all issues'
-                            : 'Select all issues'
+                          selection.featureCount > 0 ? 'Deselect all issues' : 'Select all issues'
                         }
                       >
-                        {selectedIssues.size === issues.length ? (
+                        {selection.featureCount > 0 ? (
                           <>
                             <Circle className="w-3.5 h-3.5 mr-1.5" />
                             Deselect All
@@ -717,22 +794,27 @@ export function JiraImportDialog({
                     </div>
                     <div
                       ref={issueListRef}
-                      className="border rounded-lg divide-y flex-1 min-h-0 overflow-y-auto focus:outline-none"
-                      role="listbox"
-                      aria-label="Sprint issues"
+                      className="border rounded-lg flex-1 min-h-0 overflow-y-auto focus:outline-none"
+                      role="tree"
+                      aria-label="Sprint issues with subtasks"
                       aria-multiselectable="true"
                       tabIndex={0}
                       onKeyDown={handleKeyDown}
                     >
-                      {issues.map((issue, index) => (
-                        <IssueRow
+                      {issues.map((issue) => (
+                        <IssueRowGroup
                           key={issue.id}
                           issue={issue}
-                          index={index}
-                          selected={selectedIssues.has(issue.key)}
-                          focused={focusedIssueIndex === index}
-                          onToggle={() => handleToggleIssue(issue.key)}
-                          onFocus={() => setFocusedIssueIndex(index)}
+                          isExpanded={selection.expandedIssues.has(issue.key)}
+                          isFocused={focusedIssueKey === issue.key}
+                          selected={selection.selectedIssues.has(issue.key)}
+                          selectedSubtasks={selection.selectedSubtasks}
+                          onToggleParent={selection.toggleParent}
+                          onToggleIssue={selection.toggleIssue}
+                          onToggleSubtask={selection.toggleSubtask}
+                          onToggleExpand={selection.toggleExpand}
+                          onFocus={() => setFocusedIssueKey(issue.key)}
+                          hasSubtasks={selection.hasSubtasks(issue)}
                         />
                       ))}
                     </div>
@@ -798,12 +880,10 @@ export function JiraImportDialog({
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">
-                          Importing {selectedIssues.size} issue
-                          {selectedIssues.size !== 1 ? 's' : ''}
+                          Creating {selection.featureCount} feature
+                          {selection.featureCount !== 1 ? 's' : ''}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          Creating features in your backlog...
-                        </p>
+                        <p className="text-sm text-muted-foreground">Importing from Jira...</p>
                       </div>
                       <span className="text-lg font-semibold text-primary">{importProgress}%</span>
                     </div>
@@ -832,7 +912,7 @@ export function JiraImportDialog({
             {isConnected && issues.length > 0 && (
               <Button
                 onClick={handleImport}
-                disabled={selectedIssues.size === 0 || importMutation.isPending}
+                disabled={selection.featureCount === 0 || importMutation.isPending}
                 className="min-w-[140px] min-h-[44px]"
               >
                 {importMutation.isPending ? (
@@ -843,8 +923,7 @@ export function JiraImportDialog({
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-2" aria-hidden="true" />
-                    Import {selectedIssues.size > 0 ? `${selectedIssues.size} ` : ''}Issue
-                    {selectedIssues.size !== 1 ? 's' : ''}
+                    Import {selection.featureCount} Feature{selection.featureCount !== 1 ? 's' : ''}
                   </>
                 )}
               </Button>
@@ -869,112 +948,327 @@ export function JiraImportDialog({
   );
 }
 
-interface IssueRowProps {
+interface IssueRowGroupProps {
   issue: JiraIssue;
-  index: number;
+  isExpanded: boolean;
+  isFocused: boolean;
   selected: boolean;
-  focused: boolean;
-  onToggle: () => void;
+  selectedSubtasks: Set<string>;
+  onToggleParent: (issue: JiraIssue) => void;
+  onToggleIssue: (issueKey: string) => void;
+  onToggleSubtask: (subtaskKey: string) => void;
+  onToggleExpand: (issueKey: string) => void;
   onFocus: () => void;
+  hasSubtasks: boolean;
 }
 
 /**
- * Individual issue row component - memoized for performance
- * since the parent re-renders on selection/focus changes
+ * Parent issue row with optional expandable subtasks
+ * Supports tree structure with smooth animations and keyboard navigation
  */
-const IssueRow = memo(function IssueRow({
+const IssueRowGroup = memo(function IssueRowGroup({
   issue,
-  index,
+  isExpanded,
+  isFocused,
   selected,
-  focused,
-  onToggle,
+  selectedSubtasks,
+  onToggleParent,
+  onToggleIssue,
+  onToggleSubtask,
+  onToggleExpand,
   onFocus,
-}: IssueRowProps) {
+  hasSubtasks,
+}: IssueRowGroupProps) {
+  // Get subtasks from issue (will be populated by backend)
+  const subtasks = 'subtasks' in issue && Array.isArray(issue.subtasks) ? issue.subtasks : [];
+  const allSubtaskKeys = subtasks.map((s) => s.key);
+  const selectedSubtaskCount = allSubtaskKeys.filter((key) => selectedSubtasks.has(key)).length;
+
+  // Parent checkbox state: checked when ALL subtasks selected, or selected prop for issues without subtasks
+  const parentChecked = hasSubtasks
+    ? selectedSubtaskCount === allSubtaskKeys.length && allSubtaskKeys.length > 0
+    : selected;
+
+  // Check if issue was previously imported (flag added by impl-backend)
+  const isImported = 'imported' in issue && issue.imported === true;
+  // If parent is imported, all subtasks are also imported
+  const subtasksImported =
+    isImported || subtasks.some((s) => 'imported' in s && s.imported === true);
+
   return (
     <div
-      role="option"
-      aria-selected={selected}
-      aria-label={`${issue.key}: ${issue.summary}${issue.issueType ? `, ${issue.issueType.name}` : ''}${selected ? ', selected' : ''}`}
-      data-issue-index={index}
-      className={cn(
-        'flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg',
-        'hover:bg-accent/40 active:bg-accent/60',
-        selected && 'bg-primary/5 hover:bg-primary/10',
-        focused && 'ring-2 ring-inset ring-primary/50 bg-accent/30 outline-none'
-      )}
-      onClick={onToggle}
-      onMouseEnter={onFocus}
+      role="treeitem"
+      aria-expanded={hasSubtasks ? isExpanded : undefined}
+      aria-selected={parentChecked}
+      aria-disabled={isImported}
+      aria-label={`${issue.key}: ${issue.summary}${issue.issueType ? `, ${issue.issueType.name}` : ''}${hasSubtasks ? `, ${subtasks.length} subtask${subtasks.length !== 1 ? 's' : ''}` : ''}${isImported ? ', already imported' : ''}`}
+      data-issue-key={issue.key}
+      className={cn('divide-y', isImported && 'opacity-50')}
     >
-      <Checkbox
-        checked={selected}
-        onCheckedChange={onToggle}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-0.5 h-4 w-4"
-        tabIndex={-1}
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <a
-            href={issue.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded hover:text-primary hover:bg-primary/10 transition-colors"
-            title={`Open ${issue.key} in Jira`}
+      {/* Parent row */}
+      <div
+        className={cn(
+          'flex items-start gap-2 px-3 py-2 transition-colors duration-100',
+          isImported
+            ? 'cursor-not-allowed'
+            : 'cursor-pointer hover:bg-accent/40 active:bg-accent/60',
+          parentChecked && 'bg-primary/5 hover:bg-primary/10',
+          isFocused && 'ring-2 ring-inset ring-primary/50 bg-accent/30 outline-none'
+        )}
+        onClick={() => {
+          if (isImported) return;
+          if (hasSubtasks) {
+            onToggleParent(issue);
+          } else {
+            onToggleIssue(issue.key);
+          }
+        }}
+        onMouseEnter={onFocus}
+      >
+        {/* Expand button (only for parents with subtasks) */}
+        {hasSubtasks ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand(issue.key);
+            }}
+            className="mt-0.5 h-4 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={isExpanded ? 'Collapse subtasks' : 'Expand subtasks'}
           >
-            {issue.key}
-          </a>
-          {issue.issueType && (
-            <span
-              className={cn(
-                'text-xs px-1.5 py-0.5 rounded font-medium',
-                issue.issueType.name === 'Bug'
-                  ? 'bg-red-500/10 text-red-600'
-                  : issue.issueType.name === 'Story'
-                    ? 'bg-green-500/10 text-green-600'
-                    : 'bg-blue-500/10 text-blue-600'
-              )}
+            {isExpanded ? (
+              <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+          </button>
+        ) : (
+          <div className="w-4" />
+        )}
+
+        <Checkbox
+          checked={parentChecked}
+          disabled={isImported}
+          onCheckedChange={() => {
+            if (isImported) return;
+            if (hasSubtasks) {
+              onToggleParent(issue);
+            } else {
+              onToggleIssue(issue.key);
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="mt-0.5 h-4 w-4"
+          tabIndex={-1}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href={issue.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded hover:text-primary hover:bg-primary/10 transition-colors"
+              title={`Open ${issue.key} in Jira`}
             >
-              {issue.issueType.name}
-            </span>
-          )}
-          {issue.priority && (
-            <span className="text-xs text-muted-foreground">{issue.priority.name}</span>
-          )}
-          {issue.assignee && (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              {issue.key}
+            </a>
+            {issue.issueType && (
               <span
-                className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium"
-                aria-hidden="true"
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded font-medium',
+                  issue.issueType.name === 'Bug'
+                    ? 'bg-red-500/10 text-red-600'
+                    : issue.issueType.name === 'Story'
+                      ? 'bg-green-500/10 text-green-600'
+                      : 'bg-blue-500/10 text-blue-600'
+                )}
               >
-                {issue.assignee.displayName.charAt(0).toUpperCase()}
+                {issue.issueType.name}
               </span>
-              {issue.assignee.displayName}
-            </span>
-          )}
+            )}
+            {issue.priority && (
+              <span className="text-xs text-muted-foreground">{issue.priority.name}</span>
+            )}
+            {issue.assignee && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <span
+                  className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium"
+                  aria-hidden="true"
+                >
+                  {issue.assignee.displayName.charAt(0).toUpperCase()}
+                </span>
+                {issue.assignee.displayName}
+              </span>
+            )}
+            {hasSubtasks && (
+              <span className="text-xs text-muted-foreground">
+                {subtasks.length} subtask{subtasks.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-medium mt-0.5 line-clamp-2">{issue.summary}</p>
         </div>
-        <p className="text-sm font-medium mt-0.5 line-clamp-2">{issue.summary}</p>
+        {issue.storyPoints !== undefined && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap"
+                  aria-label={`${issue.storyPoints} story points`}
+                >
+                  {issue.storyPoints} SP
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{issue.storyPoints} Story Points</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
-      {issue.storyPoints !== undefined && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap"
-                aria-label={`${issue.storyPoints} story points`}
-              >
-                {issue.storyPoints} SP
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{issue.storyPoints} Story Points</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+
+      {/* Subtasks section with expand/collapse animation */}
+      {hasSubtasks && (
+        <div
+          className={cn(
+            'overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+          )}
+        >
+          {/* Connector line */}
+          <div className="relative">
+            <div className="absolute left-[1.625rem] top-0 bottom-0 w-px bg-border" />
+            {subtasks.map((subtask, index) => {
+              const isSubtaskImported =
+                subtasksImported || ('imported' in subtask && subtask.imported === true);
+              return (
+                <div
+                  key={subtask.id}
+                  role="treeitem"
+                  aria-selected={selectedSubtasks.has(subtask.key)}
+                  aria-disabled={isSubtaskImported}
+                  data-issue-key={subtask.key}
+                  className={cn(
+                    'flex items-start gap-2 px-3 py-2 transition-colors duration-100',
+                    isSubtaskImported
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'cursor-pointer hover:bg-accent/40 active:bg-accent/60',
+                    selectedSubtasks.has(subtask.key) && 'bg-primary/5 hover:bg-primary/10',
+                    // Staggered fade-in animation
+                    isExpanded && 'animate-in fade-in slide-in-from-top-1',
+                    // Apply stagger delay via inline style
+                    isExpanded && { animationDelay: `${index * 50}ms` }
+                  )}
+                  style={
+                    isExpanded
+                      ? { animationDelay: `${index * 50}ms`, animationDuration: '200ms' }
+                      : {}
+                  }
+                  onClick={() => {
+                    if (isSubtaskImported) return;
+                    onToggleSubtask(subtask.key);
+                  }}
+                >
+                  {/* Indentation and connector */}
+                  <div className="w-4 flex items-center justify-center">
+                    <div className="w-px h-full bg-border" />
+                  </div>
+                  <div className="w-4 flex items-center justify-center">
+                    {/* Horizontal connector line */}
+                    <div className="absolute left-[1.625rem] w-3 h-px bg-border top-8" />
+                    {/* Corner piece */}
+                    <div className="absolute left-[1.625rem] w-px h-3 bg-border top-5" />
+                  </div>
+
+                  <Checkbox
+                    checked={selectedSubtasks.has(subtask.key)}
+                    disabled={isSubtaskImported}
+                    onCheckedChange={() => {
+                      if (isSubtaskImported) return;
+                      onToggleSubtask(subtask.key);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-0.5 h-4 w-4"
+                    tabIndex={-1}
+                  />
+                  <div className="flex-1 min-w-0 ml-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {'url' in subtask && subtask.url ? (
+                        <a
+                          href={subtask.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded hover:text-primary hover:bg-primary/10 transition-colors"
+                          title={`Open ${subtask.key} in Jira`}
+                        >
+                          {subtask.key}
+                        </a>
+                      ) : (
+                        <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {subtask.key}
+                        </span>
+                      )}
+                      {subtask.issueType && (
+                        <span
+                          className={cn(
+                            'text-xs px-1.5 py-0.5 rounded font-medium',
+                            subtask.issueType.name === 'Bug'
+                              ? 'bg-red-500/10 text-red-600'
+                              : subtask.issueType.name === 'Story'
+                                ? 'bg-green-500/10 text-green-600'
+                                : 'bg-blue-500/10 text-blue-600'
+                          )}
+                        >
+                          {subtask.issueType.name}
+                        </span>
+                      )}
+                      {subtask.priority && (
+                        <span className="text-xs text-muted-foreground">
+                          {subtask.priority.name}
+                        </span>
+                      )}
+                      {subtask.assignee && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span
+                            className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium"
+                            aria-hidden="true"
+                          >
+                            {subtask.assignee.displayName.charAt(0).toUpperCase()}
+                          </span>
+                          {subtask.assignee.displayName}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium mt-0.5 line-clamp-2">{subtask.summary}</p>
+                  </div>
+                  {subtask.storyPoints !== undefined && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap"
+                            aria-label={`${subtask.storyPoints} story points`}
+                          >
+                            {subtask.storyPoints} SP
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{subtask.storyPoints} Story Points</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
 });
 
 // Display name for debugging
-IssueRow.displayName = 'IssueRow';
+IssueRowGroup.displayName = 'IssueRowGroup';

@@ -105,6 +105,7 @@ export function useJiraSprints(
  */
 export function useJiraSprintIssues(
   options: {
+    projectPath?: string;
     boardId?: number;
     sprintId?: number;
     statusFilter?: 'todo' | 'indeterminate' | 'all';

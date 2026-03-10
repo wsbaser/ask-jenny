@@ -1572,7 +1572,7 @@ const initialState: AppState = {
   },
   terminalLayoutByProject: {},
   specCreatingForProject: null,
-  defaultPlanningMode: 'skip' as PlanningMode,
+  defaultPlanningMode: 'full' as PlanningMode,
   defaultRequirePlanApproval: false,
   defaultFeatureModel: { model: 'opus' } as PhaseModelEntry,
   pendingPlanApproval: null,
