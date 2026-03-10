@@ -62,9 +62,20 @@ export function useJiraDisconnect() {
 }
 
 /**
+ * Subtask details for import
+ */
+export interface SubtaskForImport {
+  key: string;
+  summary: string;
+  description?: string;
+  url?: string;
+  status?: string;
+}
+
+/**
  * Issue data for import (frontend sends details to avoid re-fetching)
  */
-interface IssueForImport {
+export interface IssueForImport {
   key: string;
   summary: string;
   description?: string;
@@ -72,19 +83,23 @@ interface IssueForImport {
   priority?: string;
   issueType?: string;
   storyPoints?: number;
-  /** Selected subtask keys (if this is a parent issue with subtasks) */
-  subtaskKeys?: string[];
+  /** Full subtask details (if this is a parent issue with subtasks) */
+  subtasks?: SubtaskForImport[];
+  /** Parent key (only present for standalone subtasks) */
+  parentKey?: string;
 }
 
 /**
  * Import request parameters
  */
-interface ImportRequest {
+export interface ImportRequest {
   projectPath: string;
   issues: IssueForImport[];
   defaultCategory?: string;
   includeIssueKey?: boolean;
   includeUrl?: boolean;
+  /** Map of parent issue key -> selected subtask keys */
+  subtaskSelections?: Record<string, string[]>;
 }
 
 /**
@@ -95,7 +110,14 @@ export function useJiraImport() {
   const httpClient = getHttpApiClient();
 
   return useMutation<JiraImportResponse, Error, ImportRequest>({
-    mutationFn: async ({ projectPath, issues, defaultCategory, includeIssueKey, includeUrl }) => {
+    mutationFn: async ({
+      projectPath,
+      issues,
+      defaultCategory,
+      includeIssueKey,
+      includeUrl,
+      subtaskSelections,
+    }) => {
       const response = await httpClient.fetch('/api/jira/import', {
         method: 'POST',
         body: JSON.stringify({
@@ -105,6 +127,7 @@ export function useJiraImport() {
           defaultCategory,
           includeIssueKey,
           includeUrl,
+          subtaskSelections,
         }),
       });
       if (!response.ok) {
@@ -125,9 +148,12 @@ export function useJiraImport() {
 /**
  * Helper to convert JiraIssue to IssueForImport format
  * @param issue - The Jira issue to convert
- * @param subtaskKeys - Optional selected subtask keys for parent issues
+ * @param subtasks - Optional full subtask details for parent issues
  */
-export function jiraIssueToImportFormat(issue: JiraIssue, subtaskKeys?: string[]): IssueForImport {
+export function jiraIssueToImportFormat(
+  issue: JiraIssue,
+  subtasks?: SubtaskForImport[]
+): IssueForImport {
   return {
     key: issue.key,
     summary: issue.summary,
@@ -136,6 +162,6 @@ export function jiraIssueToImportFormat(issue: JiraIssue, subtaskKeys?: string[]
     priority: issue.priority?.name,
     issueType: issue.issueType?.name,
     storyPoints: issue.storyPoints,
-    ...(subtaskKeys && { subtaskKeys }),
+    ...(subtasks && { subtasks }),
   };
 }

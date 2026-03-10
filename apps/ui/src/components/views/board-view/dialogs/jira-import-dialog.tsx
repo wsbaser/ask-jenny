@@ -55,6 +55,8 @@ import {
   useJiraDisconnect,
   useJiraImport,
   jiraIssueToImportFormat,
+  type IssueForImport,
+  type SubtaskForImport,
 } from '@/hooks/mutations/use-jira-mutations';
 import { useJiraSelection } from '@/hooks/use-jira-selection';
 import type { JiraIssue } from '@ask-jenny/types';
@@ -355,39 +357,38 @@ export function JiraImportDialog({
       return;
     }
 
-    // Collect issues to import, including parent context for subtasks
-    const issuesToImport = sprintData.issues
-      .filter((i) => selection.selectedIssues.has(i.key))
-      .map(jiraIssueToImportFormat);
+    // Collect issues to import
+    const issuesToImport: IssueForImport[] = [];
+    const subtaskSelections: Record<string, string[]> = {};
 
-    // For subtasks, we need to include parent context
+    // Add regular issues (without subtasks)
+    sprintData.issues
+      .filter((i) => selection.selectedIssues.has(i.key))
+      .forEach((issue) => {
+        issuesToImport.push(jiraIssueToImportFormat(issue));
+      });
+
+    // Process parent issues with subtask selections
     const parentIssues = sprintData.issues.filter((issue) => selection.hasSubtasks(issue));
     for (const parent of parentIssues) {
       const subtaskKeys = parent.subtasks!.map((s) => s.key);
       const selectedSubtaskKeys = subtaskKeys.filter((key) => selection.selectedSubtasks.has(key));
 
       if (selectedSubtaskKeys.length > 0) {
-        // Add parent as context for subtasks
-        const allSelected = selectedSubtaskKeys.length === subtaskKeys.length;
+        // Build full subtask details for import
+        const subtasksForImport: SubtaskForImport[] = parent.subtasks!.map((st) => ({
+          key: st.key,
+          summary: st.summary,
+          description: '', // JiraIssueSummary doesn't have description
+          url: parent.url ? parent.url.replace(parent.key, st.key) : undefined,
+          status: st.status.name,
+        }));
 
-        if (allSelected) {
-          // All subtasks selected - add parent to import
-          issuesToImport.push({
-            ...jiraIssueToImportFormat(parent),
-            subtaskKeys: selectedSubtaskKeys,
-          });
-        } else {
-          // Partial subtasks - add parent with selected subtask keys
-          for (const subtaskKey of selectedSubtaskKeys) {
-            const subtask = parent.subtasks!.find((s) => s.key === subtaskKey);
-            if (subtask) {
-              issuesToImport.push({
-                ...jiraIssueToImportFormat(parent),
-                subtaskKeys: [subtaskKey],
-              });
-            }
-          }
-        }
+        // Add parent with full subtask details
+        issuesToImport.push(jiraIssueToImportFormat(parent, subtasksForImport));
+
+        // Track which subtasks are selected for this parent
+        subtaskSelections[parent.key] = selectedSubtaskKeys;
       }
     }
 
@@ -404,6 +405,7 @@ export function JiraImportDialog({
         defaultCategory: category,
         includeIssueKey,
         includeUrl,
+        subtaskSelections,
       });
 
       if (progressIntervalRef.current) {
@@ -982,9 +984,10 @@ const IssueRowGroup = memo(function IssueRowGroup({
   const allSubtaskKeys = subtasks.map((s) => s.key);
   const selectedSubtaskCount = allSubtaskKeys.filter((key) => selectedSubtasks.has(key)).length;
 
-  // Parent checkbox state: only checked when ALL subtasks selected
-  const parentChecked =
-    hasSubtasks && selectedSubtaskCount === allSubtaskKeys.length && allSubtaskKeys.length > 0;
+  // Parent checkbox state: checked when ALL subtasks selected, or selected prop for issues without subtasks
+  const parentChecked = hasSubtasks
+    ? selectedSubtaskCount === allSubtaskKeys.length && allSubtaskKeys.length > 0
+    : selected;
 
   // Check if issue was previously imported (flag added by impl-backend)
   const isImported = 'imported' in issue && issue.imported === true;
