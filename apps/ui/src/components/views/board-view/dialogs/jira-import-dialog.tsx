@@ -674,28 +674,23 @@ export function JiraImportDialog({
                   <div
                     className="shrink-0 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20"
                     role="region"
-                    aria-label="Active sprint information"
+                    aria-label="Sprint information"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <ListTodo className="w-4 h-4 text-primary" aria-hidden="true" />
                         <div>
-                          <span className="font-medium">{sprint.name}</span>
+                          <span className="font-medium">Active & Future Sprints</span>
                           <span
                             className={cn(
                               'ml-2 text-xs px-2 py-0.5 rounded-full font-medium',
-                              sprint.state === 'active'
-                                ? 'bg-green-500/10 text-green-600'
-                                : 'bg-muted text-muted-foreground'
+                              'bg-green-500/10 text-green-600'
                             )}
                           >
-                            {sprint.state}
+                            {issues.length} task{issues.length !== 1 ? 's' : ''} in To Do
                           </span>
                         </div>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {issues.length} task{issues.length !== 1 ? 's' : ''} in To Do
-                      </span>
                     </div>
                   </div>
                 )}
@@ -1085,6 +1080,19 @@ const IssueRowGroup = memo(function IssueRowGroup({
                 )}
               >
                 {issue.issueType.name}
+              </span>
+            )}
+            {issue.sprint && (
+              <span
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded font-medium',
+                  issue.sprint.state === 'active'
+                    ? 'bg-amber-500/10 text-amber-600'
+                    : 'bg-purple-500/10 text-purple-600'
+                )}
+                title={`${issue.sprint.state === 'active' ? 'Active' : 'Future'} sprint`}
+              >
+                {issue.sprint.name}
               </span>
             )}
             {issue.priority && (

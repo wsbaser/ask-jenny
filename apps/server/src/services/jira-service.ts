@@ -723,11 +723,14 @@ export class JiraService {
   }
 
   /**
-   * Get active sprint for a board
+   * Get all active and future sprints for a board
    */
-  async getActiveSprint(boardId: number): Promise<JiraSprint | null> {
-    const sprints = await this.getSprints(boardId, 'active');
-    return sprints[0] || null;
+  async getActiveAndFutureSprints(boardId: number): Promise<JiraSprint[]> {
+    const [activeSprints, futureSprints] = await Promise.all([
+      this.getSprints(boardId, 'active'),
+      this.getSprints(boardId, 'future'),
+    ]);
+    return [...activeSprints, ...futureSprints];
   }
 
   /**
@@ -923,6 +926,7 @@ export class JiraService {
 
   /**
    * Get sprint issues with board auto-detection
+   * Fetches issues from both active AND future sprints
    */
   async getSprintIssuesForProject(options: {
     boardId?: number;
@@ -944,41 +948,99 @@ export class JiraService {
       boardId = selectedBoard.id;
     }
 
-    // If no sprint specified, get the active sprint
-    let sprint: JiraSprint | null = null;
-    if (!sprintId) {
-      sprint = await this.getActiveSprint(boardId);
-      if (!sprint) {
-        // Return empty response when no active sprint found (better UX than throwing)
-        return {
-          sprint: undefined,
-          issues: [],
-          total: 0,
-          hasMore: false,
-        };
-      }
-      sprintId = sprint.id;
-    } else {
-      // Get sprint details
+    // If a specific sprint is requested, fetch only that sprint
+    if (sprintId) {
       const sprints = await this.getSprints(boardId);
-      sprint = sprints.find((s) => s.id === sprintId) || null;
+      const sprint = sprints.find((s) => s.id === sprintId) || null;
       if (!sprint) {
         throw new Error(`Sprint ${sprintId} not found`);
       }
+
+      const { issues, total } = await this.getSprintIssues(
+        sprintId,
+        statusFilter,
+        maxResults,
+        options.importedIssueKeys
+      );
+
+      // Add sprint info to each issue
+      const issuesWithSprint = issues.map((issue) => ({
+        ...issue,
+        sprint: { id: sprint.id, name: sprint.name, state: sprint.state },
+      }));
+
+      return {
+        sprint,
+        issues: issuesWithSprint,
+        total,
+        hasMore: total > issuesWithSprint.length,
+      };
     }
 
-    const { issues, total } = await this.getSprintIssues(
-      sprintId,
-      statusFilter,
-      maxResults,
-      options.importedIssueKeys
-    );
+    // No specific sprint requested - fetch from both active AND future sprints
+    const sprints = await this.getActiveAndFutureSprints(boardId);
+
+    if (sprints.length === 0) {
+      return {
+        sprint: undefined,
+        issues: [],
+        total: 0,
+        hasMore: false,
+      };
+    }
+
+    // Fetch issues from all sprints (active first, then future)
+    const allIssues: JiraIssue[] = [];
+    let primarySprint: JiraSprint | undefined = sprints[0]; // First active sprint (or first future if no active)
+
+    for (const sprint of sprints) {
+      try {
+        const { issues } = await this.getSprintIssues(
+          sprint.id,
+          statusFilter,
+          maxResults,
+          options.importedIssueKeys
+        );
+
+        // Add sprint info to each issue
+        const issuesWithSprint = issues.map((issue) => ({
+          ...issue,
+          sprint: { id: sprint.id, name: sprint.name, state: sprint.state },
+        }));
+
+        allIssues.push(...issuesWithSprint);
+
+        // Stop if we've reached maxResults
+        if (allIssues.length >= maxResults) {
+          break;
+        }
+      } catch (error) {
+        logger.warn(`Failed to fetch issues for sprint ${sprint.id}:`, error);
+      }
+    }
+
+    // Sort issues by sprint state (active first) then by assignee
+    allIssues.sort((a, b) => {
+      // Active sprint issues first
+      const aState = a.sprint?.state || 'future';
+      const bState = b.sprint?.state || 'future';
+      if (aState !== bState) {
+        return aState === 'active' ? -1 : 1;
+      }
+      // Then by assignee name
+      const nameA = a.assignee?.displayName ?? '\uffff';
+      const nameB = b.assignee?.displayName ?? '\uffff';
+      return nameA.localeCompare(nameB);
+    });
+
+    // Limit to maxResults
+    const limitedIssues = allIssues.slice(0, maxResults);
 
     return {
-      sprint,
-      issues,
-      total,
-      hasMore: total > issues.length,
+      sprint: primarySprint,
+      issues: limitedIssues,
+      total: allIssues.length,
+      hasMore: allIssues.length > maxResults,
     };
   }
 
